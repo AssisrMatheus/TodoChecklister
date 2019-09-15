@@ -7,31 +7,71 @@ local TodoChecklisterFrame = core.TodoChecklisterFrame
 
 local Constants = core.Constants
 local ResponsiveFrame = core.ResponsiveFrame
+local TableUtils = core.TableUtils;
 
 --------------------------------------
 -- TodoChecklisterFrame functions
 --------------------------------------
-function TodoChecklisterFrame:OnUpdate()
-  local todoList = {
-		{text="Item one",    isChecked=false},
-		{text="Item Two",    isChecked=false},
-		{text="Item Three",  isChecked=true},
-		{text="Item four",   isChecked=false}
-	}
+function TodoChecklisterFrame:AddItem(text)
+	table.insert(TodoChecklisterDB, #TodoChecklisterDB+1, { text=text, isChecked=false })
+	self:OnUpdate()
+end
 
+function TodoChecklisterFrame:RemoveItem(text)
+	local indexToRemove = TableUtils:IndexOf(TodoChecklisterDB, function(x) return x.text == text end)
+
+	if(indexToRemove > 0) then
+		table.remove(TodoChecklisterDB, indexToRemove)
+		self:OnUpdate()
+	end
+end
+
+function TodoChecklisterFrame:CheckItem(text)
+	local indexToCheck = TableUtils:IndexOf(TodoChecklisterDB, function(x) return x.text == text end)
+
+	if(indexToCheck > 0) then
+		local item = TodoChecklisterDB[indexToCheck];
+		TodoChecklisterDB[indexToCheck] = { text=item.text, isChecked=(not item.isChecked) };
+		self:OnUpdate()
+	end
+end
+
+--------------------------------------
+-- TodoChecklisterFrame Events
+--------------------------------------
+function TodoChecklisterFrame:OnUpdate()
 	local scrollFrame = TodoItemsScrollFrame
-	if (scrollFrame and scrollFrame.buttons) then
+	local list = TodoChecklisterDB or {}
+	if (scrollFrame and scrollFrame.buttons and list) then
 		local offset = HybridScrollFrame_GetOffset(scrollFrame)
+		
+		if (#list > 0) then
+			self.frame.Background.BlankText:SetText('')
+		else
+			self.frame.Background.BlankText:SetText('Oh no! \r\n You have no items on your list \r\n\r\n Start by typing them in the box above \r\n\r\n =)')
+		end
 
 		for i=1, #scrollFrame.buttons do
 			local idx = i + offset
 			local button = scrollFrame.buttons[i]
-
-			if ( idx <= #todoList ) then
-				local todoItem = todoList[idx]
-
+			
+			if ( idx <= #list ) then
+				local todoItem = list[idx]								
 				button.todoItem = todoItem
+
+				-- Update button values
+				button.TodoContent:GetNormalFontObject():SetJustifyH("LEFT")
+				button.TodoContent:SetWidth(scrollFrame:GetWidth() - button.RemoveButton:GetWidth() - 30)
 				button.TodoContent:SetText(todoItem.text)
+
+				if (todoItem.isChecked) then
+					button.TodoContent:SetNormalFontObject(GameFontDarkGraySmall);
+				else
+					button.TodoContent:SetNormalFontObject(GameFontNormalSmall);
+				end
+
+				-- Update checkbox values
+				button.TodoCheckButton:SetChecked(todoItem.isChecked)
 
 				button:Show()
 			else
@@ -39,7 +79,7 @@ function TodoChecklisterFrame:OnUpdate()
 			end
 		end
 		
-		HybridScrollFrame_Update(scrollFrame, (scrollFrame.buttons[1]:GetHeight()) * #todoList, scrollFrame:GetHeight())
+		HybridScrollFrame_Update(scrollFrame, (scrollFrame.buttons[1]:GetHeight()) * #list, scrollFrame:GetHeight())
 	end
 end
 
@@ -49,7 +89,7 @@ function TodoChecklisterFrame:OnLoad(frame)
   ResponsiveFrame:OnLoad(frame)
 
   -- Set up elements
-  frame.Title:SetText(Constants.addonName)
+	frame.Title:SetText(Constants.addonName)
   
 	local scrollFrame = frame.ScrollFrame
 	scrollFrame.update = function() TodoChecklisterFrame:OnUpdate() end
@@ -76,5 +116,19 @@ function OnShow(frame)
 end
 
 function OnSizeChanged(frame)
-  TodoChecklisterFrame:OnSizeChanged(frame)
+	TodoChecklisterFrame:OnSizeChanged(frame)
+end
+
+function OnSaveItem(frame)
+	TodoChecklisterFrame:AddItem(TodoChecklister.TodoText:GetText())
+	TodoChecklister.TodoText:SetText("")
+	TodoChecklister.TodoText:ClearFocus()
+end
+
+function OnRemoveItem(frame)
+	TodoChecklisterFrame:RemoveItem(frame:GetParent().TodoContent:GetText())
+end
+
+function OnCheckItem(frame)
+	TodoChecklisterFrame:CheckItem(frame:GetParent().TodoContent:GetText())
 end

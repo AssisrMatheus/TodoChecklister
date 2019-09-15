@@ -3,18 +3,51 @@
 ..\FrameXML\UI.xsd">
   <Script file="TodoChecklister.lua"/>
 
-  <CheckButton name="TodoItemTemplate" inherits="UICheckButtonTemplate" virtual="true">
-    <Size x="24" y="24"/>
-    <Layers>
-      <Layer level="ARTWORK">
-        <FontString name="$parentText" inherits="GameFontNormalSmall" parentKey="TodoContent">
-          <Anchors>
-            <Anchor point="LEFT" relativePoint="RIGHT" x="-2" y="0"/>
-          </Anchors>
-        </FontString>
-      </Layer>
-    </Layers>
-  </CheckButton>
+  <Frame name="TodoItemTemplate" virtual="true">
+    <Size x="200" y="30"/>
+    <Frames>
+      <CheckButton parentKey="TodoCheckButton" name="$parentTodoCheckButton" inherits="UICheckButtonTemplate">
+        <Size x="24" y="24"/>
+
+        <Scripts>
+          <OnClick>
+            OnCheckItem(self)
+          </OnClick>
+        </Scripts>
+
+        <Anchors>
+          <Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT" />
+        </Anchors>
+      </CheckButton>
+
+      <Button name="$parentText" parentKey="TodoContent">
+        <Size>
+          <AbsDimension x="150" y="16" />
+        </Size>
+        <Anchors>
+          <Anchor point="LEFT" relativeTo="$parentTodoCheckButton" relativePoint="RIGHT" />
+        </Anchors>
+        <NormalFont style="GameFontNormalSmall"/>
+      </Button>
+
+      <Button parentKey="RemoveButton" name="$parentRemoveButton" inherits="CollapseButtonTemplate">
+        <Anchors>
+          <Anchor point="RIGHT" relativeTo="$parentText" relativePoint="RIGHT">
+            <Offset x="15" y="0"/>
+          </Anchor>
+        </Anchors>
+
+        <NormalTexture file="Interface\Buttons\UI-MinusButton-Up" />
+        <PushedTexture file="Interface\Buttons\UI-MinusButton-Down" />
+
+        <Scripts>
+          <OnClick>
+            OnRemoveItem(self)
+          </OnClick>
+        </Scripts>
+      </Button>
+    </Frames>
+  </Frame>
 
   <Frame name="TodoChecklister" inherits="TodoChecklisterResponsiveFrameTemplate">
     <Scripts>
@@ -38,6 +71,11 @@
     <Frames>
       <EditBox parentKey="TodoText" name="$parentTodoText" autoFocus="false" inherits="InputBoxTemplate">
         <Size x="0" y="20"/>
+        <Scripts>
+          <OnEnterPressed>
+            OnSaveItem(self)
+          </OnEnterPressed>
+        </Scripts>
         <Anchors>
           <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
             <Offset x="20" y="-32"/>
@@ -52,6 +90,12 @@
         <Size>
           <AbsDimension x="18" y="18"/>
         </Size>
+
+        <Scripts>
+          <OnClick>
+            OnSaveItem(self)
+          </OnClick>
+        </Scripts>
 
         <Anchors>
           <Anchor point="LEFT" relativeTo="$parentTodoText" relativePoint="RIGHT">
@@ -86,7 +130,24 @@
             <AbsValue val="16" />
           </EdgeSize>
         </Backdrop>
+
+        <Layers>
+          <Layer level="OVERLAY">
+            <FontString parentKey="BlankText" inherits="GameFontHighlight">
+              <Anchors>
+                <Anchor point="CENTER" />
+              </Anchors>
+            </FontString>
+
+            <FontString parentKey="BlankText" inherits="GameFontNormal">
+              <Anchors>
+                <Anchor point="CENTER" />
+              </Anchors>
+            </FontString>
+          </Layer>
+        </Layers>
       </Frame>
+
 
       <ScrollFrame parentKey="ScrollFrame" name="TodoItemsScrollFrame" inherits="HybridScrollFrameTemplate">
         <Anchors>
