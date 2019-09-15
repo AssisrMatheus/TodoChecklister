@@ -6,8 +6,6 @@ function core:Init(event, name)
 	
     core.Debug:Init();
     core.Chat:Init();
-    
-    core.TodoUI:Toggle();
 	
     core.Chat:Print("All loaded :)");
 end

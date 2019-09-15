@@ -10,7 +10,7 @@ constants.lua
 utils.lua
 debug.lua
 
-todoUi.lua
+components\components.xml
 
 chat.lua
 init.lua

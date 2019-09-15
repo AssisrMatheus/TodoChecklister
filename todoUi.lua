@@ -44,7 +44,7 @@ function TodoUI:CreateMenu()
 		PARENT FRAME: AssisTODOUI
 			This frame is an empty frame with the anchor and resizing capabilities
 	--]]
-	UIConfig = CreateFrame("Frame", "AssisTODOUI", UIParent, "UIPanelDialogTemplate")
+		UIConfig = CreateFrame("Frame", "AssisTODOUI", UIParent, "UIPanelDialogTemplate")
     UIConfig:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", -120, 30) -- Doesn't need to be ("CENTER", UIParent, "CENTER")
     UIConfig:SetSize(250, 300)
     UIConfig:EnableMouse(true)
@@ -196,9 +196,9 @@ function TodoUI:CreateMenu()
             self:GetParent():SetScale(self:GetParent():GetScale() * tNewScale)
             self:GetParent():SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", tx, ty)
             self:GetParent().x, self:GetParent().y = tx, ty
-		end
+				end
 		
-		child:SetSize(UIConfig:GetWidth()-42, 500)
+			child:SetSize(UIConfig:GetWidth()-42, 500)
     end)
 
 	
