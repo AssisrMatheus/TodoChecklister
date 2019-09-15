@@ -68,15 +68,13 @@ function TodoChecklisterFrame:OnUpdate()
 				button.todoItem = todoItem
 
 				-- Update button values
-				button.TodoContent:GetNormalFontObject():SetJustifyH("LEFT")
-				button.TodoContent:SetWidth(scrollFrame:GetWidth() - button.RemoveButton:GetWidth() - 30)
-				button.TodoContent:SetText(todoItem.text)
-
 				if (todoItem.isChecked) then
-					button.TodoContent:SetNormalFontObject(GameFontDarkGraySmall);
+					button.TodoContent.FontText:SetFontObject(GameFontDarkGraySmall);
 				else
-					button.TodoContent:SetNormalFontObject(GameFontNormalSmall);
+					button.TodoContent.FontText:SetFontObject(GameFontNormalSmall);
 				end
+				button.TodoContent:SetWidth(scrollFrame:GetWidth() - button.RemoveButton:GetWidth() - 30)
+				button.TodoContent.FontText:SetText(todoItem.text)
 
 				-- Update checkbox values
 				button.TodoCheckButton:SetChecked(todoItem.isChecked)
@@ -134,9 +132,9 @@ function OnSaveItem(frame)
 end
 
 function OnRemoveItem(frame)
-	TodoChecklisterFrame:RemoveItem(frame:GetParent().TodoContent:GetText())
+	TodoChecklisterFrame:RemoveItem(frame:GetParent().TodoContent.FontText:GetText())
 end
 
 function OnCheckItem(frame)
-	TodoChecklisterFrame:CheckItem(frame:GetParent().TodoContent:GetText())
+	TodoChecklisterFrame:CheckItem(frame:GetParent().TodoContent.FontText:GetText())
 end

@@ -27,7 +27,11 @@
         <Anchors>
           <Anchor point="LEFT" relativeTo="$parentTodoCheckButton" relativePoint="RIGHT" />
         </Anchors>
-        <NormalFont style="GameFontNormalSmall"/>
+        <Layers>
+          <Layer level="OVERLAY">
+            <FontString parentKey="FontText" inherits="GameFontNormalSmall" justifyH="LEFT"/>
+          </Layer>
+        </Layers>
       </Button>
 
       <Button parentKey="RemoveButton" name="$parentRemoveButton" inherits="CollapseButtonTemplate">
@@ -49,7 +53,7 @@
     </Frames>
   </Frame>
 
-  <Frame name="TodoChecklister" inherits="TodoChecklisterResponsiveFrameTemplate">
+  <Frame name="TodoChecklister" inherits="TodoChecklisterResponsiveFrameTemplate" parent="UIParent">
     <Scripts>
       <OnLoad>
         OnLoad(self)
@@ -84,6 +88,7 @@
             <Offset x="-30" y="4"/>
           </Anchor>
         </Anchors>
+        <FontString inherits="ChatFontNormal"/>
       </EditBox>
 
       <Button parentKey="SaveButton" name="$parentSaveButton" inherits="CollapseButtonTemplate">

@@ -9,7 +9,7 @@ local Constants = core.Constants;
 --------------------------------------
 -- Defaults (usually a database!)
 --------------------------------------
-Constants.debugMode = true;
+Constants.debugMode = false;
 Constants.addonName = addonName;
 Constants.theme = {
 	red = 0.8, -- 204/255

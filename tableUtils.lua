@@ -13,6 +13,7 @@ function TableUtils:IndexOf(tb, comparator)
 	for i=1, #tb do
 		if(comparator(tb[i])) then return i end
 	end
+	return 0
 end
 
 function TableUtils:Filter(tb, comparator)
