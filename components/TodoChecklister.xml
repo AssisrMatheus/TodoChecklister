@@ -3,11 +3,30 @@
 ..\FrameXML\UI.xsd">
   <Script file="TodoChecklister.lua"/>
 
+  <CheckButton name="TodoItemTemplate" inherits="UICheckButtonTemplate" virtual="true">
+    <Size x="24" y="24"/>
+    <Layers>
+      <Layer level="ARTWORK">
+        <FontString name="$parentText" inherits="GameFontNormalSmall" parentKey="TodoContent">
+          <Anchors>
+            <Anchor point="LEFT" relativePoint="RIGHT" x="-2" y="0"/>
+          </Anchors>
+        </FontString>
+      </Layer>
+    </Layers>
+  </CheckButton>
+
   <Frame name="TodoChecklister" inherits="TodoChecklisterResponsiveFrameTemplate">
     <Scripts>
       <OnLoad>
         OnLoad(self)
       </OnLoad>
+      <OnShow>
+        OnShow(self)
+      </OnShow>
+      <OnSizeChanged>
+        OnSizeChanged(self)
+      </OnSizeChanged>
     </Scripts>
 
     <Anchors>
@@ -17,7 +36,86 @@
     </Anchors>
 
     <Frames>
-      <!-- <EditBox parentKey="searchBox" name="$parentSearchBox" inherits="CombuctorSearchBoxTemplate"/> -->
+      <EditBox parentKey="TodoText" name="$parentTodoText" autoFocus="false" inherits="InputBoxTemplate">
+        <Size x="0" y="20"/>
+        <Anchors>
+          <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+            <Offset x="20" y="-32"/>
+          </Anchor>
+          <Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT">
+            <Offset x="-30" y="4"/>
+          </Anchor>
+        </Anchors>
+      </EditBox>
+
+      <Button parentKey="SaveButton" name="$parentSaveButton" inherits="CollapseButtonTemplate">
+        <Size>
+          <AbsDimension x="18" y="18"/>
+        </Size>
+
+        <Anchors>
+          <Anchor point="LEFT" relativeTo="$parentTodoText" relativePoint="RIGHT">
+            <Offset x="3" y="-1"/>
+          </Anchor>
+        </Anchors>
+
+        <NormalTexture file="Interface\Buttons\UI-PlusButton-Up" />
+      </Button>
+
+      <Frame parentKey="Background" name="$parentBackground">
+        <Anchors>
+          <Anchor point="TOPLEFT" relativeTo="$parentTodoText" relativePoint="BOTTOMLEFT">
+            <Offset>
+              <AbsDimension x="-6" y="-6"/>
+            </Offset>
+          </Anchor>
+          <Anchor point="BOTTOMRIGHT">
+            <Offset>
+              <AbsDimension x="-30" y="12"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\Tooltips\UI-Tooltip-Border" tile="true">
+          <BackgroundInsets>
+            <AbsInset left="4" right="4" top="4" bottom="4" />
+          </BackgroundInsets>
+          <TileSize>
+            <AbsValue val="16" />
+          </TileSize>
+          <EdgeSize>
+            <AbsValue val="16" />
+          </EdgeSize>
+        </Backdrop>
+      </Frame>
+
+      <ScrollFrame parentKey="ScrollFrame" name="TodoItemsScrollFrame" inherits="HybridScrollFrameTemplate">
+        <Anchors>
+          <Anchor point="TOPLEFT" relativeTo="$parentBackground" relativePoint="TOPLEFT">
+            <Offset>
+              <AbsDimension x="10" y="-6"/>
+            </Offset>
+          </Anchor>
+          <Anchor point="BOTTOMRIGHT">
+            <Offset>
+              <AbsDimension x="-32" y="20"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Frames>
+          <Slider name="$parentScrollBar" inherits="HybridScrollBarTrimTemplate" parentKey="scrollBar">
+            <Anchors>
+              <Anchor point="TOPLEFT" relativePoint="TOPRIGHT" x="4" y="-13"/>
+              <Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT" x="4" y="12"/>
+            </Anchors>
+            <Scripts>
+              <OnLoad>
+                self.trackBG:Show();
+                self.trackBG:SetVertexColor(0, 0, 0, 0.75);
+              </OnLoad>
+            </Scripts>
+          </Slider>
+        </Frames>
+      </ScrollFrame>
     </Frames>
   </Frame>
 </Ui>
