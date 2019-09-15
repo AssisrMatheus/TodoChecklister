@@ -36,6 +36,14 @@ function TodoChecklisterFrame:CheckItem(text)
 	end
 end
 
+function TodoChecklisterFrame:Toggle()
+	if (self.frame:IsShown()) then
+		self.frame:Hide();
+	else
+		self.frame:Show();
+	end
+end
+
 --------------------------------------
 -- TodoChecklisterFrame Events
 --------------------------------------
@@ -96,7 +104,7 @@ function TodoChecklisterFrame:OnLoad(frame)
 	HybridScrollFrame_CreateButtons(frame.ScrollFrame, "TodoItemTemplate")
 
   -- Display the frame
-  frame:Show()
+  self:Toggle();
 end
 
 function TodoChecklisterFrame:OnShow(frame)

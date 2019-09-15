@@ -10,6 +10,7 @@ function core:Init(event, name)
 	
     core.Debug:Init();
     core.Chat:Init();
+    core.MinimapIcon:Init();
 
     if (#TodoChecklisterDB > 0) then
         local completedList = core.TableUtils:Filter(TodoChecklisterDB, function(x) return x.isChecked == true end)

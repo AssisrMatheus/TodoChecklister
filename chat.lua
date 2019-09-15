@@ -14,22 +14,21 @@ local Utils = core.Utils;
 Chat.command = "/todo";
 Chat.commands = {
     ["tg"] = function()
-        core.TodoUI.Toggle();
+        core.TodoChecklisterFrame:Toggle()
     end,
 	
 	["help"] = function()
 		print(" ");
 		Chat:Print("List of slash commands:")
-		-- Chat:Print("|cff00cc66/todo config|r - shows config menu");
-		-- Chat:Print("|cff00cc66/todo help|r - shows help info");
+		Chat:Print("|cff00cc66/todo tg|r - Toggle todo window");
 		print(" ");
 	end,
 	
-	["example"] = {
-		["test"] = function(...)
-			Chat:Print("My Value:", tostringall(...));
-		end
-	}
+	-- ["example"] = {
+	-- 	["test"] = function(...)
+	-- 		Chat:Print("My Value:", tostringall(...));
+	-- 	end
+	-- }
 };
 
 --------------------------------------

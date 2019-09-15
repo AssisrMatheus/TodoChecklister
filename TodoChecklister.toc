@@ -4,7 +4,7 @@
 ## Notes: I have bad memory so I made this. A todolist/checklist AddOn for World of Warcraft.
 ## Version: 1.0
 ## DefaultState: enabled
-## SavedVariables: TodoChecklisterDB
+## SavedVariables: TodoChecklisterDB, TodoChecklisterMapIcon
 
 constants.lua
 tableUtils.lua
@@ -14,4 +14,5 @@ debug.lua
 components\components.xml
 
 chat.lua
+minimapIcon.lua
 init.lua
