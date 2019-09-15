@@ -14,3 +14,11 @@ function TableUtils:IndexOf(tb, comparator)
 		if(comparator(tb[i])) then return i end
 	end
 end
+
+function TableUtils:Filter(tb, comparator)
+  local newTb = {};
+	for i=1, #tb do
+		if(comparator(tb[i])) then table.insert(newTb, #newTb+1, tb[i]) end
+  end
+  return newTb
+end

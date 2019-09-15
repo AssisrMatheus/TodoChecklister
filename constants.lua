@@ -12,8 +12,8 @@ local Constants = core.Constants;
 Constants.debugMode = true;
 Constants.addonName = addonName;
 Constants.theme = {
-	red = 0, 
-	green = 0.8, -- 204/255
+	red = 0.8, -- 204/255
+	green = 0.2, -- 51/255
 	blue = 1,
-	hex = "00ccff"
+	hex = "cc33ff"
 };
