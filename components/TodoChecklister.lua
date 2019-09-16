@@ -49,11 +49,10 @@ end
 --------------------------------------
 function TodoChecklisterFrame:OnUpdate()
 	local scrollFrame = TodoItemsScrollFrame
-	local list = TodoChecklisterDB or {}
-	if (scrollFrame and scrollFrame.buttons and list) then
+	if (scrollFrame and scrollFrame.buttons and TodoChecklisterDB) then
 		local offset = HybridScrollFrame_GetOffset(scrollFrame)
 		
-		if (#list > 0) then
+		if (#TodoChecklisterDB > 0) then
 			self.frame.Background.BlankText:SetText('')
 		else
 			self.frame.Background.BlankText:SetText('Oh no! \r\n You have no items on your list \r\n\r\n Start by typing them in the box above \r\n\r\n =)')
@@ -63,8 +62,8 @@ function TodoChecklisterFrame:OnUpdate()
 			local idx = i + offset
 			local button = scrollFrame.buttons[i]
 			
-			if ( idx <= #list ) then
-				local todoItem = list[idx]								
+			if ( idx <= #TodoChecklisterDB ) then
+				local todoItem = TodoChecklisterDB[idx]								
 				button.todoItem = todoItem
 
 				-- Update button values
@@ -85,7 +84,7 @@ function TodoChecklisterFrame:OnUpdate()
 			end
 		end
 		
-		HybridScrollFrame_Update(scrollFrame, (scrollFrame.buttons[1]:GetHeight()) * #list, scrollFrame:GetHeight())
+		HybridScrollFrame_Update(scrollFrame, (scrollFrame.buttons[1]:GetHeight()) * #TodoChecklisterDB, scrollFrame:GetHeight())
 	end
 end
 

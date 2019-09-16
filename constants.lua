@@ -6,6 +6,10 @@ core.Constants = {}; -- adds Config table to addon namespace
 
 local Constants = core.Constants;
 
+if (not TodoChecklisterDB) then
+	TodoChecklisterDB = {}
+end
+
 --------------------------------------
 -- Defaults (usually a database!)
 --------------------------------------

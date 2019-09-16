@@ -3,16 +3,12 @@ local addonName, core = ...; -- Namespace
 -- WARNING: self keyword automatically becomes events frame!
 function core:Init(event, name)
     if (name ~= addonName) then return end 
-    
-    if (not TodoChecklisterDB) then
-        TodoChecklisterDB = {}
-    end
 	
     core.Debug:Init();
     core.Chat:Init();
     core.MinimapIcon:Init();
 
-    if (#TodoChecklisterDB > 0) then
+    if (TodoChecklisterDB and #TodoChecklisterDB > 0) then
         local completedList = core.TableUtils:Filter(TodoChecklisterDB, function(x) return x.isChecked == true end)
         local notList = core.TableUtils:Filter(TodoChecklisterDB, function(x) return x.isChecked == false end)
         
