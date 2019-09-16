@@ -95,7 +95,7 @@ function TodoChecklisterFrame:OnLoad(frame)
   ResponsiveFrame:OnLoad(frame)
 
   -- Set up elements
-	frame.Title:SetText(Constants.addonName)
+	frame.Title:SetText(UnitName("player").."'s List")
   
 	local scrollFrame = frame.ScrollFrame
 	scrollFrame.update = function() TodoChecklisterFrame:OnUpdate() end
