@@ -4,12 +4,12 @@
   <Script file="ResponsiveFrame.lua"/>
 
   <Frame name="TodoChecklisterResponsiveFrameTemplate" resizable="true" enableMouse="true" movable="true" topLevel="true" hidden="true" inherits="UIPanelDialogTemplate" virtual="true">
-    <Size x="250" y="300"/>
+    <Size x="300" y="300"/>
 
     <Scripts>
       <OnLoad>
         OnLoad(self)
-      </OnLoad>      
+      </OnLoad>
     </Scripts>
 
     <Layers>
