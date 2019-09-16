@@ -13,8 +13,10 @@ local TableUtils = core.TableUtils;
 -- TodoChecklisterFrame functions
 --------------------------------------
 function TodoChecklisterFrame:AddItem(text)
-	table.insert(TodoChecklisterDB, #TodoChecklisterDB+1, { text=text, isChecked=false })
-	self:OnUpdate()
+	if(text ~= "" and text ~= nil and text) then
+		table.insert(TodoChecklisterDB, #TodoChecklisterDB+1, { text=text, isChecked=false })
+		self:OnUpdate()
+	end
 end
 
 function TodoChecklisterFrame:RemoveItem(text)
@@ -28,7 +30,6 @@ end
 
 function TodoChecklisterFrame:CheckItem(text)
 	local indexToCheck = TableUtils:IndexOf(TodoChecklisterDB, function(x) return x.text == text end)
-
 	if(indexToCheck > 0) then
 		local item = TodoChecklisterDB[indexToCheck];
 		TodoChecklisterDB[indexToCheck] = { text=item.text, isChecked=(not item.isChecked) };
@@ -125,15 +126,24 @@ function OnSizeChanged(frame)
 end
 
 function OnSaveItem(frame)
-	TodoChecklisterFrame:AddItem(TodoChecklister.TodoText:GetText())
+	local text = TodoChecklister.TodoText:GetText()
+	if (not text) then text = "" end
+
+	TodoChecklisterFrame:AddItem(text)
 	TodoChecklister.TodoText:SetText("")
 	TodoChecklister.TodoText:ClearFocus()
 end
 
 function OnRemoveItem(frame)
-	TodoChecklisterFrame:RemoveItem(frame:GetParent().TodoContent.FontText:GetText())
+	local text = frame:GetParent().TodoContent.FontText:GetText()
+	if (not text) then text = "" end
+
+	TodoChecklisterFrame:RemoveItem(text)
 end
 
 function OnCheckItem(frame)
-	TodoChecklisterFrame:CheckItem(frame:GetParent().TodoContent.FontText:GetText())
+	local text = frame:GetParent().TodoContent.FontText:GetText()
+	if (not text) then text = "" end
+
+	TodoChecklisterFrame:CheckItem(text)
 end
