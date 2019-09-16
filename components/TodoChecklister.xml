@@ -32,6 +32,35 @@
             <FontString parentKey="FontText" inherits="GameFontNormalSmall" justifyH="LEFT"/>
           </Layer>
         </Layers>
+
+        <Scripts>
+          <OnMouseDown>
+            self.FontText:ClearAllPoints() 
+            self.FontText:SetPoint("LEFT", self, "LEFT", 2, -2)
+          </OnMouseDown>
+          <OnMouseUp>
+            self.FontText:ClearAllPoints() 
+            self.FontText:SetPoint("LEFT", self, "LEFT", 0, 0)
+            OnSelectItem(self)
+          </OnMouseUp>
+        </Scripts>
+
+        <Frames>
+          <Frame parentKey="ButtonHighlightFrame" name="$parentButtonHighlightFrame" hidden="true">
+            <Size>
+              <AbsDimension x="293" y="16"/>
+            </Size>
+            <Anchors>
+              <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" />
+              <Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT" />
+            </Anchors>
+            <Layers>
+              <Layer level="ARTWORK">
+                <Texture parentKey="ButtonHighlightTexture" name="$parentButtonHighlightTexture" file="Interface\QuestFrame\UI-QuestLogTitleHighlight" alphaMode="ADD"/>
+              </Layer>
+            </Layers>
+          </Frame>
+        </Frames>
       </Button>
 
       <Button parentKey="RemoveButton" name="$parentRemoveButton" inherits="CollapseButtonTemplate">

@@ -7,14 +7,19 @@ local TodoChecklisterFrame = core.TodoChecklisterFrame
 
 local Constants = core.Constants
 local ResponsiveFrame = core.ResponsiveFrame
-local TableUtils = core.TableUtils;
+local TableUtils = core.TableUtils
 
 --------------------------------------
 -- TodoChecklisterFrame functions
 --------------------------------------
 function TodoChecklisterFrame:AddItem(text)
 	if(text ~= "" and text ~= nil and text) then
-		table.insert(TodoChecklisterDB, #TodoChecklisterDB+1, { text=text, isChecked=false })
+		if(self.selectedItem == 0) then
+			table.insert(TodoChecklisterDB, #TodoChecklisterDB+1, { text=text, isChecked=false })
+		else
+			TodoChecklisterDB[self.selectedItem].text = text
+			self:ClearSelected()
+		end
 		self:OnUpdate()
 	end
 end
@@ -31,17 +36,35 @@ end
 function TodoChecklisterFrame:CheckItem(text)
 	local indexToCheck = TableUtils:IndexOf(TodoChecklisterDB, function(x) return x.text == text end)
 	if(indexToCheck > 0) then
-		local item = TodoChecklisterDB[indexToCheck];
-		TodoChecklisterDB[indexToCheck] = { text=item.text, isChecked=(not item.isChecked) };
+		local item = TodoChecklisterDB[indexToCheck]
+		TodoChecklisterDB[indexToCheck] = { text=item.text, isChecked=(not item.isChecked) }
 		self:OnUpdate()
 	end
 end
 
+function TodoChecklisterFrame:SelectItem(text, buttonFrame)
+	local indexToSelect = TableUtils:IndexOf(TodoChecklisterDB, function(x) return x.text == text end)
+
+	if(indexToSelect ~= self.selectedItem) then
+		self.selectedItem = indexToSelect
+		self.frame.TodoText:SetText(TodoChecklisterDB[self.selectedItem].text)
+	else
+		self:ClearSelected()
+	end
+
+	self:OnUpdate()
+end
+
+function TodoChecklisterFrame:ClearSelected()
+	self.selectedItem = 0
+	self.frame.TodoText:SetText("")
+end
+
 function TodoChecklisterFrame:Toggle()
 	if (self.frame:IsShown()) then
-		self.frame:Hide();
+		self.frame:Hide()
 	else
-		self.frame:Show();
+		self.frame:Show()
 	end
 end
 
@@ -69,12 +92,25 @@ function TodoChecklisterFrame:OnUpdate()
 
 				-- Update button values
 				if (todoItem.isChecked) then
-					button.TodoContent.FontText:SetFontObject(GameFontDarkGraySmall);
+					button.TodoContent.FontText:SetFontObject(GameFontDarkGraySmall)
 				else
-					button.TodoContent.FontText:SetFontObject(GameFontNormalSmall);
+					button.TodoContent.FontText:SetFontObject(GameFontNormalSmall)
 				end
 				button.TodoContent:SetWidth(scrollFrame:GetWidth() - button.RemoveButton:GetWidth() - 30)
 				button.TodoContent.FontText:SetText(todoItem.text)
+
+				if (self.selectedItem == idx) then
+					local highlightColor = NORMAL_FONT_COLOR
+
+					if (todoItem.isChecked) then
+						highlightColor = DISABLED_FONT_COLOR
+					end
+
+					button.TodoContent.ButtonHighlightFrame.ButtonHighlightTexture:SetVertexColor(highlightColor.r, highlightColor.g, highlightColor.b)
+					button.TodoContent.ButtonHighlightFrame:Show()
+				else
+					button.TodoContent.ButtonHighlightFrame:Hide()
+				end
 
 				-- Update checkbox values
 				button.TodoCheckButton:SetChecked(todoItem.isChecked)
@@ -102,7 +138,7 @@ function TodoChecklisterFrame:OnLoad(frame)
 	HybridScrollFrame_CreateButtons(frame.ScrollFrame, "TodoItemTemplate")
 
   -- Display the frame
-  self:Toggle();
+  self:Toggle()
 end
 
 function TodoChecklisterFrame:OnShow(frame)
@@ -131,7 +167,7 @@ function OnSaveItem(frame)
 
 	TodoChecklisterFrame:AddItem(text)
 	TodoChecklister.TodoText:SetText("")
-	TodoChecklister.TodoText:ClearFocus()
+	-- TodoChecklister.TodoText:ClearFocus()
 end
 
 function OnRemoveItem(frame)
@@ -146,4 +182,11 @@ function OnCheckItem(frame)
 	if (not text) then text = "" end
 
 	TodoChecklisterFrame:CheckItem(text)
+end
+
+function OnSelectItem(frame)
+	local text = frame:GetParent().TodoContent.FontText:GetText()
+	if (not text) then text = "" end
+
+	TodoChecklisterFrame:SelectItem(text, frame)
 end
