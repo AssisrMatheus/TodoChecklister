@@ -1,0 +1,19 @@
+package-as: TodoChecklister
+ignore: # Files and directories beginning with a dot (such as .git) are automatically ignored, as is the pgkmeta file itself.
+    - button.png
+    - demo.gif
+    - icon.png
+    - README.md
+
+required-dependencies:
+    - 221710-dear-cupcake
+
+optional-dependencies:
+    - 220002-junkit
+
+manual-changelog: CHANGELOG.txt
+
+license-output: LICENSE.txt
+
+tools-used:
+    - data-tools
