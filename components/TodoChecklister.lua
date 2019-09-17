@@ -17,7 +17,9 @@ function TodoChecklisterFrame:AddItem(text)
 		if(self.selectedItem == 0) then
 			table.insert(TodoChecklisterDB, #TodoChecklisterDB+1, { text=text, isChecked=false })
 		else
-			TodoChecklisterDB[self.selectedItem].text = text
+			if (TodoChecklisterDB and TodoChecklisterDB[self.selectedItem]) then
+				TodoChecklisterDB[self.selectedItem].text = text
+			end
 			self:ClearSelected()
 		end
 		self:OnUpdate()
@@ -28,6 +30,11 @@ function TodoChecklisterFrame:RemoveItem(text)
 	local indexToRemove = TableUtils:IndexOf(TodoChecklisterDB, function(x) return x.text == text end)
 
 	if(indexToRemove > 0) then
+		if (self.selectedItem == indexToRemove) then
+			self:ClearSelected()
+			TodoChecklister.TodoText:ClearFocus()
+		end
+
 		table.remove(TodoChecklisterDB, indexToRemove)
 		self:OnUpdate()
 	end
