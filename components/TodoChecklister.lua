@@ -30,12 +30,27 @@ function TodoChecklisterFrame:RemoveItem(text)
 	local indexToRemove = TableUtils:IndexOf(TodoChecklisterDB, function(x) return x.text == text end)
 
 	if(indexToRemove > 0) then
+		-- If we are removing the current selected item
 		if (self.selectedItem == indexToRemove) then
+			-- Clear selection
 			self:ClearSelected()
 			TodoChecklister.TodoText:ClearFocus()
 		end
 
+		local selectedText
+		-- If we have something selected, we have to re-find its index after deletion
+		if(self.selectedItem > 0) then
+			-- So we store the current text
+			selectedText = TodoChecklisterDB[self.selectedItem].text
+		end
+
 		table.remove(TodoChecklisterDB, indexToRemove)
+
+		if(selectedText ~= nil) then
+			local indexToSelect = TableUtils:IndexOf(TodoChecklisterDB, function(x) return x.text == selectedText end)
+			self.selectedItem = indexToSelect;
+		end
+
 		self:OnUpdate()
 	end
 end
