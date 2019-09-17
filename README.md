@@ -1,18 +1,14 @@
-<p align="center">
-	<a href="https://gitmoji.carloscuesta.me">
-		<img src="https://img.shields.io/badge/gitmoji-%20😜%20😍-FFDD67.svg?style=flat-square"
-			 alt="Gitmoji">
-	</a>
-</p>
+[![Downloads](https://cf.way2muchnoise.eu/full_341737_downloads.svg)](https://www.curseforge.com/wow/addons/todochecklister)
+[![Versions](https://cf.way2muchnoise.eu/versions/341737.svg)](https://www.curseforge.com/wow/addons/todochecklister)
+[![Gitmoji](https://img.shields.io/badge/gitmoji-%20😜%20😍-FFDD67.svg)](https://gitmoji.carloscuesta.me)
 
-## Get on [curseforge](https://www.curseforge.com/wow/addons/todochecklister)
 
 # TodoChecklister
 I have bad memory so I made this. A todolist/checklist AddOn for World of Warcraft
 
 ![demoGif](./demo.gif)
 
-**I have tested it only in WoW Classic**
+**I have tested it only in WoW Classic (1.13)**
 
 ## How to install it
 - Download the latest version [here](https://github.com/AssisrMatheus/TodoChecklister/releases/)
