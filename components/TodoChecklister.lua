@@ -15,8 +15,6 @@ local TableUtils = core.TableUtils
 function TodoChecklisterFrame:AddItem(text)
 	if(text ~= "" and text ~= nil and text) then
 		-- If the item is not selected
-		
-		print(self.selectedItem)
 		if(self.selectedItem == nil or self.selectedItem == 0) then
 			-- Adds
 			table.insert(TodoChecklisterDB, #TodoChecklisterDB+1, { text=text, isChecked=false })
