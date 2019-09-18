@@ -2,16 +2,16 @@
 [![Gitmoji](https://img.shields.io/badge/gitmoji-%20😜%20😍-FFDD67.svg)](https://gitmoji.carloscuesta.me)
 
 
-# TodoChecklister
-I have bad memory so I made this. A todolist/checklist AddOn for World of Warcraft
-
-![demoGif](./demo.gif)
-
 ## Download links
 You can download it from a handful of places:
 - [Curseforge/twitch](https://www.curseforge.com/wow/addons/todochecklister/files)
 - [Github releases](https://github.com/AssisrMatheus/TodoChecklister/releases)
 - [Will it classic](https://willitclassic.com/view/mc8DexxominWFB4i8W1a)
+
+# TodoChecklister
+I have bad memory so I made this. A todolist/checklist AddOn for World of Warcraft
+
+![demoGif](./demo.gif)
 
 ## How to install it
 - Download the latest version [here](https://github.com/AssisrMatheus/TodoChecklister/releases/)
