@@ -14,9 +14,14 @@ local TableUtils = core.TableUtils
 --------------------------------------
 function TodoChecklisterFrame:AddItem(text)
 	if(text ~= "" and text ~= nil and text) then
-		if(self.selectedItem == 0) then
+		-- If the item is not selected
+		
+		print(self.selectedItem)
+		if(self.selectedItem == nil or self.selectedItem == 0) then
+			-- Adds
 			table.insert(TodoChecklisterDB, #TodoChecklisterDB+1, { text=text, isChecked=false })
 		else
+			-- if editing
 			if (TodoChecklisterDB and TodoChecklisterDB[self.selectedItem]) then
 				TodoChecklisterDB[self.selectedItem].text = text
 			end
@@ -34,12 +39,11 @@ function TodoChecklisterFrame:RemoveItem(text)
 		if (self.selectedItem == indexToRemove) then
 			-- Clear selection
 			self:ClearSelected()
-			TodoChecklister.TodoText:ClearFocus()
 		end
 
 		local selectedText
 		-- If we have something selected, we have to re-find its index after deletion
-		if(self.selectedItem > 0) then
+		if(self.selectedItem and self.selectedItem > 0) then
 			-- So we store the current text
 			selectedText = TodoChecklisterDB[self.selectedItem].text
 		end
@@ -80,6 +84,7 @@ end
 function TodoChecklisterFrame:ClearSelected()
 	self.selectedItem = 0
 	self.frame.TodoText:SetText("")
+	self.frame.TodoText:ClearFocus()
 end
 
 function TodoChecklisterFrame:Toggle()
@@ -189,7 +194,7 @@ function OnSaveItem(frame)
 
 	TodoChecklisterFrame:AddItem(text)
 	TodoChecklister.TodoText:SetText("")
-	-- TodoChecklister.TodoText:ClearFocus()
+	TodoChecklister.TodoText:ClearFocus()
 end
 
 function OnRemoveItem(frame)
