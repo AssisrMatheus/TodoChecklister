@@ -7,6 +7,12 @@ I have bad memory so I made this. A todolist/checklist AddOn for World of Warcra
 
 ![demoGif](./demo.gif)
 
+## Download links
+You can download it from a handful of places:
+- [Curseforge/twitch](https://www.curseforge.com/wow/addons/todochecklister/files)
+- [Github releases](https://github.com/AssisrMatheus/TodoChecklister/releases)
+- [Will it classic](https://willitclassic.com/view/mc8DexxominWFB4i8W1a)
+
 ## How to install it
 - Download the latest version [here](https://github.com/AssisrMatheus/TodoChecklister/releases/)
 - Extract the files on your WoW Addon folder, usually `C:\Program Files (x86)\World of Warcraft\_classic_\Interface\AddOns`.
