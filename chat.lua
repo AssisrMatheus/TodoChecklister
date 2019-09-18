@@ -16,11 +16,16 @@ Chat.commands = {
     ["tg"] = function()
         core.TodoChecklisterFrame:Toggle()
     end,
+
+    ["add"] = function(...)
+        core.TodoChecklisterFrame:AddItem(tostringall(...))
+    end,
 	
 	["help"] = function()
 		print(" ");
 		Chat:Print("List of slash commands:")
-		Chat:Print("|cff00cc66/todo tg|r - Toggle todo window");
+        Chat:Print("|cff00cc66/todo tg|r - Toggle todo window");
+        Chat:Print("|cff00cc66/todo add|r {message} - Adds a message from chat");
 		print(" ");
 	end,
 	
