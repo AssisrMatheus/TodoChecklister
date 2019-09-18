@@ -41,6 +41,7 @@ WowFolder
 
 ## List of slash commands
 - **/todo tg** - Toggle the Todo window
+- **/todo add {message}** - Adds item via chat message
 - **/todo help** - Display available commands on chat
 
 ## Reference material
