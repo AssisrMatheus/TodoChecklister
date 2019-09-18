@@ -1,5 +1,4 @@
 [![Downloads](http://cf.way2muchnoise.eu/full_341737_downloads.svg)](https://www.curseforge.com/wow/addons/todochecklister)
-[![Versions](http://cf.way2muchnoise.eu/versions/341737.svg)](https://www.curseforge.com/wow/addons/todochecklister)
 [![Gitmoji](https://img.shields.io/badge/gitmoji-%20😜%20😍-FFDD67.svg)](https://gitmoji.carloscuesta.me)
 
 
