@@ -26,6 +26,7 @@ Chat.commands = {
 		Chat:Print("List of slash commands:")
         Chat:Print("|cff00cc66/todo tg|r - Toggle todo window");
         Chat:Print("|cff00cc66/todo add|r {message} - Adds a message from chat");
+        Chat:Print("|cff00cc66/todo reload|r - Reset you window to its original properties(size, position, scale)");
 		print(" ");
     end,
     
