@@ -36,36 +36,13 @@
 
         <Scripts>
           <OnMouseDown>
-						if button == "LeftButton" then
-              self.isSizing = true
-              self:GetParent():StartSizing("BOTTOMRIGHT")
-              self:GetParent():SetUserPlaced(true)
-            elseif button == "RightButton" then
-              self.isScaling = true
-            end
+            OnMouseDown(self, button)
           </OnMouseDown>
-          <OnMouseUp>
-						if button == "LeftButton" then
-              self.isSizing = false
-              self:GetParent():StopMovingOrSizing()
-            elseif button == "RightButton" then
-              self.isScaling = false
-            end
+          <OnMouseUp>						
+            OnMouseUp(self, button)
           </OnMouseUp>
           <OnUpdate>
-						if self.isScaling == true then
-              local cx, cy = GetCursorPosition()
-              cx = cx / self:GetEffectiveScale() - self:GetParent():GetLeft() 
-              cy = self:GetParent():GetHeight() - (cy / self:GetEffectiveScale() - self:GetParent():GetBottom() )
-  
-              local tNewScale = cx / self:GetParent():GetWidth()
-              local tx, ty = self:GetParent().x / tNewScale, self:GetParent().y / tNewScale
-              
-              self:GetParent():ClearAllPoints()
-              self:GetParent():SetScale(self:GetParent():GetScale() * tNewScale)
-              self:GetParent():SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", tx, ty)
-              self:GetParent().x, self:GetParent().y = tx, ty
-            end
+            OnUpdate(self)
           </OnUpdate>
         </Scripts>
 

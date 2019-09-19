@@ -30,3 +30,10 @@ function Debug:Init()
 		end
 	end
 end
+
+function printDBG(...)
+	if(Constants.debugMode) then
+		print(...)
+	end
+end
+
