@@ -19,7 +19,11 @@ function MinimapIcon:Init()
 			type = "data source",
 			text = addonName,
 			icon = "Interface\\Icons\\INV_Misc_Note_03",
-			OnClick = function (self, button) core.TodoChecklisterFrame:Toggle() end
+			OnClick = function (self, button) core.TodoChecklisterFrame:Toggle() end,
+			OnTooltipShow = function(GameTooltip)
+				GameTooltip:SetText(addonName, 1,1,1)
+				GameTooltip:AddLine("Click to toggle your list", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
+			end
 		});
 
 		LibStub("LibDBIcon-1.0"):Register(addonName, minimapIconLDB, TodoChecklisterMapIcon)
