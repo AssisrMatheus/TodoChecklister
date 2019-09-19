@@ -18,7 +18,7 @@ Chat.commands = {
     end,
 
     ["add"] = function(...)
-        core.TodoChecklisterFrame:AddItem(tostringall(...))
+        core.TodoChecklisterFrame:AddItem(strjoin(" ", ...))
     end,
 	
 	["help"] = function()
