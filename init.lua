@@ -1,5 +1,9 @@
 local addonName, core = ...; -- Namespace
 
+
+local events = CreateFrame("Frame", "TodoChecklisterAddon");
+events:RegisterEvent("ADDON_LOADED");
+
 -- WARNING: self keyword automatically becomes events frame!
 function core:Init(event, name)
     if (name ~= addonName) then return end 
@@ -41,9 +45,9 @@ function core:Init(event, name)
         end
     else
         core.Chat:Print("You have no pending tasks.");
-    end    
-end
+    end
 
-local events = CreateFrame("Frame");
-events:RegisterEvent("ADDON_LOADED");
+    
+    CreateFrame("Frame", "TodoChecklister", events, "TodoChecklisterTemplate");
+end
 events:SetScript("OnEvent", core.Init);

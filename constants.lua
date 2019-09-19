@@ -13,7 +13,7 @@ end
 --------------------------------------
 -- Defaults (usually a database!)
 --------------------------------------
-Constants.debugMode = false;
+Constants.debugMode = true;
 Constants.addonName = addonName;
 Constants.theme = {
 	red = 0.8, -- 204/255

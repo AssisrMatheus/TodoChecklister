@@ -151,7 +151,7 @@ function TodoChecklisterFrame:OnUpdate()
 end
 
 function TodoChecklisterFrame:OnLoad(frame)
-  self.frame = frame
+	self.frame = frame
   -- Parent's OnLoad Function
   ResponsiveFrame:OnLoad(frame)
 
@@ -162,12 +162,13 @@ function TodoChecklisterFrame:OnLoad(frame)
 	scrollFrame.update = function() TodoChecklisterFrame:OnUpdate() end
 	HybridScrollFrame_CreateButtons(frame.ScrollFrame, "TodoItemTemplate")
 
-  -- Display the frame
-  self:Toggle()
+	-- Display the frame
+	self:OnUpdate()
+	self:Toggle()
 end
 
 function TodoChecklisterFrame:OnShow(frame)
-  self:OnUpdate()
+	self:OnUpdate()
 end
 
 function TodoChecklisterFrame:OnSizeChanged(frame)

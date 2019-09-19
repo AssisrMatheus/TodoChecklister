@@ -82,7 +82,7 @@
     </Frames>
   </Frame>
 
-  <Frame name="TodoChecklister" inherits="TodoChecklisterResponsiveFrameTemplate" parent="UIParent">
+  <Frame name="TodoChecklisterTemplate" inherits="TodoChecklisterResponsiveFrameTemplate" parent="UIParent" virtual="true">
     <Scripts>
       <OnLoad>
         OnLoad(self)
