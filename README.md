@@ -43,6 +43,7 @@ WowFolder
 - **/todo tg** - Toggle the Todo window
 - **/todo add {message}** - Adds item via chat message
 - **/todo help** - Display available commands on chat
+- **/todo reload** - Reset you window to its original properties(size, position, scale)
 
 ## Reference material
 
