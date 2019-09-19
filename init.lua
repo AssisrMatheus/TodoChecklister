@@ -48,6 +48,6 @@ function core:Init(event, name)
     end
 
     
-    CreateFrame("Frame", "TodoChecklister", events, "TodoChecklisterTemplate");
+    core.mainFrame = CreateFrame("Frame", "TodoChecklister", events, "TodoChecklisterTemplate");
 end
 events:SetScript("OnEvent", core.Init);

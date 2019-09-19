@@ -27,6 +27,16 @@ Chat.commands = {
         Chat:Print("|cff00cc66/todo tg|r - Toggle todo window");
         Chat:Print("|cff00cc66/todo add|r {message} - Adds a message from chat");
 		print(" ");
+    end,
+    
+    ["reload"] = function()
+        if(core.mainFrame) then
+            core.mainFrame:SetSize(200,200)
+            core.mainFrame:ClearAllPoints()
+            core.mainFrame:SetPoint("BOTTOMRIGHT", "$parent", "BOTTOMRIGHT", -120, 30)
+            core.mainFrame:SetScale(1)
+            core.mainFrame:Show()
+        end        
 	end,
 	
 	-- ["example"] = {

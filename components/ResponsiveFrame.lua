@@ -59,15 +59,20 @@ function OnUpdate(self)
     cx = cx / self:GetEffectiveScale() - self:GetParent():GetLeft() 
     cy = self:GetParent():GetHeight() - (cy / self:GetEffectiveScale() - self:GetParent():GetBottom() )
 
+    
+
     local tNewScale = cx / self:GetParent():GetWidth()
     local tx, ty = self:GetParent().x / tNewScale, self:GetParent().y / tNewScale
     local newScale = self:GetParent():GetScale() * tNewScale;
 
     if (newScale > 0) then
-      self:GetParent():ClearAllPoints()
-      self:GetParent():SetScale(self:GetParent():GetScale() * tNewScale)
-      self:GetParent():SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", tx, ty)
-      self:GetParent().x, self:GetParent().y = tx, ty
+      local finalScale = self:GetParent():GetScale() * tNewScale;
+      if(finalScale > 0.5) then
+        self:GetParent():ClearAllPoints()
+        self:GetParent():SetScale(self:GetParent():GetScale() * tNewScale)
+        self:GetParent():SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", tx, ty)
+        self:GetParent().x, self:GetParent().y = tx, ty
+      end
     end
   end
 end
@@ -93,6 +98,10 @@ function OnMouseDown(self, button)
   if (height <= 146) then
     self:GetParent():SetHeight(147)
   end
+
+  -- Fix a bug if you click too much in the scale button
+  self:GetParent():StartMoving()
+  self:GetParent():StopMovingOrSizing()
 
   if button == "LeftButton" then
     self.isSizing = true
