@@ -111,7 +111,7 @@ function TodoChecklisterFrame:PaintItem(frame, todoItem, index)
 	else
 		frame.TodoContent.FontText:SetFontObject(GameFontNormalSmall)
 	end
-	frame.TodoContent:SetWidth(TodoItemsScrollFrame:GetWidth() - frame.RemoveButton:GetWidth() - 30)
+	frame.TodoContent:SetWidth(TodoItemsScrollFrame:GetWidth() - frame.RemoveButton:GetWidth() - 23)
 	frame.TodoContent.FontText:SetText(todoItem.text)
 
 	if (self.selectedItem == index) then
@@ -278,7 +278,6 @@ function TodoChecklisterFrame:OnUpdate()
 							end
 							if (todoContent:IsMouseOver(topOffset)) then
 								self.floatingFrame.targetIndex = idx
-								print(idx)
 								-- Highlight where dragged item will be dropped
 								button.TopDropIndicator:Show()
 							end
@@ -321,6 +320,9 @@ function TodoChecklisterFrame:OnLoad(frame)
 
 	-- Set up elements
 	frame.Title:SetText(UnitName("player") .. "'s List")
+
+	_G["TodoChecklisterClose"]:SetNormalTexture("Interface\\Buttons\\UI-Panel-HideButton-Up")
+	_G["TodoChecklisterClose"]:SetPushedTexture("Interface\\Buttons\\UI-Panel-HideButton-Down")
 
 	local scrollFrame = frame.ScrollFrame
 	scrollFrame.update = function()

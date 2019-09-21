@@ -89,6 +89,8 @@
 
       <!-- Remove button -->
       <Button parentKey="RemoveButton" name="$parentRemoveButton" inherits="CollapseButtonTemplate">
+        <Size x="20" y="20"/>
+
         <!-- Attached on right side of text -->
         <Anchors>
           <Anchor point="RIGHT" relativeTo="$parentText" relativePoint="RIGHT">
@@ -96,9 +98,8 @@
           </Anchor>
         </Anchors>
 
-        <NormalTexture file="Interface\Buttons\UI-MinusButton-Up" />
-        <PushedTexture file="Interface\Buttons\UI-MinusButton-Down" />
-
+        <NormalTexture file="Interface\Buttons\UI-Panel-MinimizeButton-Up"/>
+        <PushedTexture file="Interface\Buttons\UI-Panel-MinimizeButton-Down"/>
         <Scripts>
           <OnClick>
             OnRemoveItem(self)

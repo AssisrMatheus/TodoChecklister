@@ -10,6 +10,7 @@ local ResponsiveFrame = core.ResponsiveFrame
 --------------------------------------
 function ResponsiveFrame:OnLoad(frame)
   self.frame = frame
+
   frame:RegisterForDrag("LeftButton")
   frame:SetScale(1)
   frame.x = frame:GetLeft()
