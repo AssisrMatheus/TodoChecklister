@@ -3,7 +3,7 @@
 ..\FrameXML\UI.xsd">
   <Script file="TodoChecklister.lua"/>
 
-  <Frame name="TodoItemTemplate" virtual="true">
+  <Frame name="TodoItemTemplate" virtual="true" enableMouse="true" movable="true">
     <Size x="200" y="30"/>
     <Frames>
       <CheckButton parentKey="TodoCheckButton" name="$parentTodoCheckButton" inherits="UICheckButtonTemplate">
@@ -79,6 +79,48 @@
           </OnClick>
         </Scripts>
       </Button>
+
+      <Frame parentKey="Background" name="$parentBackground" hidden="true">
+        <Anchors>
+          <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+            <Offset>
+              <AbsDimension x="-5" y="0"/>
+            </Offset>
+          </Anchor>
+          <Anchor point="BOTTOMRIGHT" relativeTo="$parentRemoveButton" relativePoint="BOTTOMRIGHT">
+            <Offset>
+              <AbsDimension x="5" y="-5"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\Tooltips\UI-Tooltip-Border" tile="true">
+          <BackgroundInsets>
+            <AbsInset left="4" right="4" top="4" bottom="4" />
+          </BackgroundInsets>
+          <TileSize>
+            <AbsValue val="16" />
+          </TileSize>
+          <EdgeSize>
+            <AbsValue val="16" />
+          </EdgeSize>
+        </Backdrop>
+
+        <Layers>
+          <Layer level="OVERLAY">
+            <FontString parentKey="BlankText" inherits="GameFontHighlight">
+              <Anchors>
+                <Anchor point="CENTER" />
+              </Anchors>
+            </FontString>
+
+            <FontString parentKey="BlankText" inherits="GameFontNormal">
+              <Anchors>
+                <Anchor point="CENTER" />
+              </Anchors>
+            </FontString>
+          </Layer>
+        </Layers>
+      </Frame>
     </Frames>
   </Frame>
 
@@ -181,7 +223,6 @@
           </Layer>
         </Layers>
       </Frame>
-
 
       <ScrollFrame parentKey="ScrollFrame" name="TodoItemsScrollFrame" inherits="HybridScrollFrameTemplate">
         <Anchors>

@@ -9,34 +9,43 @@ local ResponsiveFrame = core.ResponsiveFrame
 -- ResponsiveFrame functions
 --------------------------------------
 function ResponsiveFrame:OnLoad(frame)
-  self.frame = frame;
+  self.frame = frame
   frame:RegisterForDrag("LeftButton")
   frame:SetScale(1)
-  frame.x = frame:GetLeft() 
-  frame.y = (frame:GetTop() - frame:GetHeight()) 
+  frame.x = frame:GetLeft()
+  frame.y = (frame:GetTop() - frame:GetHeight())
 
-  frame:SetScript("OnDragStart", function(frame) 
-    frame.isMoving = true
-    frame:StartMoving() 
-  end)
+  frame:SetScript(
+    "OnDragStart",
+    function(frame)
+      frame.isMoving = true
+      frame:StartMoving()
+    end
+  )
 
-  frame:SetScript("OnDragStop", function(frame)
-    frame.isMoving = false
-    frame:StopMovingOrSizing() 
-    frame.x = frame:GetLeft() 
-    frame.y = (frame:GetTop() - frame:GetHeight()) 
-    frame:ClearAllPoints()
-    frame:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", frame.x, frame.y)
-  end)
+  frame:SetScript(
+    "OnDragStop",
+    function(frame)
+      frame.isMoving = false
+      frame:StopMovingOrSizing()
+      frame.x = frame:GetLeft()
+      frame.y = (frame:GetTop() - frame:GetHeight())
+      frame:ClearAllPoints()
+      frame:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", frame.x, frame.y)
+    end
+  )
 
-  frame:SetScript("OnUpdate", function(frame) 
-    if frame.isMoving == true then
-        frame.x = frame:GetLeft() 
-        frame.y = (frame:GetTop() - frame:GetHeight()) 
+  frame:SetScript(
+    "OnUpdate",
+    function(frame)
+      if frame.isMoving == true then
+        frame.x = frame:GetLeft()
+        frame.y = (frame:GetTop() - frame:GetHeight())
         frame:ClearAllPoints()
         frame:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", frame.x, frame.y)
+      end
     end
-  end)
+  )
 end
 
 function OnLoad(frame)
@@ -49,25 +58,23 @@ function OnUpdate(self)
     -- stop resizing
     local width, height = self:GetParent():GetWidth(), self:GetParent():GetHeight()
     if (width <= 105 or height <= 140) then
-        self.isSizing = false;
-       self:GetParent():StopMovingOrSizing()
+      self.isSizing = false
+      self:GetParent():StopMovingOrSizing()
     end
   end
 
   if self.isScaling == true then
     local cx, cy = GetCursorPosition()
-    cx = cx / self:GetEffectiveScale() - self:GetParent():GetLeft() 
-    cy = self:GetParent():GetHeight() - (cy / self:GetEffectiveScale() - self:GetParent():GetBottom() )
-
-    
+    cx = cx / self:GetEffectiveScale() - self:GetParent():GetLeft()
+    cy = self:GetParent():GetHeight() - (cy / self:GetEffectiveScale() - self:GetParent():GetBottom())
 
     local tNewScale = cx / self:GetParent():GetWidth()
     local tx, ty = self:GetParent().x / tNewScale, self:GetParent().y / tNewScale
-    local newScale = self:GetParent():GetScale() * tNewScale;
+    local newScale = self:GetParent():GetScale() * tNewScale
 
     if (newScale > 0) then
-      local finalScale = self:GetParent():GetScale() * tNewScale;
-      if(finalScale > 0.5) then
+      local finalScale = self:GetParent():GetScale() * tNewScale
+      if (finalScale > 0.5) then
         self:GetParent():ClearAllPoints()
         self:GetParent():SetScale(self:GetParent():GetScale() * tNewScale)
         self:GetParent():SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", tx, ty)
@@ -107,7 +114,7 @@ function OnMouseDown(self, button)
     self.isSizing = true
     self:GetParent():StartSizing("BOTTOMRIGHT")
     self:GetParent():SetUserPlaced(true)
-  end  
+  end
 
   if button == "RightButton" then
     self.isScaling = true

@@ -6,13 +6,5 @@
 ## DefaultState: enabled
 ## SavedVariables: TodoChecklisterDB, TodoChecklisterMapIcon
 
-constants.lua
-tableUtils.lua
-utils.lua
-debug.lua
-
-components\components.xml
-
-chat.lua
-minimapIcon.lua
-init.lua
+src\init.xml
+src\init.lua
