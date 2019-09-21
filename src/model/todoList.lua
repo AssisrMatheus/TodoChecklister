@@ -60,15 +60,21 @@ function TodoList:UpdateItem(indexToUpdate, updatedItem)
 	return false
 end
 
+function TodoList:Move(fromIndex, toIndex)
+	TableUtils:Move(TodoChecklisterDB, fromIndex, toIndex)
+end
+
 function TodoList:GetItems()
 	return TodoChecklisterDB
 end
 
 function TodoList:GetIndexByItem(todoItem)
-	if (todoItem.id) then
+	if (todoItem and todoItem.id) then
 		return TodoList:GetIndexById(todoItem.id)
-	else
+	elseif (todoItem) then
 		return TodoList:GetIndexByText(todoItem.text)
+	else
+		return 0
 	end
 end
 

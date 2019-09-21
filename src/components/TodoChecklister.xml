@@ -3,9 +3,27 @@
 ..\FrameXML\UI.xsd">
   <Script file="TodoChecklister.lua"/>
 
+  <Frame name="DropIndicatorTemplate" virtual="true">
+    <Size>
+      <AbsDimension y="3"/>
+    </Size>
+    <Layers>
+      <Layer level="ARTWORK">
+        <Texture parentKey="Texture" name="$parentTexture" file="Interface\QuestFrame\UI-QuestLogTitleHighlight" alphaMode="ADD"/>
+      </Layer>
+    </Layers>
+
+    <Scripts>
+      <OnLoad>
+        self.Texture:SetVertexColor(NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+      </OnLoad>
+    </Scripts>
+  </Frame>
+
   <Frame name="TodoItemTemplate" virtual="true" enableMouse="true" movable="true">
     <Size x="200" y="30"/>
     <Frames>
+      <!-- Checkbox -->
       <CheckButton parentKey="TodoCheckButton" name="$parentTodoCheckButton" inherits="UICheckButtonTemplate">
         <Size x="24" y="24"/>
 
@@ -15,16 +33,19 @@
           </OnClick>
         </Scripts>
 
+        <!-- Attached to the left side of scrollItem -->
         <Anchors>
           <Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT" />
         </Anchors>
       </CheckButton>
 
+      <!-- Button with text -->
       <Button name="$parentText" parentKey="TodoContent">
         <Size>
           <AbsDimension x="150" y="16" />
         </Size>
         <Anchors>
+          <!-- Attached to the left side of the checkbox -->
           <Anchor point="LEFT" relativeTo="$parentTodoCheckButton" relativePoint="RIGHT" />
         </Anchors>
         <Layers>
@@ -35,10 +56,12 @@
 
         <Scripts>
           <OnMouseDown>
+            <!-- Create a fake animation -->
             self.FontText:ClearAllPoints() 
             self.FontText:SetPoint("LEFT", self, "LEFT", 2, -2)
           </OnMouseDown>
           <OnMouseUp>
+            <!-- Resets fake animation -->
             self.FontText:ClearAllPoints() 
             self.FontText:SetPoint("LEFT", self, "LEFT", 0, 0)
             OnSelectItem(self)
@@ -46,6 +69,7 @@
         </Scripts>
 
         <Frames>
+          <!-- Button highlight frame(selected/dragging) -->
           <Frame parentKey="ButtonHighlightFrame" name="$parentButtonHighlightFrame" hidden="true">
             <Size>
               <AbsDimension x="293" y="16"/>
@@ -63,7 +87,9 @@
         </Frames>
       </Button>
 
+      <!-- Remove button -->
       <Button parentKey="RemoveButton" name="$parentRemoveButton" inherits="CollapseButtonTemplate">
+        <!-- Attached on right side of text -->
         <Anchors>
           <Anchor point="RIGHT" relativeTo="$parentText" relativePoint="RIGHT">
             <Offset x="15" y="0"/>
@@ -80,6 +106,7 @@
         </Scripts>
       </Button>
 
+      <!-- Background frame shown when dragging -->
       <Frame parentKey="Background" name="$parentBackground" hidden="true">
         <Anchors>
           <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
@@ -120,6 +147,36 @@
             </FontString>
           </Layer>
         </Layers>
+      </Frame>
+
+      <Frame parentKey="TopDropIndicator" name="$parentButtonTopDropIndicator" inherits="DropIndicatorTemplate" hidden="true">
+        <Anchors>
+          <Anchor point="TOPLEFT" relativeTo="$parentText" relativePoint="TOPLEFT">
+            <Offset>
+              <AbsDimension x="-30" y="8"/>
+            </Offset>
+          </Anchor>
+          <Anchor point="TOPRIGHT" relativeTo="$parentText" relativePoint="TOPRIGHT">
+            <Offset>
+              <AbsDimension x="30"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+      </Frame>
+
+      <Frame parentKey="BottomDropIndicator" name="$parentBottomDropIndicator" inherits="DropIndicatorTemplate" hidden="true">
+        <Anchors>
+          <Anchor point="BOTTOMLEFT" relativeTo="$parentText" relativePoint="BOTTOMLEFT">
+            <Offset>
+              <AbsDimension x="-30" y="-8"/>
+            </Offset>
+          </Anchor>
+          <Anchor point="BOTTOMRIGHT" relativeTo="$parentText" relativePoint="BOTTOMRIGHT">
+            <Offset>
+              <AbsDimension x="30"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
       </Frame>
     </Frames>
   </Frame>

@@ -29,7 +29,7 @@ function TableUtils:Filter(tb, comparator)
 end
 
 function TableUtils:Output(tb)
-	if not tb then
+	if (not tb or type(tb) ~= "table") then
 		print(tb)
 		return
 	end
@@ -46,6 +46,10 @@ function TableUtils:Output(tb)
 end
 
 function TableUtils:Move(tb, fromIndex, toIndex)
+	if (fromIndex == toIndex) then
+		return
+	end
+
 	local item = tb[fromIndex]
 	table.remove(tb, fromIndex)
 	table.insert(tb, toIndex, item)
