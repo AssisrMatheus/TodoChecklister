@@ -7,6 +7,7 @@ local TodoChecklisterFrame = core.TodoChecklisterFrame
 
 local ResponsiveFrame = core.ResponsiveFrame
 local TableUtils = core.TableUtils
+local Settings = core.Settings
 local TodoList = core.TodoList
 
 --------------------------------------
@@ -89,6 +90,8 @@ function TodoChecklisterFrame:Toggle()
 	else
 		self.frame:Show()
 	end
+
+	Settings:SetIsShown(self.frame:IsShown())
 end
 
 function TodoChecklisterFrame:GetColor(todoItem)
@@ -323,6 +326,12 @@ function TodoChecklisterFrame:OnLoad(frame)
 
 	_G["TodoChecklisterClose"]:SetNormalTexture("Interface\\Buttons\\UI-Panel-HideButton-Up")
 	_G["TodoChecklisterClose"]:SetPushedTexture("Interface\\Buttons\\UI-Panel-HideButton-Down")
+	_G["TodoChecklisterClose"]:SetScript(
+		"OnClick",
+		function()
+			TodoChecklisterFrame:Toggle()
+		end
+	)
 
 	local scrollFrame = frame.ScrollFrame
 	scrollFrame.update = function()
@@ -332,7 +341,10 @@ function TodoChecklisterFrame:OnLoad(frame)
 
 	-- Display the frame
 	self:OnUpdate()
-	self:Toggle()
+
+	if (Settings:IsShown()) then
+		self:Toggle()
+	end
 end
 
 function OnLoad(frame)

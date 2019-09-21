@@ -28,6 +28,7 @@ globals = {
 	"TodoChecklisterDB",
 	"TodoItemsScrollFrame",
 	"TodoChecklister",
+	"TodoChecklisterSettingsDB",
 
 	-- misc custom
 	"AceGUIWeakAurasMultiLineEditBoxInsertLink",
