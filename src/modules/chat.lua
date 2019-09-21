@@ -19,12 +19,26 @@ Chat.commands = {
     ["add"] = function(...)
         core.TodoChecklisterFrame:AddItem(strjoin(" ", ...))
     end,
+    ["rmv"] = function(indexToRemove)
+        core.TodoChecklisterFrame:RemoveItemWithIndex(tonumber(indexToRemove))
+    end,
+    ["mv"] = function(indexFrom, indexTo)
+        core.TodoChecklisterFrame:Move(tonumber(indexFrom), tonumber(indexTo), true)
+    end,
+    ["chk"] = function(indexToCheck)
+        core.TodoChecklisterFrame:CheckItemWithIndex(tonumber(indexToCheck))
+    end,
     ["help"] = function()
         print(" ")
-        Chat:Print("List of slash commands:")
+        Chat:Print("List of commands:")
+        Chat:Print("|cff00cc66/todo reload|r - Reset you window to its default properties(size, position, scale)")
         Chat:Print("|cff00cc66/todo tg|r - Toggle todo window")
-        Chat:Print("|cff00cc66/todo add|r {message} - Adds a message from chat")
-        Chat:Print("|cff00cc66/todo reload|r - Reset you window to its original properties(size, position, scale)")
+        Chat:Print("|cff00cc66/todo add|r |cffff2211message|r - Adds |cffff2211message|r to your item list")
+        Chat:Print("|cff00cc66/todo rmv|r |cffff2211position|r - Remove item in |cffff2211position|r")
+        Chat:Print(
+            "|cff00cc66/todo mv|r |cffff2211original_position target_position|r - Move item from |cffff2211original_position|r to |cffff2211target_position|r"
+        )
+        Chat:Print("|cff00cc66/todo chk|r |cffff2211position|r - Check or unchecks an item in |cffff2211position|r")
         print(" ")
     end,
     ["reload"] = function()
@@ -34,7 +48,6 @@ Chat.commands = {
             core.mainFrame:SetPoint("BOTTOMRIGHT", "$parent", "BOTTOMRIGHT", -120, 30)
             core.mainFrame:SetScale(1)
             core.mainFrame:Show()
-            core.mainFrame.ScrollFrame:SetValue(0)
         end
     end
 

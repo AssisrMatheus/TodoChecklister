@@ -26,10 +26,8 @@ function TodoChecklisterFrame:AddItem(text)
 	end
 end
 
-function TodoChecklisterFrame:RemoveItem(todoItem)
-	local indexToRemove = TodoList:GetIndexByItem(todoItem)
-
-	if (indexToRemove > 0) then
+function TodoChecklisterFrame:RemoveItemWithIndex(indexToRemove)
+	if (indexToRemove and type(indexToRemove) == "number" and indexToRemove > 0) then
 		-- If we are removing the current selected item
 		if (self.selectedItem and self.selectedItem == indexToRemove) then
 			-- Clear selection before removing it
@@ -54,13 +52,45 @@ function TodoChecklisterFrame:RemoveItem(todoItem)
 	end
 end
 
-function TodoChecklisterFrame:CheckItem(todoItem)
-	local indexToCheck = TodoList:GetIndexByItem(todoItem)
-	if (indexToCheck > 0) then
+function TodoChecklisterFrame:RemoveItem(todoItem)
+	local indexToRemove = TodoList:GetIndexByItem(todoItem)
+	self:RemoveItemWithIndex(indexToRemove)
+end
+
+function TodoChecklisterFrame:Move(fromIndex, toIndex, fromChat)
+	if
+		(fromIndex and type(fromIndex) == "number" and fromIndex > 0 and toIndex and type(toIndex) == "number" and toIndex > 0)
+	 then
+		local selectedItem
+		if (self.selectedItem and self.selectedItem > 0) then
+			selectedItem = TodoList:GetItems()[self.selectedItem]
+		end
+
+		if (not fromChat and fromIndex < toIndex) then
+			toIndex = toIndex - 1
+		end
+
+		TodoList:Move(fromIndex, toIndex)
+
+		if (selectedItem) then
+			self.selectedItem = TodoList:GetIndexByItem(selectedItem)
+		end
+
+		self:OnUpdate()
+	end
+end
+
+function TodoChecklisterFrame:CheckItemWithIndex(indexToCheck)
+	if (indexToCheck and type(indexToCheck) == "number" and indexToCheck > 0) then
 		local item = TodoList:GetItems()[indexToCheck]
 		TodoList:UpdateItem(indexToCheck, {isChecked = (not item.isChecked)})
 		self:OnUpdate()
 	end
+end
+
+function TodoChecklisterFrame:CheckItem(todoItem)
+	local indexToCheck = TodoList:GetIndexByItem(todoItem)
+	self:CheckItemWithIndex(indexToCheck)
 end
 
 function TodoChecklisterFrame:SelectItem(todoItem, buttonFrame)
@@ -167,25 +197,6 @@ function TodoChecklisterFrame:FloatingButton(parent)
 	floatingFrame:SetFrameStrata("TOOLTIP")
 	floatingFrame.Background:Show()
 	return floatingFrame
-end
-
-function TodoChecklisterFrame:Move(fromIndex, toIndex)
-	local selectedItem
-	if (self.selectedItem and self.selectedItem > 0) then
-		selectedItem = TodoList:GetItems()[self.selectedItem]
-	end
-
-	if (fromIndex < toIndex) then
-		toIndex = toIndex - 1
-	end
-
-	TodoList:Move(fromIndex, toIndex)
-
-	if (selectedItem) then
-		self.selectedItem = TodoList:GetIndexByItem(selectedItem)
-	end
-
-	self:OnUpdate()
 end
 
 --------------------------------------

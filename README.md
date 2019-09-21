@@ -40,10 +40,17 @@ WowFolder
 - Or you can also type `/todo tg` on your chatbox to toggle the window
 
 ## List of slash commands
-- **/todo tg** - Toggle the Todo window
-- **/todo add {message}** - Adds item via chat message
 - **/todo help** - Display available commands on chat
-- **/todo reload** - Reset you window to its original properties(size, position, scale)
+- **/todo reload** - Reset you window to its default properties(size, position, scale)
+- **/todo tg** - Toggle the Todo window
+- **/todo add {message}** - Adds `{message}` to your item list  
+  Example: `/todo add My item` will add a item named "My item" to your list
+- **/todo rmv {position}** - Remove item in `{position}`  
+  Example: `/todo rmv 1` removes the first item from the list
+- **/todo mv {original_position} {target_position}** - Move item from `{original_position}` to `{target_position}`  
+  Example: `/todo mv 1 3` Moves the first item in the list to the 3rd slot
+- **/todo chk {position}** - Check or unchecks an item in `{position}`  
+  Example: `/todo chk 1` Checks the first intem on your list
 
 ## Reference material
 
