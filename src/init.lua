@@ -11,14 +11,11 @@ function core:Init(event, name)
         return
     end
 
-    if (not TodoChecklisterSettingsDB) then
-        TodoChecklisterSettingsDB = {}
-    end
-
     if (not TodoChecklisterDB) then
         TodoChecklisterDB = {}
     end
 
+    core.Settings:Init()
     core.Debug:Init()
     core.Chat:Init()
     core.MinimapIcon:Init()

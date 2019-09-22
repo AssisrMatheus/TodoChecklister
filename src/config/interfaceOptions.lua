@@ -6,6 +6,8 @@ core.InterfaceOptions = {} -- adds Config table to addon namespace
 local InterfaceOptions = core.InterfaceOptions
 
 local Constants = core.Constants
+local TodoChecklisterFrame = core.TodoChecklisterFrame
+local Settings = core.Settings
 
 --------------------------------------
 -- InterfaceOptions functions
@@ -41,12 +43,23 @@ function InterfaceOptions:Init()
   self.frame.SettingsContainer.Obs:SetScript(
     "OnClick",
     function()
-      StaticPopup_Show("TodoChecklisterWEBSITE")
+      StaticPopup_Show(addonName .. "WEBSITE")
     end
   )
+
+  self.frame.SettingsContainer.FocusCheckButton:SetChecked(Settings:IsKeepFocusShown())
 
   InterfaceOptions_AddCategory(self.frame)
 
   -- Debugging
   InterfaceOptionsFrame_OpenToCategory(TodoChecklisterInterfaceOptions)
+end
+
+function KeepFocusClick(frame)
+  Settings:SetIsKeepFocusShown(frame:GetChecked())
+  if (frame:GetChecked()) then
+    TodoChecklisterFrame.frame.KeepFocus:Show()
+  else
+    TodoChecklisterFrame.frame.KeepFocus:Hide()
+  end
 end

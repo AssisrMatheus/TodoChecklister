@@ -3,6 +3,7 @@
 ..\FrameXML\UI.xsd">
   <Script file="interfaceOptions.lua"/>
 
+
   <Frame name="TodoChecklisterInterfaceOptionsTemplate" virtual="true" parent="UIParent">
     <Layers>
       <Layer level="OVERLAY">
@@ -38,22 +39,35 @@
         </Anchors>
 
         <Frames>
-          <CheckButton parentKey="TodoCheckButton" name="$parentTodoCheckButton" inherits="UICheckButtonTemplate">
-            <Size x="24" y="24"/>
+          <CheckButton parentKey="FocusCheckButton" name="$parentFocusCheckButton" inherits="UICheckButtonTemplate">
+            <Size x="28" y="28"/>
 
             <Scripts>
               <OnLoad>
-            self.text:SetText("Display 'Keep focus' checkbox");
+                self.Text:SetText("Display 'Keep focus' checkbox");
               </OnLoad>
               <OnClick>
-            PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
+                PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
+                KeepFocusClick(self)
               </OnClick>
             </Scripts>
 
             <Anchors>
               <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+
               </Anchor>
             </Anchors>
+
+            <Layers>
+              <Layer level="OVERLAY">
+                <FontString name="$parentText" parentKey="Text" inherits="GameFontWhite" justifyH="LEFT">
+                  <Anchors>
+                    <Anchor point="LEFT" relativeTo="$parent" relativePoint="Right">
+                    </Anchor>
+                  </Anchors>
+                </FontString>
+              </Layer>
+            </Layers>
           </CheckButton>
 
           <Button parentKey="Obs" name="$parentObs" hidden="false">
@@ -77,13 +91,12 @@
             </Layers>
 
             <Scripts>
-              <OnUpdate>
-                if(self:IsMouseOver()) then
-                  self.Text:SetFontObject(GameFontNormal)
-                else
-                  self.Text:SetFontObject(GameFontHighlight)
-                end
-              </OnUpdate>
+              <OnEnter>
+                self.Text:SetFontObject(GameFontNormal)
+              </OnEnter>
+              <OnLeave>
+                self.Text:SetFontObject(GameFontHighlight)
+              </OnLeave>
             </Scripts>
           </Button>
         </Frames>

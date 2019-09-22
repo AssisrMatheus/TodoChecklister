@@ -203,6 +203,50 @@
     </Anchors>
 
     <Frames>
+      <GameTooltip parentKey="TodoTooltip" name="$parentTodoTooltip" frameStrata="TOOLTIP" inherits="GameTooltipTemplate" />
+
+      <CheckButton parentKey="KeepFocus" name="$parentKeepFocus" inherits="UICheckButtonTemplate" hidden="true">
+        <Size x="20" y="20"/>
+
+        <Scripts>
+          <OnClick>
+            ToggleFocusSettings(self)
+            PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
+          </OnClick>
+          <OnLoad>
+            self.Focus:SetText("Keep focus");
+            ToggleFocusLoad(self);
+          </OnLoad>
+          <OnEnter>
+            self:GetParent().TodoTooltip:SetOwner(self, "ANCHOR_NONE")
+            self:GetParent().TodoTooltip:ClearAllPoints()
+            self:GetParent().TodoTooltip:SetPoint("BOTTOMRIGHT", self, "TOPRIGHT")
+            self:GetParent().TodoTooltip:AddLine("Whether or not the textbox cursor \r\nshould persist after adding an item",1,1,1)
+            self:GetParent().TodoTooltip:Show()
+          </OnEnter>
+          <OnLeave>
+            self:GetParent().TodoTooltip:Hide()
+          </OnLeave>
+        </Scripts>
+
+        <Anchors>
+          <Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT">
+            <Offset x="-30" y="-6"/>
+          </Anchor>
+        </Anchors>
+
+        <Layers>
+          <Layer level="OVERLAY">
+            <FontString name="$parentFocus" parentKey="Focus" inherits="GameFontHighlightSmallOutline" justifyH="RIGHT">
+              <Anchors>
+                <Anchor point="RIGHT" relativeTo="$parent" relativePoint="LEFT">
+                </Anchor>
+              </Anchors>
+            </FontString>
+          </Layer>
+        </Layers>
+      </CheckButton>
+
       <EditBox parentKey="TodoText" name="$parentTodoText" autoFocus="false" inherits="InputBoxTemplate">
         <Size x="0" y="20"/>
         <Scripts>

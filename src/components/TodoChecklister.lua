@@ -111,7 +111,9 @@ end
 function TodoChecklisterFrame:ClearSelected()
 	self.selectedItem = 0
 	self.frame.TodoText:SetText("")
-	self.frame.TodoText:ClearFocus()
+	if (not Settings.KeepFocus()) then
+		self.frame.TodoText:ClearFocus()
+	end
 end
 
 function TodoChecklisterFrame:Toggle()
@@ -350,10 +352,15 @@ function TodoChecklisterFrame:OnLoad(frame)
 	end
 	HybridScrollFrame_CreateButtons(frame.ScrollFrame, "TodoItemTemplate")
 
-	-- Display the frame
 	self:OnUpdate()
 
+	if (Settings:IsKeepFocusShown()) then
+		print(Settings:IsKeepFocusShown())
+		self.frame.KeepFocus:Show()
+	end
+
 	if (Settings:IsShown()) then
+		-- Display the frame
 		self:Toggle()
 	end
 end
@@ -392,4 +399,16 @@ end
 
 function OnSelectItem(frame)
 	TodoChecklisterFrame:SelectItem(frame:GetParent().todoItem)
+end
+
+function ToggleFocusSettings(frame)
+	Settings:ToggleFocus()
+
+	if (not Settings:KeepFocus()) then
+		TodoChecklister.TodoText:ClearFocus()
+	end
+end
+
+function ToggleFocusLoad(frame)
+	frame:SetChecked(Settings:KeepFocus())
 end
