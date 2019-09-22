@@ -431,7 +431,6 @@ function OnSaveItem(frame)
 	if (not text or text == "") then
 		text = ""
 	else
-		core.Chat:Print(text)
 		PlaySound(SOUNDKIT.IG_CHARACTER_INFO_OPEN)
 	end
 
