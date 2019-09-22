@@ -1,13 +1,19 @@
 --------------------------------------
--- Namespaces
+-- Imports
 --------------------------------------
-local addonName, core = ...
-core.Constants = {} -- adds Config table to addon namespace
-
-local Constants = core.Constants
+---@class TodoAddon
+local TodoAddon = select(2, ...)
 
 --------------------------------------
--- Defaults (usually a database!)
+-- Declarations
+--------------------------------------
+TodoAddon.Constants = {}
+
+---@class Constants
+local Constants = TodoAddon.Constants
+
+--------------------------------------
+-- Defaults
 --------------------------------------
 Constants.debugMode = (UnitName("player") == "Assis") -- Not good but it's better than forgetting to set it back to false
 Constants.theme = {

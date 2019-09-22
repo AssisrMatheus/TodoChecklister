@@ -1,25 +1,38 @@
 --------------------------------------
--- Namespaces
+-- Imports
 --------------------------------------
-local addonName, core = ...
-core.InterfaceOptions = {} -- adds Config table to addon namespace
-local InterfaceOptions = core.InterfaceOptions
+---@class TodoAddon
+local TodoAddon = select(2, ...)
 
-local Constants = core.Constants
-local Settings = core.Settings
+---@type string
+local addonName = select(1, ...)
+
+---@class Constants
+local Constants = TodoAddon.Constants
+---@class Settings
+local Settings = TodoAddon.Settings
 
 --------------------------------------
--- InterfaceOptions functions
+-- Declarations
 --------------------------------------
+TodoAddon.InterfaceOptions = {}
+
+---@class InterfaceOptions
+local InterfaceOptions = TodoAddon.InterfaceOptions
+
 --------------------------------------
 -- Lifecycle Events
 --------------------------------------
+---
+---Resets all properties to their default values
 function InterfaceOptions:Defaults()
   -- This will also call Settings:Defaults
-  core.TodoChecklisterFrame:Defaults()
+  TodoAddon.TodoChecklisterFrame:Defaults()
   self:LoadCFG()
 end
 
+---
+---Load required configuration for this class
 function InterfaceOptions:LoadCFG()
   if (self.frame) then
     self.frame.SettingsContainer.FocusCheckButton:SetChecked(Settings:IsKeepFocusShown())
@@ -35,11 +48,13 @@ function InterfaceOptions:LoadCFG()
     self.frame.SettingsContainer.FanfareCheck:SetChecked(Settings:PlayFanfare())
   end
 
-  if (core.TodoChecklisterFrame) then
-    core.TodoChecklisterFrame:LoadCFG()
+  if (TodoAddon.TodoChecklisterFrame) then
+    TodoAddon.TodoChecklisterFrame:LoadCFG()
   end
 end
 
+---
+---Initializes required properties for this class
 function InterfaceOptions:Init()
   -- Create interface options frame
   self.frame =
@@ -91,7 +106,6 @@ end
 --------------------------------------
 -- XML Events
 --------------------------------------
-
 function ShowKeepFocusClick(frame)
   Settings:SetIsKeepFocusShown(frame:GetChecked())
   InterfaceOptions:LoadCFG()

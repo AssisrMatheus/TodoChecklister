@@ -1,32 +1,45 @@
 --------------------------------------
--- Namespaces
+-- Imports
 --------------------------------------
-local addonName, core = ...
-core.Chat = {} -- adds Config table to addon namespace
-local Chat = core.Chat
+---@class TodoAddon
+local TodoAddon = select(2, ...)
+---@type string
+local addonName = select(1, ...)
 
-local Constants = core.Constants
-local Utils = core.Utils
+---@class Constants
+local Constants = TodoAddon.Constants
+---@class Utils
+local Utils = TodoAddon.Utils
+---@class TodoChecklisterFrame
+local TodoChecklisterFrame = TodoAddon.TodoChecklisterFrame
 
 --------------------------------------
--- Defaults (usually a database!)
+-- Declarations
+--------------------------------------
+TodoAddon.Chat = {}
+
+---@class Chat
+local Chat = TodoAddon.Chat
+
+--------------------------------------
+-- Defaults
 --------------------------------------
 Chat.command = "/todo"
 Chat.commands = {
     ["tg"] = function()
-        core.TodoChecklisterFrame:Toggle()
+        TodoChecklisterFrame:Toggle()
     end,
     ["add"] = function(...)
-        core.TodoChecklisterFrame:AddItem(strjoin(" ", ...))
+        TodoChecklisterFrame:AddItem(strjoin(" ", ...))
     end,
     ["rmv"] = function(indexToRemove)
-        core.TodoChecklisterFrame:RemoveItemWithIndex(tonumber(indexToRemove))
+        TodoChecklisterFrame:RemoveItemWithIndex(tonumber(indexToRemove))
     end,
     ["mv"] = function(indexFrom, indexTo)
-        core.TodoChecklisterFrame:Move(tonumber(indexFrom), tonumber(indexTo), true)
+        TodoChecklisterFrame:Move(tonumber(indexFrom), tonumber(indexTo), true)
     end,
     ["chk"] = function(indexToCheck)
-        core.TodoChecklisterFrame:CheckItemWithIndex(tonumber(indexToCheck))
+        TodoChecklisterFrame:CheckItemWithIndex(tonumber(indexToCheck))
     end,
     ["help"] = function()
         print(" ")
@@ -42,7 +55,7 @@ Chat.commands = {
         print(" ")
     end,
     ["reload"] = function()
-        core.TodoChecklisterFrame:Defaults()
+        TodoChecklisterFrame:Defaults()
     end
 
     -- ["example"] = {
@@ -61,6 +74,11 @@ function Chat:Print(...)
     DEFAULT_CHAT_FRAME:AddMessage(string.join(" ", prefix, ...))
 end
 
+--------------------------------------
+-- Lifecycle Events
+--------------------------------------
+---
+---Initializes the chat slash commands
 function Chat:Init()
     SLASH_TodoChecklister1 = self.command
     SlashCmdList["TodoChecklister"] = function(msg)

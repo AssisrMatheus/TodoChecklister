@@ -1,20 +1,23 @@
 --------------------------------------
--- Namespaces
+-- Imports
 --------------------------------------
-local addonName, core = ...;
-core.Utils = {}; -- adds Config table to addon namespace
+---@class TodoAddon
+local TodoAddon = select(2, ...)
+---@class Constants
+local Constants = TodoAddon.Constants
 
-local Utils = core.Utils;
-local Constants = core.Constants;
+--------------------------------------
+-- Declarations
+--------------------------------------
+TodoAddon.Utils = {}
 
---------------------------------------
--- Defaults (usually a database!)
---------------------------------------
+---@class Utils
+local Utils = TodoAddon.Utils
 
 --------------------------------------
 -- Utils functions
 --------------------------------------
 function Utils:GetThemeColor()
-	local theme = Constants.theme;
-	return theme.red, theme.green, theme.blue, theme.hex;
+	local theme = Constants.theme
+	return theme.red, theme.green, theme.blue, theme.hex
 end

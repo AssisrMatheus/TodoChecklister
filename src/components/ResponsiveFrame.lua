@@ -1,13 +1,22 @@
 --------------------------------------
--- Namespaces
+-- Imports
 --------------------------------------
-local _, core = ...
-core.ResponsiveFrame = {} -- adds Config table to addon namespace
-local ResponsiveFrame = core.ResponsiveFrame
+---@class TodoAddon
+local TodoAddon = select(2, ...)
+
+--------------------------------------
+-- Declarations
+--------------------------------------
+TodoAddon.ResponsiveFrame = {}
+
+---@class ResponsiveFrame
+local ResponsiveFrame = TodoAddon.ResponsiveFrame
 
 --------------------------------------
 -- ResponsiveFrame functions
 --------------------------------------
+---
+---Sets up required properties so the frame can properly function
 function ResponsiveFrame:OnLoad(frame)
   self.frame = frame
 
@@ -49,6 +58,9 @@ function ResponsiveFrame:OnLoad(frame)
   )
 end
 
+--------------------------------------
+-- XML Events
+--------------------------------------
 function OnLoad(frame)
   ResponsiveFrame:OnLoad(frame)
 end

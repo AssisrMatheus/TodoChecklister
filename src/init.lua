@@ -1,31 +1,56 @@
-local addonName, core = ... -- Namespace
+--------------------------------------
+-- Imports
+--------------------------------------
+---@class TodoAddon
+local TodoAddon = select(2, ...)
 
+---@type string
+local addonName = select(1, ...)
+
+---@class Debug
+local Debug = TodoAddon.Debug
+---@class Settings
+local Settings = TodoAddon.Settings
+---@class TodoList
+local TodoList = TodoAddon.TodoList
+---@class InterfaceOptions
+local InterfaceOptions = TodoAddon.InterfaceOptions
+---@class TodoChecklisterFrame
+local TodoChecklisterFrame = TodoAddon.TodoChecklisterFrame
+---@class Chat
+local Chat = TodoAddon.Chat
+---@class MinimapIcon
+local MinimapIcon = TodoAddon.MinimapIcon
+
+--------------------------------------
+-- Initialization
+--------------------------------------
 local main = CreateFrame("Frame", addonName .. "MAINFRAME", UIParent)
-core.main = main
+TodoAddon.main = main
 
-function core:Init(event, name)
+function TodoAddon:Init(event, name)
     if (name ~= addonName) then
         return
     end
 
     -- Config
-    core.Debug:Init()
-    core.Settings:Init()
+    Debug:Init()
+    Settings:Init()
 
     -- Model
-    core.TodoList:Init()
+    TodoList:Init()
 
     -- Components
-    core.InterfaceOptions:Init()
-    core.TodoChecklisterFrame:Init()
+    InterfaceOptions:Init()
+    TodoChecklisterFrame:Init()
 
     -- Modules
-    core.Chat:Init()
-    core.MinimapIcon:Init()
+    Chat:Init()
+    MinimapIcon:Init()
 
     -------------------------------------------
-    core.Chat:Print(core.TodoList:GetMOTD())
+    Chat:Print(TodoList:GetMOTD())
 end
 
 main:RegisterEvent("ADDON_LOADED")
-main:SetScript("OnEvent", core.Init)
+main:SetScript("OnEvent", TodoAddon.Init)

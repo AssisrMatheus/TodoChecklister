@@ -1,18 +1,35 @@
 --------------------------------------
--- Namespaces
+-- Imports
 --------------------------------------
-local _, core = ...
-core.TodoChecklisterFrame = {} -- adds Config table to addon namespace
-local TodoChecklisterFrame = core.TodoChecklisterFrame
+---@class TodoAddon
+local TodoAddon = select(2, ...)
 
-local ResponsiveFrame = core.ResponsiveFrame
-local TableUtils = core.TableUtils
-local Settings = core.Settings
-local TodoList = core.TodoList
+---@class Settings
+local Settings = TodoAddon.Settings
+---@class ResponsiveFrame
+local ResponsiveFrame = TodoAddon.ResponsiveFrame
+---@class TableUtils
+local TableUtils = TodoAddon.TableUtils
+---@class TodoList
+local TodoList = TodoAddon.TodoList
+
+--------------------------------------
+-- Declarations
+--------------------------------------
+TodoAddon.TodoChecklisterFrame = {}
+
+---@class TodoChecklisterFrame
+local TodoChecklisterFrame = TodoAddon.TodoChecklisterFrame
+
+---@class TodoItemFrame : ButtonFrame
+---@class TodoChecklisterWindowFrame : Frame
 
 --------------------------------------
 -- TodoChecklisterFrame functions
 --------------------------------------
+---
+---Appends a new TodoItem to the list
+---@param text string @New element to be appended to the list
 function TodoChecklisterFrame:AddItem(text)
 	if (text ~= "" and text ~= nil and text) then
 		-- If the item is not selected
@@ -26,6 +43,9 @@ function TodoChecklisterFrame:AddItem(text)
 	end
 end
 
+---
+---Removes an element from a given position, moving down other elements to close space and decrementing the size of the array
+---@param indexToRemove number @The ONE-based location in the array to remove.
 function TodoChecklisterFrame:RemoveItemWithIndex(indexToRemove)
 	if (indexToRemove and type(indexToRemove) == "number" and indexToRemove > 0) then
 		-- If we are removing the current selected item
@@ -52,11 +72,19 @@ function TodoChecklisterFrame:RemoveItemWithIndex(indexToRemove)
 	end
 end
 
+---
+---Removes the given element from the list
+---@param todoItem TodoItem @The item to be removed from the list
 function TodoChecklisterFrame:RemoveItem(todoItem)
 	local indexToRemove = TodoList:GetIndexByItem(todoItem)
 	self:RemoveItemWithIndex(indexToRemove)
 end
 
+---
+---Moves an item from a given position of an array to a new one, moving up other elements
+---@param fromIndex number @The ONE-based location in the array to move from.
+---@param toIndex number @The ONE-based location in the array to move to.
+---@param fromChat boolean @Whether or not is removing from chatbox slash command
 function TodoChecklisterFrame:Move(fromIndex, toIndex, fromChat)
 	if
 		(fromIndex and type(fromIndex) == "number" and fromIndex > 0 and toIndex and type(toIndex) == "number" and toIndex > 0)
@@ -80,6 +108,9 @@ function TodoChecklisterFrame:Move(fromIndex, toIndex, fromChat)
 	end
 end
 
+---
+---Mark the item on indexToCheck position as done
+---@param indexToCheck number @The ONE-based location in the array to check.
 function TodoChecklisterFrame:CheckItemWithIndex(indexToCheck)
 	if (indexToCheck and type(indexToCheck) == "number" and indexToCheck > 0) then
 		local item = TodoList:GetItems()[indexToCheck]
@@ -95,16 +126,23 @@ function TodoChecklisterFrame:CheckItemWithIndex(indexToCheck)
 				))
 		 then
 			PlaySound(SOUNDKIT.READY_CHECK)
-			core.Chat:Print("|cff00cc66Congratulations!!|r You have completed your list")
+			TodoAddon.Chat:Print("|cff00cc66Congratulations!!|r You have completed your list")
 		end
 	end
 end
 
+---
+---Mark the given item as done
+---@param todoItem TodoItem @The item to be marked as checked
 function TodoChecklisterFrame:CheckItem(todoItem)
 	local indexToCheck = TodoList:GetIndexByItem(todoItem)
 	self:CheckItemWithIndex(indexToCheck)
 end
 
+---
+---Set the given item as selected
+---@param todoItem TodoItem @The item to be marked as selected
+---@param buttonFrame ButtonFrame @The button frame to set as highlighted
 function TodoChecklisterFrame:SelectItem(todoItem, buttonFrame)
 	local indexToSelect = TodoList:GetIndexByItem(todoItem)
 
@@ -120,6 +158,9 @@ function TodoChecklisterFrame:SelectItem(todoItem, buttonFrame)
 	self:OnUpdate()
 end
 
+---
+---Set the given item as selected
+---@param todoItem TodoItem @The item to be marked as checked
 function TodoChecklisterFrame:ClearSelected()
 	self.selectedItem = 0
 	self.frame.TodoText:SetText("")
@@ -128,6 +169,8 @@ function TodoChecklisterFrame:ClearSelected()
 	end
 end
 
+---
+---Toggle the frame's visibility
 function TodoChecklisterFrame:Toggle()
 	if (self.frame:IsShown()) then
 		self.frame:Hide()
@@ -140,6 +183,9 @@ function TodoChecklisterFrame:Toggle()
 	Settings:SetIsShown(self.frame:IsShown())
 end
 
+---
+---Get the color based on the given item's properties
+---@param todoItem TodoItem @The item to get the color to
 function TodoChecklisterFrame:GetColor(todoItem)
 	local highlightColor = NORMAL_FONT_COLOR
 
@@ -150,6 +196,11 @@ function TodoChecklisterFrame:GetColor(todoItem)
 	return highlightColor
 end
 
+---
+---Set the given frame's properties to the given item ones
+---@param frame TodoItemFrame @The item to get the color to
+---@param todoItem TodoItem @The item to get the color to
+---@param index number @The current item index on the list
 function TodoChecklisterFrame:PaintItem(frame, todoItem, index)
 	index = index or 0
 
@@ -180,6 +231,10 @@ function TodoChecklisterFrame:PaintItem(frame, todoItem, index)
 	frame.TodoCheckButton:SetChecked(todoItem.isChecked)
 end
 
+---
+---Creates and returns the floating button frame to drag and drop items
+---@param parent TodoChecklisterWindowFrame @The parent frame for all items
+---@return TodoItemFrame @The item to get the color to
 function TodoChecklisterFrame:FloatingButton(parent)
 	-- Create an initial offset based on where the mouse is
 	local cx = GetCursorPosition()
@@ -215,6 +270,9 @@ function TodoChecklisterFrame:FloatingButton(parent)
 	return floatingFrame
 end
 
+---
+---The main update function for this class
+---(Used to update the scrollbar and the view)
 function TodoChecklisterFrame:OnUpdate()
 	local scrollFrame = TodoItemsScrollFrame
 	local list = TodoList:GetItems()
@@ -343,7 +401,8 @@ end
 --------------------------------------
 -- Lifecycle Events
 --------------------------------------
-
+---
+---Resets all properties to their default values
 function TodoChecklisterFrame:Defaults()
 	self.frame:SetSize(300, 300)
 	self.frame:ClearAllPoints()
@@ -355,6 +414,8 @@ function TodoChecklisterFrame:Defaults()
 	self:LoadCFG()
 end
 
+---
+---Load required configuration for this class
 function TodoChecklisterFrame:LoadCFG()
 	if (self.frame) then
 		if (Settings:IsKeepFocusShown()) then
@@ -373,16 +434,26 @@ function TodoChecklisterFrame:LoadCFG()
 			self.frame:SetAlpha(Settings:Opacity())
 		end
 
+		-- Set up scroll bar
+		self.frame.ScrollFrame.update = function()
+			self:OnUpdate()
+		end
+		HybridScrollFrame_CreateButtons(self.frame.ScrollFrame, "TodoItemTemplate")
+
 		self:OnUpdate()
 	end
 end
 
+---
+---Initializes required properties for this class
 function TodoChecklisterFrame:Init()
 	-- Creates the addon frame
 	local frame = CreateFrame("Frame", "TodoChecklister", UIParent, "TodoChecklisterTemplate")
 
 	-- Set up responsive frame
 	ResponsiveFrame:OnLoad(frame)
+
+	--- @class TodoChecklisterWindowFrame
 	self.frame = frame
 
 	-- Display window title
@@ -397,12 +468,6 @@ function TodoChecklisterFrame:Init()
 			TodoChecklisterFrame:Toggle()
 		end
 	)
-
-	-- Set up scroll bar
-	self.frame.ScrollFrame.update = function()
-		self:OnUpdate()
-	end
-	HybridScrollFrame_CreateButtons(self.frame.ScrollFrame, "TodoItemTemplate")
 
 	-- Set up defaults
 	self:LoadCFG()
@@ -451,6 +516,7 @@ end
 
 function ToggleFocusSettings(frame)
 	Settings:ToggleFocus()
+	TodoChecklisterFrame:LoadCFG()
 end
 
 function ToggleFocusLoad(frame)
