@@ -1,0 +1,93 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" 
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
+..\FrameXML\UI.xsd">
+  <Script file="interfaceOptions.lua"/>
+
+  <Frame name="TodoChecklisterInterfaceOptionsTemplate" virtual="true" parent="UIParent">
+    <Layers>
+      <Layer level="OVERLAY">
+        <FontString name="$parentTitle" parentKey="Title" inherits="GameFontNormalLarge" justifyH="LEFT" justifyV="TOP">
+          <Anchors>
+            <Anchor point="TOPLEFT">
+              <Offset x="10" y="-15"/>
+            </Anchor>
+            <Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT">
+              <Offset x="10" y="-45"/>
+            </Anchor>
+          </Anchors>
+        </FontString>
+        <FontString name="$parentVersion" parentKey="Version" inherits="GameFontNormalLarge" justifyH="RIGHT" justifyV="TOP">
+          <Anchors>
+            <Anchor point="TOPRIGHT">
+              <Offset x="-10" y="-15"/>
+            </Anchor>
+          </Anchors>
+        </FontString>
+      </Layer>
+    </Layers>
+
+    <Frames>
+      <Frame parentKey="SettingsContainer" name="$parentSettingsContainer">
+        <Anchors>
+          <Anchor point="TOPLEFT" relativeTo="$parentTitle" relativePoint="BOTTOMLEFT">
+            <Offset x="-5"/>
+          </Anchor>
+          <Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT">
+            <Offset x="-7" y="7"/>
+          </Anchor>
+        </Anchors>
+
+        <Frames>
+          <CheckButton parentKey="TodoCheckButton" name="$parentTodoCheckButton" inherits="UICheckButtonTemplate">
+            <Size x="24" y="24"/>
+
+            <Scripts>
+              <OnLoad>
+            self.text:SetText("Display 'Keep focus' checkbox");
+              </OnLoad>
+              <OnClick>
+            PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
+              </OnClick>
+            </Scripts>
+
+            <Anchors>
+              <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+              </Anchor>
+            </Anchors>
+          </CheckButton>
+
+          <Button parentKey="Obs" name="$parentObs" hidden="false">
+            <Size x="300" y="15"/>
+
+            <Anchors>
+              <Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT">
+              </Anchor>
+              <Anchor point="LEFT">
+              </Anchor>
+            </Anchors>
+            <Layers>
+              <Layer level="OVERLAY">
+                <FontString name="$parentText" parentKey="Text" inherits="GameFontHighlight" justifyH="RIGHT" justifyV="BOTTOM">
+                  <Anchors>
+                    <Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT">
+                    </Anchor>
+                  </Anchors>
+                </FontString>
+              </Layer>
+            </Layers>
+
+            <Scripts>
+              <OnUpdate>
+                if(self:IsMouseOver()) then
+                  self.Text:SetFontObject(GameFontNormal)
+                else
+                  self.Text:SetFontObject(GameFontHighlight)
+                end
+              </OnUpdate>
+            </Scripts>
+          </Button>
+        </Frames>
+      </Frame>
+    </Frames>
+  </Frame>
+</Ui>

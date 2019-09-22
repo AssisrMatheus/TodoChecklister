@@ -22,6 +22,7 @@ function core:Init(event, name)
     core.Debug:Init()
     core.Chat:Init()
     core.MinimapIcon:Init()
+    core.InterfaceOptions:Init()
 
     if (TodoChecklisterDB and #TodoChecklisterDB > 0) then
         local completedList =

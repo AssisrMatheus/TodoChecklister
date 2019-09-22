@@ -6,4 +6,5 @@
   <Include file="model\model.xml"/>
   <Include file="modules\modules.xml"/>
   <Include file="components\components.xml"/>
+  <Include file="config\interfaceOptions.xml"/>
 </Ui>
