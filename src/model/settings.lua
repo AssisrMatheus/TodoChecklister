@@ -34,6 +34,28 @@ function Settings:SetIsKeepFocusShown(isKeepFocusShown)
 	TodoChecklisterSettingsDB.isKeepFocusShown = isKeepFocusShown
 end
 
+function Settings:Opacity()
+	return TodoChecklisterSettingsDB.windowOpacity
+end
+
+function Settings:SetOpacity(opacity)
+	TodoChecklisterSettingsDB.windowOpacity = opacity
+end
+
+function Settings:Defaults()
+	TodoChecklisterSettingsDB =
+		TableUtils:Assign(
+		{},
+		TodoChecklisterSettingsDB,
+		{
+			isShown = true,
+			keepFocus = false,
+			isKeepFocusShown = true,
+			windowOpacity = 1
+		}
+	)
+end
+
 function Settings:Init()
 	if (not TodoChecklisterSettingsDB) then
 		TodoChecklisterSettingsDB = {}

@@ -42,13 +42,7 @@ Chat.commands = {
         print(" ")
     end,
     ["reload"] = function()
-        if (core.mainFrame) then
-            core.mainFrame:SetSize(200, 200)
-            core.mainFrame:ClearAllPoints()
-            core.mainFrame:SetPoint("BOTTOMRIGHT", "$parent", "BOTTOMRIGHT", -120, 30)
-            core.mainFrame:SetScale(1)
-            core.mainFrame:Show()
-        end
+        core.TodoChecklisterFrame:Defaults()
     end
 
     -- ["example"] = {

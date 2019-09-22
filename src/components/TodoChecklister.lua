@@ -201,6 +201,25 @@ function TodoChecklisterFrame:FloatingButton(parent)
 	return floatingFrame
 end
 
+function TodoChecklisterFrame:Defaults()
+	Settings:Defaults()
+
+	self.frame:SetSize(300, 300)
+	self.frame:ClearAllPoints()
+	self.frame:SetPoint("BOTTOMRIGHT", "$parent", "BOTTOMRIGHT", -120, 30)
+	self.frame:SetScale(1)
+	self.frame:SetAlpha(1)
+	self.frame.KeepFocus:SetChecked(Settings:KeepFocus())
+
+	if (Settings:IsKeepFocusShown()) then
+		self.frame.KeepFocus:Show()
+	else
+		self.frame.KeepFocus:Hide()
+	end
+
+	self.frame:Show()
+end
+
 --------------------------------------
 -- TodoChecklisterFrame Events
 --------------------------------------
@@ -355,8 +374,11 @@ function TodoChecklisterFrame:OnLoad(frame)
 	self:OnUpdate()
 
 	if (Settings:IsKeepFocusShown()) then
-		print(Settings:IsKeepFocusShown())
 		self.frame.KeepFocus:Show()
+	end
+
+	if (Settings:Opacity()) then
+		self.frame:SetAlpha(Settings:Opacity())
 	end
 
 	if (Settings:IsShown()) then

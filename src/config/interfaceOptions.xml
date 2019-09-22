@@ -39,6 +39,7 @@
         </Anchors>
 
         <Frames>
+          <!-- "Keep focus" checkbox -->
           <CheckButton parentKey="FocusCheckButton" name="$parentFocusCheckButton" inherits="UICheckButtonTemplate">
             <Size x="28" y="28"/>
 
@@ -48,7 +49,7 @@
               </OnLoad>
               <OnClick>
                 PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
-                KeepFocusClick(self)
+                ShowKeepFocusClick(self)
               </OnClick>
             </Scripts>
 
@@ -70,6 +71,82 @@
             </Layers>
           </CheckButton>
 
+          <CheckButton parentKey="KeepFocusCheckButton" name="$parentKeepFocusCheckButton" inherits="UICheckButtonTemplate">
+            <Size x="28" y="28"/>
+
+            <Scripts>
+              <OnLoad>
+                self.Text:SetText("Keep focus");
+              </OnLoad>
+              <OnClick>
+                PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
+                KeepFocusClick(self)
+              </OnClick>
+            </Scripts>
+
+            <Anchors>
+              <Anchor point="LEFT" relativeTo="$parentFocusCheckButtonText" relativePoint="RIGHT">
+                <Offset x="250"/>
+
+              </Anchor>
+            </Anchors>
+
+            <Layers>
+              <Layer level="OVERLAY">
+                <FontString name="$parentText" parentKey="Text" inherits="GameFontWhite" justifyH="LEFT">
+                  <Anchors>
+                    <Anchor point="LEFT" relativeTo="$parent" relativePoint="RIGHT">
+                    </Anchor>
+                  </Anchors>
+                </FontString>
+              </Layer>
+            </Layers>
+          </CheckButton>
+
+          <Slider parentKey="Opacity" name="$parentOpacity" inherits="OptionsSliderTemplate" minValue="0" maxValue="1" valueStep="0.01" defaultValue="1">
+            <Anchors>
+              <Anchor point="TOPLEFT" relativeTo="$parentFocusCheckButton" relativePoint="BOTTOMLEFT">
+                <Offset x="10" y="-40"/>
+              </Anchor>
+            </Anchors>
+
+            <Layers>
+              <Layer level="ARTWORK">
+                <FontString name="$parentText" inherits="GameFontNormalSmall" text="OPACITY">
+                  <Anchors>
+                    <Anchor point="TOP" relativeTo="$parent">
+                      <Offset>
+                        <AbsDimension x="0" y="11"/>
+                      </Offset>
+                    </Anchor>
+                  </Anchors>
+                </FontString>
+
+                <FontString parentKey="Value" name="$parentValue" inherits="GameFontHighlight">
+                  <Anchors>
+                    <Anchor point="BOTTOM" relativeTo="$parent">
+                      <Offset>
+                        <AbsDimension x="0" y="-15"/>
+                      </Offset>
+                    </Anchor>
+                  </Anchors>
+                </FontString>
+              </Layer>
+            </Layers>
+
+            <Scripts>
+              <OnLoad>
+                self.Low:SetText("0%")
+                self.High:SetText("100%")
+              </OnLoad>
+              <OnValueChanged>
+                  OpacityValueChanged(self)
+                  self.Value:SetText(string.format("%d%s", self:GetValue() * 100, "%"))
+              </OnValueChanged>
+            </Scripts>
+          </Slider>
+
+          <!-- Footer github url -->
           <Button parentKey="Obs" name="$parentObs" hidden="false">
             <Size x="300" y="15"/>
 
