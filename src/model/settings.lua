@@ -42,6 +42,14 @@ function Settings:SetOpacity(opacity)
 	TodoChecklisterSettingsDB.windowOpacity = opacity
 end
 
+function Settings:PlayFanfare()
+	return TodoChecklisterSettingsDB.playFanfare
+end
+
+function Settings:SetPlayFanfare(playFanfare)
+	TodoChecklisterSettingsDB.playFanfare = playFanfare
+end
+
 --------------------------------------
 -- Lifecycle Events
 --------------------------------------
@@ -54,7 +62,8 @@ function Settings:Defaults()
 			isShown = true,
 			keepFocus = false,
 			isKeepFocusShown = true,
-			windowOpacity = 1
+			windowOpacity = 1,
+			playFanfare = true
 		}
 	)
 end
@@ -63,5 +72,17 @@ function Settings:Init()
 	if (not TodoChecklisterSettingsDB) then
 		TodoChecklisterSettingsDB = {}
 		self:Defaults()
+	end
+
+	if (TodoChecklisterSettingsDB.isShown == nil) then
+		self:SetIsShown(true)
+	end
+
+	if (TodoChecklisterSettingsDB.isKeepFocusShown == nil) then
+		self:SetIsKeepFocusShown(true)
+	end
+
+	if (TodoChecklisterSettingsDB.playFanfare == nil) then
+		self:SetPlayFanfare(true)
 	end
 end

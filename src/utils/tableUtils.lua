@@ -71,3 +71,13 @@ function TableUtils:Assign(target, ...)
 	end
 	return target
 end
+
+function TableUtils:Every(tb, comparator)
+	local newTb = {}
+	for i = 1, #tb do
+		if (not comparator(tb[i])) then
+			return false
+		end
+	end
+	return true
+end

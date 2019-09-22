@@ -31,6 +31,8 @@ function InterfaceOptions:LoadCFG()
       self.frame.SettingsContainer.Opacity:SetValue(Settings:Opacity())
       self.frame.SettingsContainer.Opacity.Value:SetText(string.format("%d%s", Settings:Opacity() * 100, "%"))
     end
+
+    self.frame.SettingsContainer.FanfareCheck:SetChecked(Settings:PlayFanfare())
   end
 
   if (core.TodoChecklisterFrame) then
@@ -105,4 +107,9 @@ function OpacityValueChanged(frame)
     Settings:SetOpacity(frame:GetValue())
     InterfaceOptions:LoadCFG()
   end
+end
+
+function OnFanfarreCheck(frame)
+  Settings:SetPlayFanfare(frame:GetChecked())
+  InterfaceOptions:LoadCFG()
 end

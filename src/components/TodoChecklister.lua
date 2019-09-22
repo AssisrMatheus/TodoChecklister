@@ -85,6 +85,18 @@ function TodoChecklisterFrame:CheckItemWithIndex(indexToCheck)
 		local item = TodoList:GetItems()[indexToCheck]
 		TodoList:UpdateItem(indexToCheck, {isChecked = (not item.isChecked)})
 		self:OnUpdate()
+		if
+			(Settings:PlayFanfare() and
+				TableUtils:Every(
+					TodoList:GetItems(),
+					function(item)
+						return item.isChecked == true
+					end
+				))
+		 then
+			PlaySound(SOUNDKIT.READY_CHECK)
+			core.Chat:Print("|cff00cc66Congratulations!!|r You have completed your list")
+		end
 	end
 end
 
@@ -119,8 +131,10 @@ end
 function TodoChecklisterFrame:Toggle()
 	if (self.frame:IsShown()) then
 		self.frame:Hide()
+		PlaySound(SOUNDKIT.IG_MAINMENU_OPTION)
 	else
 		self.frame:Show()
+		PlaySound(SOUNDKIT.IG_MAINMENU_CLOSE)
 	end
 
 	Settings:SetIsShown(self.frame:IsShown())
@@ -369,7 +383,6 @@ function TodoChecklisterFrame:Init()
 
 	-- Set up responsive frame
 	ResponsiveFrame:OnLoad(frame)
-	print(frame)
 	self.frame = frame
 
 	-- Display window title
@@ -415,8 +428,11 @@ end
 
 function OnSaveItem(frame)
 	local text = TodoChecklister.TodoText:GetText()
-	if (not text) then
+	if (not text or text == "") then
 		text = ""
+	else
+		core.Chat:Print(text)
+		PlaySound(SOUNDKIT.IG_CHARACTER_INFO_OPEN)
 	end
 
 	TodoChecklisterFrame:AddItem(text)

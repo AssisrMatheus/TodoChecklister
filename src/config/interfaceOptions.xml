@@ -146,6 +146,39 @@
             </Scripts>
           </Slider>
 
+          <CheckButton parentKey="FanfareCheck" name="$parentFanfareCheck" inherits="UICheckButtonTemplate">
+            <Size x="28" y="28"/>
+
+            <Scripts>
+              <OnLoad>
+                self.Text:SetText("Play fanfare when completing all items");
+              </OnLoad>
+              <OnClick>
+                PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
+                OnFanfarreCheck(self)
+              </OnClick>
+            </Scripts>
+
+            <Anchors>
+              <Anchor point="LEFT" relativeTo="$parentOpacity" relativePoint="RIGHT">
+                <Offset>
+                  <AbsDimension x="30"/>
+                </Offset>
+              </Anchor>
+            </Anchors>
+
+            <Layers>
+              <Layer level="OVERLAY">
+                <FontString name="$parentText" parentKey="Text" inherits="GameFontWhite" justifyH="LEFT">
+                  <Anchors>
+                    <Anchor point="LEFT" relativeTo="$parent" relativePoint="Right">
+                    </Anchor>
+                  </Anchors>
+                </FontString>
+              </Layer>
+            </Layers>
+          </CheckButton>
+
           <!-- Footer github url -->
           <Button parentKey="Obs" name="$parentObs" hidden="false">
             <Size x="300" y="15"/>
