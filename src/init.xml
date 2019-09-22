@@ -4,7 +4,7 @@
   <Include file="utils\utils.xml"/>
   <Include file="config\config.xml"/>
   <Include file="model\model.xml"/>
-  <Include file="modules\modules.xml"/>
-  <Include file="components\components.xml"/>
   <Include file="config\interfaceOptions.xml"/>
+  <Include file="components\components.xml"/>
+  <Include file="modules\modules.xml"/>
 </Ui>

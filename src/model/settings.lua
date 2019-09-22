@@ -42,10 +42,13 @@ function Settings:SetOpacity(opacity)
 	TodoChecklisterSettingsDB.windowOpacity = opacity
 end
 
+--------------------------------------
+-- Lifecycle Events
+--------------------------------------
+
 function Settings:Defaults()
 	TodoChecklisterSettingsDB =
 		TableUtils:Assign(
-		{},
 		TodoChecklisterSettingsDB,
 		{
 			isShown = true,
@@ -59,13 +62,6 @@ end
 function Settings:Init()
 	if (not TodoChecklisterSettingsDB) then
 		TodoChecklisterSettingsDB = {}
-	end
-
-	if (self:IsKeepFocusShown() == nil) then
-		self:SetIsKeepFocusShown(true)
-	end
-
-	if (not self:IsShown() == nil) then
-		self:SetIsShown(true)
+		self:Defaults()
 	end
 end

@@ -4,6 +4,7 @@
 ## Notes: I have bad memory so I made this. A todolist/checklist AddOn for World of Warcraft.
 ## Version: 1.2.0
 ## DefaultState: enabled
+## OptionalDeps: LibStub
 ## SavedVariables: TodoChecklisterDB, TodoChecklisterMapIcon, TodoChecklisterSettingsDB
 
 src\init.xml

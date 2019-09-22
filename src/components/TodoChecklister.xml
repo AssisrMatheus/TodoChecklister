@@ -185,9 +185,6 @@
 
   <Frame name="TodoChecklisterTemplate" inherits="TodoChecklisterResponsiveFrameTemplate" parent="UIParent" virtual="true">
     <Scripts>
-      <OnLoad>
-        OnLoad(self)
-      </OnLoad>
       <OnShow>
         OnShow(self)
       </OnShow>

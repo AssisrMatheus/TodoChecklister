@@ -53,6 +53,7 @@ globals = {
 	"DISABLED_FONT_COLOR",
 	"HybridScrollFrame_Update",
 	"HybridScrollFrame_CreateButtons",
+	"InterfaceOptionsFrame",
 
 	-- FrameXML misc
 	"C_Timer",

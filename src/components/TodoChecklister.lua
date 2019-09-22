@@ -201,32 +201,10 @@ function TodoChecklisterFrame:FloatingButton(parent)
 	return floatingFrame
 end
 
-function TodoChecklisterFrame:Defaults()
-	Settings:Defaults()
-
-	self.frame:SetSize(300, 300)
-	self.frame:ClearAllPoints()
-	self.frame:SetPoint("BOTTOMRIGHT", "$parent", "BOTTOMRIGHT", -120, 30)
-	self.frame:SetScale(1)
-	self.frame:SetAlpha(1)
-	self.frame.KeepFocus:SetChecked(Settings:KeepFocus())
-
-	if (Settings:IsKeepFocusShown()) then
-		self.frame.KeepFocus:Show()
-	else
-		self.frame.KeepFocus:Hide()
-	end
-
-	self.frame:Show()
-end
-
---------------------------------------
--- TodoChecklisterFrame Events
---------------------------------------
 function TodoChecklisterFrame:OnUpdate()
 	local scrollFrame = TodoItemsScrollFrame
 	local list = TodoList:GetItems()
-	if (scrollFrame and scrollFrame.buttons and list) then
+	if (self.frame and scrollFrame and scrollFrame.buttons and list) then
 		local offset = HybridScrollFrame_GetOffset(scrollFrame)
 
 		if (#list > 0) then
@@ -348,14 +326,56 @@ function TodoChecklisterFrame:OnUpdate()
 	end
 end
 
-function TodoChecklisterFrame:OnLoad(frame)
-	self.frame = frame
-	-- Parent's OnLoad Function
+--------------------------------------
+-- Lifecycle Events
+--------------------------------------
+
+function TodoChecklisterFrame:Defaults()
+	self.frame:SetSize(300, 300)
+	self.frame:ClearAllPoints()
+	self.frame:SetPoint("BOTTOMRIGHT", "$parent", "BOTTOMRIGHT", -120, 30)
+	self.frame:SetScale(1)
+	self.frame:SetAlpha(1)
+
+	Settings:Defaults()
+	self:LoadCFG()
+end
+
+function TodoChecklisterFrame:LoadCFG()
+	if (self.frame) then
+		if (Settings:IsKeepFocusShown()) then
+			self.frame.KeepFocus:Show()
+		else
+			self.frame.KeepFocus:Hide()
+		end
+
+		self.frame.KeepFocus:SetChecked(Settings:KeepFocus())
+
+		if (not Settings:KeepFocus()) then
+			TodoChecklister.TodoText:ClearFocus()
+		end
+
+		if (Settings:Opacity()) then
+			self.frame:SetAlpha(Settings:Opacity())
+		end
+
+		self:OnUpdate()
+	end
+end
+
+function TodoChecklisterFrame:Init()
+	-- Creates the addon frame
+	local frame = CreateFrame("Frame", "TodoChecklister", UIParent, "TodoChecklisterTemplate")
+
+	-- Set up responsive frame
 	ResponsiveFrame:OnLoad(frame)
+	print(frame)
+	self.frame = frame
 
-	-- Set up elements
-	frame.Title:SetText(UnitName("player") .. "'s List")
+	-- Display window title
+	self.frame.Title:SetText(UnitName("player") .. "'s List")
 
+	-- Change window close button to minimize button
 	_G["TodoChecklisterClose"]:SetNormalTexture("Interface\\Buttons\\UI-Panel-HideButton-Up")
 	_G["TodoChecklisterClose"]:SetPushedTexture("Interface\\Buttons\\UI-Panel-HideButton-Down")
 	_G["TodoChecklisterClose"]:SetScript(
@@ -365,21 +385,14 @@ function TodoChecklisterFrame:OnLoad(frame)
 		end
 	)
 
-	local scrollFrame = frame.ScrollFrame
-	scrollFrame.update = function()
+	-- Set up scroll bar
+	self.frame.ScrollFrame.update = function()
 		self:OnUpdate()
 	end
-	HybridScrollFrame_CreateButtons(frame.ScrollFrame, "TodoItemTemplate")
+	HybridScrollFrame_CreateButtons(self.frame.ScrollFrame, "TodoItemTemplate")
 
-	self:OnUpdate()
-
-	if (Settings:IsKeepFocusShown()) then
-		self.frame.KeepFocus:Show()
-	end
-
-	if (Settings:Opacity()) then
-		self.frame:SetAlpha(Settings:Opacity())
-	end
+	-- Set up defaults
+	self:LoadCFG()
 
 	if (Settings:IsShown()) then
 		-- Display the frame
@@ -387,10 +400,9 @@ function TodoChecklisterFrame:OnLoad(frame)
 	end
 end
 
-function OnLoad(frame)
-	TodoChecklisterFrame:OnLoad(frame)
-end
-
+--------------------------------------
+-- XML Events
+--------------------------------------
 function OnShow(frame)
 	TodoChecklisterFrame:OnUpdate()
 end
@@ -411,7 +423,6 @@ function OnSaveItem(frame)
 end
 
 function OnRemoveItem(frame)
-	--TODO: RECEIVE ENTIRE ITEM AND CHECK IF THERE'S ID. IF THERE'S NOT, USE TEXT
 	TodoChecklisterFrame:RemoveItem(frame:GetParent().todoItem)
 end
 
@@ -425,10 +436,6 @@ end
 
 function ToggleFocusSettings(frame)
 	Settings:ToggleFocus()
-
-	if (not Settings:KeepFocus()) then
-		TodoChecklister.TodoText:ClearFocus()
-	end
 end
 
 function ToggleFocusLoad(frame)
