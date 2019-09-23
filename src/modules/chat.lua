@@ -82,7 +82,7 @@ end
 function Chat:Init()
     SLASH_TodoChecklister1 = self.command
     SlashCmdList["TodoChecklister"] = function(msg)
-        local str = msg:lower()
+        local str = msg
         if (#str == 0) then
             -- User just entered "/todo" with no additional args.
             Chat.commands.help()

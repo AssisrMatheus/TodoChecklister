@@ -252,6 +252,9 @@
           <OnEnterPressed>
             OnSaveItem(self)
           </OnEnterPressed>
+          <OnHyperlinkClick>
+            SetItemRef(link, text, button, self);
+          </OnHyperlinkClick>
         </Scripts>
         <Anchors>
           <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">

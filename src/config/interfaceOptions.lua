@@ -51,6 +51,8 @@ function InterfaceOptions:LoadCFG()
   if (TodoAddon.TodoChecklisterFrame) then
     TodoAddon.TodoChecklisterFrame:LoadCFG()
   end
+
+  self.frame.SettingsContainer.LinkedCounterCheckButton:SetChecked(Settings:DisplayLinked())
 end
 
 ---
@@ -125,5 +127,10 @@ end
 
 function OnFanfarreCheck(frame)
   Settings:SetPlayFanfare(frame:GetChecked())
+  InterfaceOptions:LoadCFG()
+end
+
+function DisplayLinkedCountClick(frame)
+  Settings:SetDisplayLinked(frame:GetChecked())
   InterfaceOptions:LoadCFG()
 end

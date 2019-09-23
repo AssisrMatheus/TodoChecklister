@@ -23,6 +23,7 @@ local Settings = TodoAddon.Settings
 ---@field public isKeepFocusShown boolean|nil @Whether or not the KeepFocus checkbox is displayed to the user
 ---@field public windowOpacity number|nil @The alpha value of 0 to 1 for the window opacity
 ---@field public playFanfare boolean|nil @Whether or not a fanfare sound should be played
+---@field public displayLinked boolean|nil @Whether or not to display linked items count from bag
 local DB
 
 --------------------------------------
@@ -80,6 +81,16 @@ function Settings:SetPlayFanfare(playFanfare)
 	DB.playFanfare = playFanfare
 end
 
+---@return boolean @Whether or not to display linked items count from bag
+function Settings:DisplayLinked()
+	return DB.displayLinked
+end
+
+---@param displayLinked boolean @Sets whether or not to display linked items count from bag
+function Settings:SetDisplayLinked(displayLinked)
+	DB.displayLinked = displayLinked
+end
+
 --------------------------------------
 -- Lifecycle Events
 --------------------------------------
@@ -94,7 +105,8 @@ function Settings:Defaults()
 			keepFocus = false,
 			isKeepFocusShown = true,
 			windowOpacity = 1,
-			playFanfare = true
+			playFanfare = true,
+			displayLinked = true
 		}
 	)
 end
@@ -119,5 +131,9 @@ function Settings:Init()
 
 	if (DB.playFanfare == nil) then
 		self:SetPlayFanfare(true)
+	end
+
+	if (DB.displayLinked == nil) then
+		self:SetDisplayLinked(true)
 	end
 end

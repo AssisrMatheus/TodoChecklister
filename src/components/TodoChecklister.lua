@@ -212,7 +212,45 @@ function TodoChecklisterFrame:PaintItem(frame, todoItem, index)
 		frame.TodoContent.FontText:SetFontObject(GameFontNormalSmall)
 	end
 	frame.TodoContent:SetWidth(TodoItemsScrollFrame:GetWidth() - frame.RemoveButton:GetWidth() - 23)
-	frame.TodoContent.FontText:SetText(todoItem.text)
+
+	if (self.displayLinked) then
+		-- Startup regex process by storing string values
+		local finalString = ""
+		local remainingString = todoItem.text
+
+		-- If the remaining string still has linked items
+		while (remainingString and not (not GetItemInfo(remainingString))) do
+			-- Find the linked item position
+			local st, en = string.find(remainingString, "|Hitem:.-|r")
+
+			if (en) then
+				-- Set the final string to:
+				finalString =
+					table.concat {
+					finalString, -- Current final string
+					remainingString:sub(1, en), -- Current string until now
+					"(",
+					GetItemCount(remainingString), -- Amount from bag
+					") "
+				}
+
+				-- Remove the current linked item from the remaining string to continue the process
+				remainingString = remainingString:sub(en + 1)
+			else
+				remainingString = ""
+			end
+		end
+
+		-- If the final string has been set
+		if (string.len(finalString) > 0) then
+			frame.TodoContent.FontText:SetText(finalString .. remainingString)
+		else
+			-- If not, the string doesn't have links
+			frame.TodoContent.FontText:SetText(todoItem.text)
+		end
+	else
+		frame.TodoContent.FontText:SetText(todoItem.text)
+	end
 
 	if (self.selectedItem == index) then
 		local highlightColor = self:GetColor(todoItem)
@@ -440,6 +478,8 @@ function TodoChecklisterFrame:LoadCFG()
 		end
 		HybridScrollFrame_CreateButtons(self.frame.ScrollFrame, "TodoItemTemplate")
 
+		self.displayLinked = Settings:DisplayLinked()
+
 		self:OnUpdate()
 	end
 end
@@ -449,6 +489,15 @@ end
 function TodoChecklisterFrame:Init()
 	-- Creates the addon frame
 	local frame = CreateFrame("Frame", "TodoChecklister", UIParent, "TodoChecklisterTemplate")
+	frame:RegisterEvent("BAG_UPDATE_DELAYED")
+	frame:HookScript(
+		"OnEvent",
+		function(frame, event)
+			if (event == "BAG_UPDATE_DELAYED") then
+				self:OnUpdate()
+			end
+		end
+	)
 
 	-- Set up responsive frame
 	ResponsiveFrame:OnLoad(frame)
@@ -469,6 +518,9 @@ function TodoChecklisterFrame:Init()
 		end
 	)
 
+	self.frame.TodoText:SetHyperlinksEnabled(true)
+	self.frame:SetHyperlinksEnabled(true)
+
 	-- Set up defaults
 	self:LoadCFG()
 
@@ -477,6 +529,35 @@ function TodoChecklisterFrame:Init()
 		self:Toggle()
 	end
 end
+
+hooksecurefunc(
+	"ContainerFrameItemButton_OnModifiedClick",
+	function(self, button)
+		-- If any of these conditions are true, the link will have been posted
+		-- to another UI element by the time this hook is called.
+		if
+			not TodoChecklisterFrame.frame.TodoText:HasFocus() or
+				(ChatEdit_GetActiveWindow() or (BrowseName and BrowseName:IsVisible()) or
+					(MacroFrameText and MacroFrameText:HasFocus()) or
+					(TradeSkillFrame and TradeSkillFrame.SearchBox:HasFocus()) or
+					(CommunitiesFrame and CommunitiesFrame.ChatEditBox:HasFocus()) or
+					(SocialPostFrame and Social_IsShown()))
+		 then
+			-- Link will have been posted to one of the above areas. Ignore.
+			return false
+		end
+
+		local bag = self:GetParent():GetID()
+		local slot = self:GetID()
+		local link = GetContainerItemLink(bag, slot)
+
+		if self.hasStackSplit == 1 then
+			StackSplitFrame:Hide()
+		end
+
+		TodoChecklisterFrame.frame.TodoText:Insert(link)
+	end
+)
 
 --------------------------------------
 -- XML Events

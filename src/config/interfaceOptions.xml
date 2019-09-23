@@ -103,9 +103,75 @@
             </Layers>
           </CheckButton>
 
+          <CheckButton parentKey="FanfareCheck" name="$parentFanfareCheck" inherits="UICheckButtonTemplate">
+            <Size x="28" y="28"/>
+
+            <Scripts>
+              <OnLoad>
+                self.Text:SetText("Play fanfare when completing all items");
+              </OnLoad>
+              <OnClick>
+                PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
+                OnFanfarreCheck(self)
+              </OnClick>
+            </Scripts>
+
+            <Anchors>
+              <Anchor point="LEFT" relativeTo="$parentKeepFocusCheckButton" relativePoint="LEFT">
+                <Offset>
+                  <AbsDimension y="-40"/>
+                </Offset>
+              </Anchor>
+            </Anchors>
+
+            <Layers>
+              <Layer level="OVERLAY">
+                <FontString name="$parentText" parentKey="Text" inherits="GameFontWhite" justifyH="LEFT">
+                  <Anchors>
+                    <Anchor point="LEFT" relativeTo="$parent" relativePoint="Right">
+                    </Anchor>
+                  </Anchors>
+                </FontString>
+              </Layer>
+            </Layers>
+          </CheckButton>
+
+          <CheckButton parentKey="LinkedCounterCheckButton" name="$parentLinkedCounterCheckButton" inherits="UICheckButtonTemplate">
+            <Size x="28" y="28"/>
+
+            <Scripts>
+              <OnLoad>
+                self.Text:SetText("Display linked items amount from bag");
+              </OnLoad>
+              <OnClick>
+                PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
+                DisplayLinkedCountClick(self)
+              </OnClick>
+            </Scripts>
+
+            <Anchors>
+              <Anchor point="LEFT" relativeTo="$parentFocusCheckButton" relativePoint="LEFT">
+                <Offset>
+                  <AbsDimension y="-39" />
+                </Offset>
+              </Anchor>
+            </Anchors>
+
+            <Layers>
+              <Layer level="OVERLAY">
+                <FontString name="$parentText" parentKey="Text" inherits="GameFontWhite" justifyH="LEFT">
+                  <Anchors>
+                    <Anchor point="LEFT" relativeTo="$parent" relativePoint="Right">
+                    </Anchor>
+                  </Anchors>
+                </FontString>
+              </Layer>
+            </Layers>
+          </CheckButton>
+
           <Slider parentKey="Opacity" name="$parentOpacity" inherits="OptionsSliderTemplate" minValue="0" maxValue="1" valueStep="0.01" defaultValue="1">
             <Anchors>
-              <Anchor point="TOPLEFT" relativeTo="$parentFocusCheckButton" relativePoint="BOTTOMLEFT">
+              <Anchor point="TOPLEFT" relativeTo="$parentLinkedCounterCheckButton" relativePoint="BOTTOMLEFT">
                 <Offset x="10" y="-40"/>
               </Anchor>
             </Anchors>
@@ -145,39 +211,6 @@
               </OnValueChanged>
             </Scripts>
           </Slider>
-
-          <CheckButton parentKey="FanfareCheck" name="$parentFanfareCheck" inherits="UICheckButtonTemplate">
-            <Size x="28" y="28"/>
-
-            <Scripts>
-              <OnLoad>
-                self.Text:SetText("Play fanfare when completing all items");
-              </OnLoad>
-              <OnClick>
-                PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
-                OnFanfarreCheck(self)
-              </OnClick>
-            </Scripts>
-
-            <Anchors>
-              <Anchor point="LEFT" relativeTo="$parentOpacity" relativePoint="RIGHT">
-                <Offset>
-                  <AbsDimension x="30"/>
-                </Offset>
-              </Anchor>
-            </Anchors>
-
-            <Layers>
-              <Layer level="OVERLAY">
-                <FontString name="$parentText" parentKey="Text" inherits="GameFontWhite" justifyH="LEFT">
-                  <Anchors>
-                    <Anchor point="LEFT" relativeTo="$parent" relativePoint="Right">
-                    </Anchor>
-                  </Anchors>
-                </FontString>
-              </Layer>
-            </Layers>
-          </CheckButton>
 
           <!-- Footer github url -->
           <Button parentKey="Obs" name="$parentObs" hidden="false">

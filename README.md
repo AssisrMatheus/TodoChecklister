@@ -6,18 +6,24 @@
 You can download it from a handful of places:
 - [Curseforge/twitch](https://www.curseforge.com/wow/addons/todochecklister/files)
 - [Github releases](https://github.com/AssisrMatheus/TodoChecklister/releases)
-- [Will it classic](https://willitclassic.com/view/mc8DexxominWFB4i8W1a)
 
 # TodoChecklister
-I have bad memory so I made this. A todolist/checklist AddOn for World of Warcraft
+A todolist/checklist AddOn for World of Warcraft. Save the bad guy's names, the items you're going to farm, the path you're going to take.
 
 ![demoGif](./demo.gif)
 
+- Link items from you bag and display their amount
+- List is saved even when you log out
+- Drag items around to move them
+- Click to edit
+- Multi-add items with "Keep focus" option!
+- More options like opacity or toggling in "Esc" -> Interface Options -> Addons -> Todochecklister
+
 ## How to install it
-- Download the latest version [here](https://github.com/AssisrMatheus/TodoChecklister/releases/)
+- Download the latest version from any link in the top of this page
 - Extract the files on your WoW Addon folder, usually `C:\Program Files (x86)\World of Warcraft\_classic_\Interface\AddOns`.
 - Ensure that the .lua files are not spread inside the AddOns folder, but rather, inside the correct `TodoChecklister` folder.
-- Your files shoud look like this:
+- Your file structure shoud look like this:
 ```
 WowFolder
   \
@@ -31,7 +37,7 @@ WowFolder
      TodoChecklister
            \
             \
-	TodoChecklister.toc/*.lua files/Any other addon file and folder
+	TodoChecklister.toc/src folder
 ```
 
 ## How to use it
