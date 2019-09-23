@@ -3,28 +3,50 @@
 ..\FrameXML\UI.xsd">
   <Script file="TodoChecklister.lua"/>
 
-  <Frame name="TodoItemTemplate" virtual="true">
+  <Frame name="DropIndicatorTemplate" virtual="true">
+    <Size>
+      <AbsDimension y="3"/>
+    </Size>
+    <Layers>
+      <Layer level="ARTWORK">
+        <Texture parentKey="Texture" name="$parentTexture" file="Interface\QuestFrame\UI-QuestLogTitleHighlight" alphaMode="ADD"/>
+      </Layer>
+    </Layers>
+
+    <Scripts>
+      <OnLoad>
+        self.Texture:SetVertexColor(NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+      </OnLoad>
+    </Scripts>
+  </Frame>
+
+  <Frame name="TodoItemTemplate" virtual="true" enableMouse="true" movable="true">
     <Size x="200" y="30"/>
     <Frames>
+      <!-- Checkbox -->
       <CheckButton parentKey="TodoCheckButton" name="$parentTodoCheckButton" inherits="UICheckButtonTemplate">
         <Size x="24" y="24"/>
 
         <Scripts>
           <OnClick>
             OnCheckItem(self)
+            PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
           </OnClick>
         </Scripts>
 
+        <!-- Attached to the left side of scrollItem -->
         <Anchors>
           <Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT" />
         </Anchors>
       </CheckButton>
 
+      <!-- Button with text -->
       <Button name="$parentText" parentKey="TodoContent">
         <Size>
           <AbsDimension x="150" y="16" />
         </Size>
         <Anchors>
+          <!-- Attached to the left side of the checkbox -->
           <Anchor point="LEFT" relativeTo="$parentTodoCheckButton" relativePoint="RIGHT" />
         </Anchors>
         <Layers>
@@ -35,17 +57,21 @@
 
         <Scripts>
           <OnMouseDown>
+            <!-- Create a fake animation -->
             self.FontText:ClearAllPoints() 
             self.FontText:SetPoint("LEFT", self, "LEFT", 2, -2)
           </OnMouseDown>
           <OnMouseUp>
+            <!-- Resets fake animation -->
             self.FontText:ClearAllPoints() 
             self.FontText:SetPoint("LEFT", self, "LEFT", 0, 0)
             OnSelectItem(self)
+            PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
           </OnMouseUp>
         </Scripts>
 
         <Frames>
+          <!-- Button highlight frame(selected/dragging) -->
           <Frame parentKey="ButtonHighlightFrame" name="$parentButtonHighlightFrame" hidden="true">
             <Size>
               <AbsDimension x="293" y="16"/>
@@ -63,30 +89,104 @@
         </Frames>
       </Button>
 
+      <!-- Remove button -->
       <Button parentKey="RemoveButton" name="$parentRemoveButton" inherits="CollapseButtonTemplate">
+        <Size x="20" y="20"/>
+
+        <!-- Attached on right side of text -->
         <Anchors>
           <Anchor point="RIGHT" relativeTo="$parentText" relativePoint="RIGHT">
             <Offset x="15" y="0"/>
           </Anchor>
         </Anchors>
 
-        <NormalTexture file="Interface\Buttons\UI-MinusButton-Up" />
-        <PushedTexture file="Interface\Buttons\UI-MinusButton-Down" />
-
+        <NormalTexture file="Interface\Buttons\UI-Panel-MinimizeButton-Up"/>
+        <PushedTexture file="Interface\Buttons\UI-Panel-MinimizeButton-Down"/>
         <Scripts>
           <OnClick>
+            PlaySound(SOUNDKIT.IG_CHARACTER_INFO_CLOSE);
             OnRemoveItem(self)
           </OnClick>
         </Scripts>
       </Button>
+
+      <!-- Background frame shown when dragging -->
+      <Frame parentKey="Background" name="$parentBackground" hidden="true">
+        <Anchors>
+          <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+            <Offset>
+              <AbsDimension x="-5" y="0"/>
+            </Offset>
+          </Anchor>
+          <Anchor point="BOTTOMRIGHT" relativeTo="$parentRemoveButton" relativePoint="BOTTOMRIGHT">
+            <Offset>
+              <AbsDimension x="5" y="-5"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\Tooltips\UI-Tooltip-Border" tile="true">
+          <BackgroundInsets>
+            <AbsInset left="4" right="4" top="4" bottom="4" />
+          </BackgroundInsets>
+          <TileSize>
+            <AbsValue val="16" />
+          </TileSize>
+          <EdgeSize>
+            <AbsValue val="16" />
+          </EdgeSize>
+        </Backdrop>
+
+        <Layers>
+          <Layer level="OVERLAY">
+            <FontString parentKey="BlankText" inherits="GameFontHighlight">
+              <Anchors>
+                <Anchor point="CENTER" />
+              </Anchors>
+            </FontString>
+
+            <FontString parentKey="BlankText" inherits="GameFontNormal">
+              <Anchors>
+                <Anchor point="CENTER" />
+              </Anchors>
+            </FontString>
+          </Layer>
+        </Layers>
+      </Frame>
+
+      <Frame parentKey="TopDropIndicator" name="$parentButtonTopDropIndicator" inherits="DropIndicatorTemplate" hidden="true">
+        <Anchors>
+          <Anchor point="TOPLEFT" relativeTo="$parentText" relativePoint="TOPLEFT">
+            <Offset>
+              <AbsDimension x="-30" y="8"/>
+            </Offset>
+          </Anchor>
+          <Anchor point="TOPRIGHT" relativeTo="$parentText" relativePoint="TOPRIGHT">
+            <Offset>
+              <AbsDimension x="30"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+      </Frame>
+
+      <Frame parentKey="BottomDropIndicator" name="$parentBottomDropIndicator" inherits="DropIndicatorTemplate" hidden="true">
+        <Anchors>
+          <Anchor point="BOTTOMLEFT" relativeTo="$parentText" relativePoint="BOTTOMLEFT">
+            <Offset>
+              <AbsDimension x="-30" y="-8"/>
+            </Offset>
+          </Anchor>
+          <Anchor point="BOTTOMRIGHT" relativeTo="$parentText" relativePoint="BOTTOMRIGHT">
+            <Offset>
+              <AbsDimension x="30"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+      </Frame>
     </Frames>
   </Frame>
 
   <Frame name="TodoChecklisterTemplate" inherits="TodoChecklisterResponsiveFrameTemplate" parent="UIParent" virtual="true">
     <Scripts>
-      <OnLoad>
-        OnLoad(self)
-      </OnLoad>
       <OnShow>
         OnShow(self)
       </OnShow>
@@ -102,12 +202,59 @@
     </Anchors>
 
     <Frames>
+      <GameTooltip parentKey="TodoTooltip" name="$parentTodoTooltip" frameStrata="TOOLTIP" inherits="GameTooltipTemplate" />
+
+      <CheckButton parentKey="KeepFocus" name="$parentKeepFocus" inherits="UICheckButtonTemplate" hidden="true">
+        <Size x="20" y="20"/>
+
+        <Scripts>
+          <OnClick>
+            ToggleFocusSettings(self)
+            PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
+          </OnClick>
+          <OnLoad>
+            self.Focus:SetText("Keep focus");
+            ToggleFocusLoad(self);
+          </OnLoad>
+          <OnEnter>
+            self:GetParent().TodoTooltip:SetOwner(self, "ANCHOR_NONE")
+            self:GetParent().TodoTooltip:ClearAllPoints()
+            self:GetParent().TodoTooltip:SetPoint("BOTTOMRIGHT", self, "TOPRIGHT")
+            self:GetParent().TodoTooltip:AddLine("Whether or not the textbox cursor \r\nshould persist after adding an item",1,1,1)
+            self:GetParent().TodoTooltip:Show()
+          </OnEnter>
+          <OnLeave>
+            self:GetParent().TodoTooltip:Hide()
+          </OnLeave>
+        </Scripts>
+
+        <Anchors>
+          <Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT">
+            <Offset x="-30" y="-6"/>
+          </Anchor>
+        </Anchors>
+
+        <Layers>
+          <Layer level="OVERLAY">
+            <FontString name="$parentFocus" parentKey="Focus" inherits="GameFontHighlightSmallOutline" justifyH="RIGHT">
+              <Anchors>
+                <Anchor point="RIGHT" relativeTo="$parent" relativePoint="LEFT">
+                </Anchor>
+              </Anchors>
+            </FontString>
+          </Layer>
+        </Layers>
+      </CheckButton>
+
       <EditBox parentKey="TodoText" name="$parentTodoText" autoFocus="false" inherits="InputBoxTemplate">
         <Size x="0" y="20"/>
         <Scripts>
           <OnEnterPressed>
             OnSaveItem(self)
           </OnEnterPressed>
+          <OnHyperlinkClick>
+            SetItemRef(link, text, button, self);
+          </OnHyperlinkClick>
         </Scripts>
         <Anchors>
           <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
@@ -181,7 +328,6 @@
           </Layer>
         </Layers>
       </Frame>
-
 
       <ScrollFrame parentKey="ScrollFrame" name="TodoItemsScrollFrame" inherits="HybridScrollFrameTemplate">
         <Anchors>

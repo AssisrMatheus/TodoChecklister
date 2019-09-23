@@ -1,0 +1,10 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" 
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
+..\FrameXML\UI.xsd">
+  <Include file="utils\utils.xml"/>
+  <Include file="config\config.xml"/>
+  <Include file="model\model.xml"/>
+  <Include file="config\interfaceOptions.xml"/>
+  <Include file="components\components.xml"/>
+  <Include file="modules\modules.xml"/>
+</Ui>

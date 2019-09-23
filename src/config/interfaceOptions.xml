@@ -1,0 +1,249 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" 
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
+..\FrameXML\UI.xsd">
+  <Script file="interfaceOptions.lua"/>
+
+
+  <Frame name="TodoChecklisterInterfaceOptionsTemplate" virtual="true" parent="UIParent">
+    <Layers>
+      <Layer level="OVERLAY">
+        <FontString name="$parentTitle" parentKey="Title" inherits="GameFontNormalLarge" justifyH="LEFT" justifyV="TOP">
+          <Anchors>
+            <Anchor point="TOPLEFT">
+              <Offset x="10" y="-15"/>
+            </Anchor>
+            <Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT">
+              <Offset x="10" y="-45"/>
+            </Anchor>
+          </Anchors>
+        </FontString>
+        <FontString name="$parentVersion" parentKey="Version" inherits="GameFontNormalLarge" justifyH="RIGHT" justifyV="TOP">
+          <Anchors>
+            <Anchor point="TOPRIGHT">
+              <Offset x="-10" y="-15"/>
+            </Anchor>
+          </Anchors>
+        </FontString>
+      </Layer>
+    </Layers>
+
+    <Frames>
+      <Frame parentKey="SettingsContainer" name="$parentSettingsContainer">
+        <Anchors>
+          <Anchor point="TOPLEFT" relativeTo="$parentTitle" relativePoint="BOTTOMLEFT">
+            <Offset x="-5"/>
+          </Anchor>
+          <Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT">
+            <Offset x="-7" y="7"/>
+          </Anchor>
+        </Anchors>
+
+        <Frames>
+          <!-- "Keep focus" checkbox -->
+          <CheckButton parentKey="FocusCheckButton" name="$parentFocusCheckButton" inherits="UICheckButtonTemplate">
+            <Size x="28" y="28"/>
+
+            <Scripts>
+              <OnLoad>
+                self.Text:SetText("Display 'Keep focus' checkbox");
+              </OnLoad>
+              <OnClick>
+                PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
+                ShowKeepFocusClick(self)
+              </OnClick>
+            </Scripts>
+
+            <Anchors>
+              <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+
+              </Anchor>
+            </Anchors>
+
+            <Layers>
+              <Layer level="OVERLAY">
+                <FontString name="$parentText" parentKey="Text" inherits="GameFontWhite" justifyH="LEFT">
+                  <Anchors>
+                    <Anchor point="LEFT" relativeTo="$parent" relativePoint="Right">
+                    </Anchor>
+                  </Anchors>
+                </FontString>
+              </Layer>
+            </Layers>
+          </CheckButton>
+
+          <CheckButton parentKey="KeepFocusCheckButton" name="$parentKeepFocusCheckButton" inherits="UICheckButtonTemplate">
+            <Size x="28" y="28"/>
+
+            <Scripts>
+              <OnLoad>
+                self.Text:SetText("Keep focus");
+              </OnLoad>
+              <OnClick>
+                PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
+                KeepFocusClick(self)
+              </OnClick>
+            </Scripts>
+
+            <Anchors>
+              <Anchor point="LEFT" relativeTo="$parentFocusCheckButtonText" relativePoint="RIGHT">
+                <Offset x="250"/>
+
+              </Anchor>
+            </Anchors>
+
+            <Layers>
+              <Layer level="OVERLAY">
+                <FontString name="$parentText" parentKey="Text" inherits="GameFontWhite" justifyH="LEFT">
+                  <Anchors>
+                    <Anchor point="LEFT" relativeTo="$parent" relativePoint="RIGHT">
+                    </Anchor>
+                  </Anchors>
+                </FontString>
+              </Layer>
+            </Layers>
+          </CheckButton>
+
+          <CheckButton parentKey="FanfareCheck" name="$parentFanfareCheck" inherits="UICheckButtonTemplate">
+            <Size x="28" y="28"/>
+
+            <Scripts>
+              <OnLoad>
+                self.Text:SetText("Play fanfare when completing all items");
+              </OnLoad>
+              <OnClick>
+                PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
+                OnFanfarreCheck(self)
+              </OnClick>
+            </Scripts>
+
+            <Anchors>
+              <Anchor point="LEFT" relativeTo="$parentKeepFocusCheckButton" relativePoint="LEFT">
+                <Offset>
+                  <AbsDimension y="-40"/>
+                </Offset>
+              </Anchor>
+            </Anchors>
+
+            <Layers>
+              <Layer level="OVERLAY">
+                <FontString name="$parentText" parentKey="Text" inherits="GameFontWhite" justifyH="LEFT">
+                  <Anchors>
+                    <Anchor point="LEFT" relativeTo="$parent" relativePoint="Right">
+                    </Anchor>
+                  </Anchors>
+                </FontString>
+              </Layer>
+            </Layers>
+          </CheckButton>
+
+          <CheckButton parentKey="LinkedCounterCheckButton" name="$parentLinkedCounterCheckButton" inherits="UICheckButtonTemplate">
+            <Size x="28" y="28"/>
+
+            <Scripts>
+              <OnLoad>
+                self.Text:SetText("Display linked items amount from bag");
+              </OnLoad>
+              <OnClick>
+                PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
+                DisplayLinkedCountClick(self)
+              </OnClick>
+            </Scripts>
+
+            <Anchors>
+              <Anchor point="LEFT" relativeTo="$parentFocusCheckButton" relativePoint="LEFT">
+                <Offset>
+                  <AbsDimension y="-39" />
+                </Offset>
+              </Anchor>
+            </Anchors>
+
+            <Layers>
+              <Layer level="OVERLAY">
+                <FontString name="$parentText" parentKey="Text" inherits="GameFontWhite" justifyH="LEFT">
+                  <Anchors>
+                    <Anchor point="LEFT" relativeTo="$parent" relativePoint="Right">
+                    </Anchor>
+                  </Anchors>
+                </FontString>
+              </Layer>
+            </Layers>
+          </CheckButton>
+
+          <Slider parentKey="Opacity" name="$parentOpacity" inherits="OptionsSliderTemplate" minValue="0" maxValue="1" valueStep="0.01" defaultValue="1">
+            <Anchors>
+              <Anchor point="TOPLEFT" relativeTo="$parentLinkedCounterCheckButton" relativePoint="BOTTOMLEFT">
+                <Offset x="10" y="-40"/>
+              </Anchor>
+            </Anchors>
+
+            <Layers>
+              <Layer level="ARTWORK">
+                <FontString name="$parentText" inherits="GameFontNormalSmall" text="OPACITY">
+                  <Anchors>
+                    <Anchor point="TOP" relativeTo="$parent">
+                      <Offset>
+                        <AbsDimension x="0" y="11"/>
+                      </Offset>
+                    </Anchor>
+                  </Anchors>
+                </FontString>
+
+                <FontString parentKey="Value" name="$parentValue" inherits="GameFontHighlight">
+                  <Anchors>
+                    <Anchor point="BOTTOM" relativeTo="$parent">
+                      <Offset>
+                        <AbsDimension x="0" y="-15"/>
+                      </Offset>
+                    </Anchor>
+                  </Anchors>
+                </FontString>
+              </Layer>
+            </Layers>
+
+            <Scripts>
+              <OnLoad>
+                self.Low:SetText("0%")
+                self.High:SetText("100%")
+              </OnLoad>
+              <OnValueChanged>
+                  OpacityValueChanged(self)
+                  self.Value:SetText(string.format("%d%s", self:GetValue() * 100, "%"))
+              </OnValueChanged>
+            </Scripts>
+          </Slider>
+
+          <!-- Footer github url -->
+          <Button parentKey="Obs" name="$parentObs" hidden="false">
+            <Size x="300" y="15"/>
+
+            <Anchors>
+              <Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT">
+              </Anchor>
+              <Anchor point="LEFT">
+              </Anchor>
+            </Anchors>
+            <Layers>
+              <Layer level="OVERLAY">
+                <FontString name="$parentText" parentKey="Text" inherits="GameFontHighlight" justifyH="RIGHT" justifyV="BOTTOM">
+                  <Anchors>
+                    <Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT">
+                    </Anchor>
+                  </Anchors>
+                </FontString>
+              </Layer>
+            </Layers>
+
+            <Scripts>
+              <OnEnter>
+                self.Text:SetFontObject(GameFontNormal)
+              </OnEnter>
+              <OnLeave>
+                self.Text:SetFontObject(GameFontHighlight)
+              </OnLeave>
+            </Scripts>
+          </Button>
+        </Frames>
+      </Frame>
+    </Frames>
+  </Frame>
+</Ui>

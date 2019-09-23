@@ -2,17 +2,10 @@
 ## Title: TodoChecklister
 ## Author: Matheus Assis Rios (github.com/AssisrMatheus)
 ## Notes: I have bad memory so I made this. A todolist/checklist AddOn for World of Warcraft.
-## Version: 1.1.7
+## Version: 1.2.0
 ## DefaultState: enabled
-## SavedVariables: TodoChecklisterDB, TodoChecklisterMapIcon
+## OptionalDeps: LibStub
+## SavedVariables: TodoChecklisterDB, TodoChecklisterMapIcon, TodoChecklisterSettingsDB
 
-constants.lua
-tableUtils.lua
-utils.lua
-debug.lua
-
-components\components.xml
-
-chat.lua
-minimapIcon.lua
-init.lua
+src\init.xml
+src\init.lua
