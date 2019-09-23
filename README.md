@@ -10,7 +10,7 @@ You can download it from a handful of places:
 # TodoChecklister
 A todolist/checklist AddOn for World of Warcraft. Save the bad guy's names, the items you're going to farm, the path you're going to take.
 
-![demoGif](./demo.gif)
+![demoGif](./demo1.2.gif)
 
 - Link items from you bag and display their amount
 - List is saved even when you log out
