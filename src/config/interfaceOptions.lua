@@ -46,13 +46,12 @@ function InterfaceOptions:LoadCFG()
     end
 
     self.frame.SettingsContainer.FanfareCheck:SetChecked(Settings:PlayFanfare())
+    self.frame.SettingsContainer.LinkedCounterCheckButton:SetChecked(Settings:DisplayLinked())
   end
 
   if (TodoAddon.TodoChecklisterFrame) then
     TodoAddon.TodoChecklisterFrame:LoadCFG()
   end
-
-  self.frame.SettingsContainer.LinkedCounterCheckButton:SetChecked(Settings:DisplayLinked())
 end
 
 ---
@@ -69,6 +68,9 @@ function InterfaceOptions:Init()
   self.frame.name = addonName
   self.frame.default = function(frame)
     self:Defaults()
+  end
+  self.frame.refresh = function(frame)
+    self:LoadCFG()
   end
 
   -- Set up fixed values

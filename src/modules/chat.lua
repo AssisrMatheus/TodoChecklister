@@ -12,6 +12,8 @@ local Constants = TodoAddon.Constants
 local Utils = TodoAddon.Utils
 ---@class TodoChecklisterFrame
 local TodoChecklisterFrame = TodoAddon.TodoChecklisterFrame
+---@class InterfaceOptions
+local InterfaceOptions = TodoAddon.InterfaceOptions
 
 --------------------------------------
 -- Declarations
@@ -55,7 +57,7 @@ Chat.commands = {
         print(" ")
     end,
     ["reload"] = function()
-        TodoChecklisterFrame:Defaults()
+        InterfaceOptions:Defaults()
     end
 
     -- ["example"] = {

@@ -20,11 +20,6 @@ local TodoList = TodoAddon.TodoList
 ---@field public text string @The text content of an item
 ---@field public isChecked boolean @Whether or not this item is done
 
----
----The SavedVariable where the items are stored into
----@type TodoItem[]|nil
-local DB
-
 -- {
 --   pages = [
 --     {
@@ -55,7 +50,11 @@ function TodoList:AddItem(text)
 	-- If text is not empty
 	if (text and text ~= nil and text ~= "") then
 		-- Adds one at the end of array
-		table.insert(DB, #DB + 1, {text = text, isChecked = false, id = text .. (#DB + 1)})
+		table.insert(
+			TodoChecklisterDB,
+			#TodoChecklisterDB + 1,
+			{text = text, isChecked = false, id = text .. (#TodoChecklisterDB + 1)}
+		)
 	end
 end
 
@@ -63,8 +62,8 @@ end
 ---Removes an element from a given position, moving down other elements to close space and decrementing the size of the array
 ---@param indexToRemove number @The ONE-based location in the array to remove.
 function TodoList:RemoveItem(indexToRemove)
-	if (indexToRemove > 0 and DB and DB[indexToRemove]) then
-		table.remove(DB, indexToRemove)
+	if (indexToRemove > 0 and TodoChecklisterDB and TodoChecklisterDB[indexToRemove]) then
+		table.remove(TodoChecklisterDB, indexToRemove)
 		return true
 	end
 	return false
@@ -75,10 +74,10 @@ end
 ---@param indexToUpdate number @The ONE-based location in the array to remove.
 ---@param updatedItem TodoItem @Source object
 function TodoList:UpdateItem(indexToUpdate, updatedItem)
-	local item = DB[indexToUpdate]
+	local item = TodoChecklisterDB[indexToUpdate]
 	-- If the list exists and the item exists on the list
-	if (indexToUpdate > 0 and DB and DB[indexToUpdate] and updatedItem) then
-		DB[indexToUpdate] = TableUtils:Assign({}, DB[indexToUpdate], updatedItem)
+	if (indexToUpdate > 0 and TodoChecklisterDB and TodoChecklisterDB[indexToUpdate] and updatedItem) then
+		TodoChecklisterDB[indexToUpdate] = TableUtils:Assign({}, TodoChecklisterDB[indexToUpdate], updatedItem)
 		return true
 	end
 	return false
@@ -89,14 +88,14 @@ end
 ---@param fromIndex number @The ONE-based location in the array to move from.
 ---@param toIndex number @The ONE-based location in the array to move to.
 function TodoList:Move(fromIndex, toIndex)
-	TableUtils:Move(DB, fromIndex, toIndex)
+	TableUtils:Move(TodoChecklisterDB, fromIndex, toIndex)
 end
 
 ---
 ---Return every item
 ---@return TodoItem[] @The saved list of items
 function TodoList:GetItems()
-	return DB
+	return TodoChecklisterDB
 end
 
 ---
@@ -119,7 +118,7 @@ end
 ---@return number @The index of such item
 function TodoList:GetIndexByText(text)
 	return TableUtils:FindIndex(
-		DB,
+		TodoChecklisterDB,
 		function(x)
 			return x.text == text
 		end
@@ -132,7 +131,7 @@ end
 ---@return number @The index of such item
 function TodoList:GetIndexById(id)
 	return TableUtils:FindIndex(
-		DB,
+		TodoChecklisterDB,
 		function(x)
 			return x.id == id
 		end
@@ -143,17 +142,17 @@ end
 ---Gets the message of the day value based on available items the user currently has
 ---@return string @MOTD value
 function TodoList:GetMOTD()
-	if (DB and #DB > 0) then
+	if (TodoChecklisterDB and #TodoChecklisterDB > 0) then
 		local completedList =
 			TableUtils:Filter(
-			DB,
+			TodoChecklisterDB,
 			function(x)
 				return x.isChecked == true
 			end
 		)
 		local notList =
 			TableUtils:Filter(
-			DB,
+			TodoChecklisterDB,
 			function(x)
 				return x.isChecked == false
 			end
@@ -199,9 +198,10 @@ end
 ---
 ---Initializes required properties for this class
 function TodoList:Init()
-	DB = TodoChecklisterDB
-
-	if (not DB) then
-		DB = {}
+	if (not TodoChecklisterDB) then
+		---
+		---The SavedVariable where the items are stored into
+		---@type TodoItem[]|nil
+		TodoChecklisterDB = {}
 	end
 end
