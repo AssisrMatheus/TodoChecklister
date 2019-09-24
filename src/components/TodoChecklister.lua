@@ -12,6 +12,8 @@ local ResponsiveFrame = TodoAddon.ResponsiveFrame
 local TableUtils = TodoAddon.TableUtils
 ---@class TodoList
 local TodoList = TodoAddon.TodoList
+---@class FunctionUtils
+local FunctionUtils = TodoAddon.FunctionUtils
 
 --------------------------------------
 -- Declarations
@@ -38,6 +40,7 @@ function TodoChecklisterFrame:AddItem(text)
 		else
 			TodoList:UpdateItem(self.selectedItem, {text = text})
 		end
+		self.memoizationId = self.memoizationId + 1
 		self:ClearSelected()
 		self:OnUpdate()
 	end
@@ -68,6 +71,7 @@ function TodoChecklisterFrame:RemoveItemWithIndex(indexToRemove)
 			self.selectedItem = indexToSelect
 		end
 
+		self.memoizationId = self.memoizationId + 1
 		self:OnUpdate()
 	end
 end
@@ -104,6 +108,7 @@ function TodoChecklisterFrame:Move(fromIndex, toIndex, fromChat)
 			self.selectedItem = TodoList:GetIndexByItem(selectedItem)
 		end
 
+		self.memoizationId = self.memoizationId + 1
 		self:OnUpdate()
 	end
 end
@@ -115,6 +120,7 @@ function TodoChecklisterFrame:CheckItemWithIndex(indexToCheck)
 	if (indexToCheck and type(indexToCheck) == "number" and indexToCheck > 0) then
 		local item = TodoList:GetItems()[indexToCheck]
 		TodoList:UpdateItem(indexToCheck, {isChecked = (not item.isChecked)})
+		self.memoizationId = self.memoizationId + 1
 		self:OnUpdate()
 		if
 			(Settings:PlayFanfare() and
@@ -155,6 +161,7 @@ function TodoChecklisterFrame:SelectItem(todoItem, buttonFrame)
 		self:ClearSelected()
 	end
 
+	self.memoizationId = self.memoizationId + 1
 	self:OnUpdate()
 end
 
@@ -214,40 +221,46 @@ function TodoChecklisterFrame:PaintItem(frame, todoItem, index)
 	frame.TodoContent:SetWidth(TodoItemsScrollFrame:GetWidth() - frame.RemoveButton:GetWidth() - 23)
 
 	if (self.displayLinked) then
-		-- Startup regex process by storing string values
-		local finalString = ""
-		local remainingString = todoItem.text
+		FunctionUtils:Memoize(
+			function()
+				-- Startup regex process by storing string values
+				local finalString = ""
+				local remainingString = todoItem.text
 
-		-- If the remaining string still has linked items
-		while (remainingString and not (not GetItemInfo(remainingString))) do
-			-- Find the linked item position
-			local st, en = string.find(remainingString, "|Hitem:.-|r")
+				-- If the remaining string still has linked items
+				while (remainingString and not (not GetItemInfo(remainingString))) do
+					-- Find the linked item position
+					local st, en = string.find(remainingString, "|Hitem:.-|r")
 
-			if (en) then
-				-- Set the final string to:
-				finalString =
-					table.concat {
-					finalString, -- Current final string
-					remainingString:sub(1, en), -- Current string until now
-					"(",
-					GetItemCount(remainingString), -- Amount from bag
-					") "
-				}
+					if (en) then
+						-- Set the final string to:
+						finalString =
+							table.concat {
+							finalString, -- Current final string
+							remainingString:sub(1, en), -- Current string until now
+							"(",
+							GetItemCount(remainingString), -- Amount from bag
+							") "
+						}
 
-				-- Remove the current linked item from the remaining string to continue the process
-				remainingString = remainingString:sub(en + 1)
-			else
-				remainingString = ""
-			end
-		end
+						-- Remove the current linked item from the remaining string to continue the process
+						remainingString = remainingString:sub(en + 1)
+					else
+						remainingString = ""
+					end
+				end
 
-		-- If the final string has been set
-		if (string.len(finalString) > 0) then
-			frame.TodoContent.FontText:SetText(finalString .. remainingString)
-		else
-			-- If not, the string doesn't have links
-			frame.TodoContent.FontText:SetText(todoItem.text)
-		end
+				-- If the final string has been set
+				if (string.len(finalString) > 0) then
+					frame.TodoContent.FontText:SetText(finalString .. remainingString)
+				else
+					-- If not, the string doesn't have links
+					frame.TodoContent.FontText:SetText(todoItem.text)
+				end
+			end,
+			todoItem.id .. self.memoizationId,
+			todoItem.id .. "Count"
+		)
 	else
 		frame.TodoContent.FontText:SetText(todoItem.text)
 	end
@@ -489,11 +502,16 @@ end
 function TodoChecklisterFrame:Init()
 	-- Creates the addon frame
 	local frame = CreateFrame("Frame", "TodoChecklister", UIParent, "TodoChecklisterTemplate")
+
+	-- Store a value to be used as a memoization id
+	self.memoizationId = 0
+
 	frame:RegisterEvent("BAG_UPDATE_DELAYED")
 	frame:HookScript(
 		"OnEvent",
 		function(frame, event)
 			if (event == "BAG_UPDATE_DELAYED") then
+				self.memoizationId = self.memoizationId + 1
 				self:OnUpdate()
 			end
 		end
