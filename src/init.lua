@@ -23,6 +23,17 @@ local Chat = TodoAddon.Chat
 local MinimapIcon = TodoAddon.MinimapIcon
 
 --------------------------------------
+-- Init keybindings
+--------------------------------------
+BINDING_HEADER_TC_HEADER = "TodoChecklister"
+BINDING_NAME_TC_TOGGLE_FRAME = "Toggle log visibility"
+
+-- Export the method TodoChecklisterFrame:Toggle to a global function
+-- so that it can be called from a keybind
+GLOBAL_TodoChecklisterFrameToggle = function () TodoChecklisterFrame:Toggle() end
+
+
+--------------------------------------
 -- Initialization
 --------------------------------------
 local main = CreateFrame("Frame", addonName .. "MAINFRAME", UIParent)

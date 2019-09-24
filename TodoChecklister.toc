@@ -9,3 +9,4 @@
 
 src\init.xml
 src\init.lua
+bindings.xml
