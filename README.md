@@ -6,6 +6,8 @@
 You can download it from a handful of places:
 - [Curseforge/twitch](https://www.curseforge.com/wow/addons/todochecklister/files)
 - [Github releases](https://github.com/AssisrMatheus/TodoChecklister/releases)
+- [WoW Interface - Retail](https://www.wowinterface.com/downloads/info25349-TodoChecklister.html)
+- [WoW Interface - Classic](https://www.wowinterface.com/downloads/info25348-TodoChecklister.html)
 
 # TodoChecklister
 A todolist/checklist AddOn for World of Warcraft. Save the bad guy's names, the items you're going to farm, the path you're going to take.
