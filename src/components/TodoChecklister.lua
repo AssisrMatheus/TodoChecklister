@@ -539,8 +539,8 @@ hooksecurefunc(
 			not TodoChecklisterFrame.frame.TodoText:HasFocus() or
 				(ChatEdit_GetActiveWindow() or (BrowseName and BrowseName:IsVisible()) or
 					(MacroFrameText and MacroFrameText:HasFocus()) or
-					(TradeSkillFrame and TradeSkillFrame.SearchBox:HasFocus()) or
-					(CommunitiesFrame and CommunitiesFrame.ChatEditBox:HasFocus()) or
+					(TradeSkillFrame and TradeSkillFrame.SearchBox and TradeSkillFrame.SearchBox:HasFocus()) or
+					(CommunitiesFrame and CommunitiesFrame.ChatEditBox and CommunitiesFrame.ChatEditBox:HasFocus()) or
 					(SocialPostFrame and Social_IsShown()))
 		 then
 			-- Link will have been posted to one of the above areas. Ignore.
