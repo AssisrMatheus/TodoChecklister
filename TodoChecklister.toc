@@ -2,7 +2,7 @@
 ## Title: TodoChecklister
 ## Author: Matheus Assis Rios (github.com/AssisrMatheus)
 ## Notes: I have bad memory so I made this. A todolist/checklist AddOn for World of Warcraft.
-## Version: 1.2.1
+## Version: 1.2.2
 ## DefaultState: enabled
 ## OptionalDeps: LibStub, LibDataBroker
 ## SavedVariables: TodoChecklisterDB, TodoChecklisterMapIcon, TodoChecklisterSettingsDB
