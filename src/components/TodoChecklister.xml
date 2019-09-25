@@ -193,6 +193,12 @@
       <OnSizeChanged>
         OnSizeChanged(self)
       </OnSizeChanged>
+      <OnEnter>
+        OnEnter(self)
+      </OnEnter>
+      <OnLeave>
+        OnLeave(self)
+      </OnLeave>
     </Scripts>
 
     <Anchors>

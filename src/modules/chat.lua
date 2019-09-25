@@ -14,6 +14,8 @@ local Utils = TodoAddon.Utils
 local TodoChecklisterFrame = TodoAddon.TodoChecklisterFrame
 ---@class InterfaceOptions
 local InterfaceOptions = TodoAddon.InterfaceOptions
+---@class Settings
+local Settings = TodoAddon.Settings
 
 --------------------------------------
 -- Declarations
@@ -32,6 +34,10 @@ Chat.commands = {
         TodoChecklisterFrame:Toggle()
     end,
     ["add"] = function(...)
+        if (TodoChecklisterFrame.selectedItem and TodoChecklisterFrame.selectedItem > 0) then
+            TodoChecklisterFrame:ClearSelected()
+            TodoChecklisterFrame:OnUpdate()
+        end
         TodoChecklisterFrame:AddItem(strjoin(" ", ...))
     end,
     ["rmv"] = function(indexToRemove)
@@ -71,9 +77,11 @@ Chat.commands = {
 -- Chat functions
 --------------------------------------
 function Chat:Print(...)
-    local hex = select(4, Utils:GetThemeColor())
-    local prefix = string.format("|cff%s%s|r", hex:upper(), addonName)
-    DEFAULT_CHAT_FRAME:AddMessage(string.join(" ", prefix, ...))
+    if (not Settings:ChatMuted()) then
+        local hex = select(4, Utils:GetThemeColor())
+        local prefix = string.format("|cff%s%s|r", hex:upper(), addonName)
+        DEFAULT_CHAT_FRAME:AddMessage(string.join(" ", prefix, ...))
+    end
 end
 
 --------------------------------------

@@ -234,14 +234,23 @@ function TodoChecklisterFrame:PaintItem(frame, todoItem, index)
 
 					if (en) then
 						-- Set the final string to:
-						finalString =
-							table.concat {
-							finalString, -- Current final string
-							remainingString:sub(1, en), -- Current string until now
-							"(",
-							GetItemCount(remainingString), -- Amount from bag
-							") "
-						}
+						local count = GetItemCount(remainingString, self.displayBankOnLinked, self.displayChargesOnLinked)
+						if (count and count > 0) then
+							finalString =
+								table.concat {
+								finalString, -- Current final string
+								remainingString:sub(1, en), -- Current string until now
+								"(",
+								count,
+								")"
+							}
+						else
+							finalString =
+								table.concat {
+								finalString, -- Current final string
+								remainingString:sub(1, en) -- Current string until now
+							}
+						end
 
 						-- Remove the current linked item from the remaining string to continue the process
 						remainingString = remainingString:sub(en + 1)
@@ -460,6 +469,7 @@ function TodoChecklisterFrame:Defaults()
 	self.frame:SetPoint("BOTTOMRIGHT", "$parent", "BOTTOMRIGHT", -120, 30)
 	self.frame:SetScale(1)
 	self.frame:SetAlpha(1)
+	self.memoizationId = 0
 
 	Settings:Defaults()
 	self:LoadCFG()
@@ -475,6 +485,7 @@ function TodoChecklisterFrame:LoadCFG()
 			self.frame.KeepFocus:Hide()
 		end
 
+		self.memoizationId = self.memoizationId + 1
 		self.frame.KeepFocus:SetChecked(Settings:KeepFocus())
 
 		if (not Settings:KeepFocus()) then
@@ -487,11 +498,14 @@ function TodoChecklisterFrame:LoadCFG()
 
 		-- Set up scroll bar
 		self.frame.ScrollFrame.update = function()
+			self.memoizationId = self.memoizationId + 1
 			self:OnUpdate()
 		end
 		HybridScrollFrame_CreateButtons(self.frame.ScrollFrame, "TodoItemTemplate")
 
 		self.displayLinked = Settings:DisplayLinked()
+		self.displayBankOnLinked = Settings:DisplayBankOnLinked()
+		self.displayChargesOnLinked = Settings:DisplayChargesOnLinked()
 
 		self:OnUpdate()
 	end
@@ -620,4 +634,18 @@ end
 
 function ToggleFocusLoad(frame)
 	frame:SetChecked(Settings:KeepFocus())
+end
+
+function OnEnter(frame)
+	-- if (Settings:OpacityOnHover()) then
+	-- 	frame:SetAlpha(Settings:OpacityOnHover())
+	-- end
+end
+
+function OnLeave(frame)
+	-- if (Settings:Opacity()) then
+	-- 	frame:SetAlpha(Settings:Opacity())
+	-- else
+	-- 	frame:SetAlpha(1)
+	-- end
 end

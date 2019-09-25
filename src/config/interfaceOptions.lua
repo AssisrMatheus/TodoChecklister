@@ -11,6 +11,8 @@ local addonName = select(1, ...)
 local Constants = TodoAddon.Constants
 ---@class Settings
 local Settings = TodoAddon.Settings
+---@class MinimapIcon
+local MinimapIcon = TodoAddon.MinimapIcon
 
 --------------------------------------
 -- Declarations
@@ -29,6 +31,7 @@ function InterfaceOptions:Defaults()
   -- This will also call Settings:Defaults
   TodoAddon.TodoChecklisterFrame:Defaults()
   self:LoadCFG()
+  TodoAddon.MinimapIcon:LoadCFG()
 end
 
 ---
@@ -45,8 +48,19 @@ function InterfaceOptions:LoadCFG()
       self.frame.SettingsContainer.Opacity.Value:SetText(string.format("%d%s", Settings:Opacity() * 100, "%"))
     end
 
+    if (Settings:OpacityOnHover()) then
+      self.frame.SettingsContainer.OpacityOnHover:SetValue(Settings:OpacityOnHover())
+      self.frame.SettingsContainer.OpacityOnHover.Value:SetText(
+        string.format("%d%s", Settings:OpacityOnHover() * 100, "%")
+      )
+    end
+
     self.frame.SettingsContainer.FanfareCheck:SetChecked(Settings:PlayFanfare())
     self.frame.SettingsContainer.LinkedCounterCheckButton:SetChecked(Settings:DisplayLinked())
+    self.frame.SettingsContainer.MuteChatCheckButton:SetChecked(Settings:ChatMuted())
+    self.frame.SettingsContainer.ToggleMapButton:SetChecked(Settings:DisplayMinimapIcon())
+    self.frame.SettingsContainer.DisplayBankOnLinked:SetChecked(Settings:DisplayBankOnLinked())
+    self.frame.SettingsContainer.DisplayChargesOnLinked:SetChecked(Settings:DisplayChargesOnLinked())
   end
 
   if (TodoAddon.TodoChecklisterFrame) then
@@ -134,5 +148,31 @@ end
 
 function DisplayLinkedCountClick(frame)
   Settings:SetDisplayLinked(frame:GetChecked())
+  InterfaceOptions:LoadCFG()
+end
+
+function ToggleMapClick(frame)
+  Settings:SetDisplayMinimapIcon(frame:GetChecked())
+  TodoAddon.MinimapIcon:LoadCFG()
+end
+
+function MuteChatClick(frame)
+  Settings:SetChatMuted(frame:GetChecked())
+end
+
+function OpacityOnHoverValueChanged(frame)
+  if (InterfaceOptions.frame) then
+    Settings:SetOpacityOnHover(frame:GetValue())
+    InterfaceOptions:LoadCFG()
+  end
+end
+
+function DisplayBankClick(frame)
+  Settings:SetDisplayBankOnLinked(frame:GetChecked())
+  InterfaceOptions:LoadCFG()
+end
+
+function DisplayChargesClick(frame)
+  Settings:SetDisplayChargesOnLinked(frame:GetChecked())
   InterfaceOptions:LoadCFG()
 end

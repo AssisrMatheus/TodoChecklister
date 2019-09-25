@@ -103,39 +103,6 @@
             </Layers>
           </CheckButton>
 
-          <CheckButton parentKey="FanfareCheck" name="$parentFanfareCheck" inherits="UICheckButtonTemplate">
-            <Size x="28" y="28"/>
-
-            <Scripts>
-              <OnLoad>
-                self.Text:SetText("Play fanfare when completing all items");
-              </OnLoad>
-              <OnClick>
-                PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
-                OnFanfarreCheck(self)
-              </OnClick>
-            </Scripts>
-
-            <Anchors>
-              <Anchor point="LEFT" relativeTo="$parentKeepFocusCheckButton" relativePoint="LEFT">
-                <Offset>
-                  <AbsDimension y="-40"/>
-                </Offset>
-              </Anchor>
-            </Anchors>
-
-            <Layers>
-              <Layer level="OVERLAY">
-                <FontString name="$parentText" parentKey="Text" inherits="GameFontWhite" justifyH="LEFT">
-                  <Anchors>
-                    <Anchor point="LEFT" relativeTo="$parent" relativePoint="Right">
-                    </Anchor>
-                  </Anchors>
-                </FontString>
-              </Layer>
-            </Layers>
-          </CheckButton>
-
           <CheckButton parentKey="LinkedCounterCheckButton" name="$parentLinkedCounterCheckButton" inherits="UICheckButtonTemplate">
             <Size x="28" y="28"/>
 
@@ -169,9 +136,174 @@
             </Layers>
           </CheckButton>
 
+          <CheckButton parentKey="ToggleMapButton" name="$parentToggleMapButton" inherits="UICheckButtonTemplate">
+            <Size x="28" y="28"/>
+
+            <Scripts>
+              <OnLoad>
+                self.Text:SetText("Display minimap icon");
+              </OnLoad>
+              <OnClick>
+                PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
+                ToggleMapClick(self)
+              </OnClick>
+            </Scripts>
+
+            <Anchors>
+              <Anchor point="LEFT" relativeTo="$parentKeepFocusCheckButton" relativePoint="LEFT">
+                <Offset>
+                  <AbsDimension y="-40"/>
+                </Offset>
+              </Anchor>
+            </Anchors>
+
+            <Layers>
+              <Layer level="OVERLAY">
+                <FontString name="$parentText" parentKey="Text" inherits="GameFontWhite" justifyH="LEFT">
+                  <Anchors>
+                    <Anchor point="LEFT" relativeTo="$parent" relativePoint="Right">
+                    </Anchor>
+                  </Anchors>
+                </FontString>
+              </Layer>
+            </Layers>
+          </CheckButton>
+
+          <CheckButton parentKey="MuteChatCheckButton" name="$parentMuteChatCheckButton" inherits="UICheckButtonTemplate">
+            <Size x="28" y="28"/>
+
+            <Scripts>
+              <OnLoad>
+                self.Text:SetText("Mute all chat messages");
+              </OnLoad>
+              <OnClick>
+                PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
+                MuteChatClick(self)
+              </OnClick>
+            </Scripts>
+
+            <Anchors>
+              <Anchor point="LEFT" relativeTo="$parentLinkedCounterCheckButton" relativePoint="LEFT">
+                <Offset>
+                  <AbsDimension y="-39" />
+                </Offset>
+              </Anchor>
+            </Anchors>
+
+            <Layers>
+              <Layer level="OVERLAY">
+                <FontString name="$parentText" parentKey="Text" inherits="GameFontWhite" justifyH="LEFT">
+                  <Anchors>
+                    <Anchor point="LEFT" relativeTo="$parent" relativePoint="Right">
+                    </Anchor>
+                  </Anchors>
+                </FontString>
+              </Layer>
+            </Layers>
+          </CheckButton>
+
+          <CheckButton parentKey="FanfareCheck" name="$parentFanfareCheck" inherits="UICheckButtonTemplate">
+            <Size x="28" y="28"/>
+
+            <Scripts>
+              <OnLoad>
+                self.Text:SetText("Play fanfare when completing all items");
+              </OnLoad>
+              <OnClick>
+                PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
+                OnFanfarreCheck(self)
+              </OnClick>
+            </Scripts>
+
+            <Anchors>
+              <Anchor point="LEFT" relativeTo="$parentToggleMapButton" relativePoint="LEFT">
+                <Offset>
+                  <AbsDimension y="-40"/>
+                </Offset>
+              </Anchor>
+            </Anchors>
+
+            <Layers>
+              <Layer level="OVERLAY">
+                <FontString name="$parentText" parentKey="Text" inherits="GameFontWhite" justifyH="LEFT">
+                  <Anchors>
+                    <Anchor point="LEFT" relativeTo="$parent" relativePoint="Right">
+                    </Anchor>
+                  </Anchors>
+                </FontString>
+              </Layer>
+            </Layers>
+          </CheckButton>
+
+          <CheckButton parentKey="DisplayBankOnLinked" name="$parentMuteDisplayBankOnLinked" inherits="UICheckButtonTemplate">
+            <Size x="28" y="28"/>
+
+            <Scripts>
+              <OnLoad>
+                self.Text:SetText("Count from bank on linked items");
+              </OnLoad>
+              <OnClick>
+                PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
+                DisplayBankClick(self)
+              </OnClick>
+            </Scripts>
+
+            <Anchors>
+              <Anchor point="LEFT" relativeTo="$parentMuteChatCheckButton" relativePoint="LEFT">
+                <Offset>
+                  <AbsDimension y="-39" />
+                </Offset>
+              </Anchor>
+            </Anchors>
+
+            <Layers>
+              <Layer level="OVERLAY">
+                <FontString name="$parentText" parentKey="Text" inherits="GameFontWhite" justifyH="LEFT">
+                  <Anchors>
+                    <Anchor point="LEFT" relativeTo="$parent" relativePoint="Right">
+                    </Anchor>
+                  </Anchors>
+                </FontString>
+              </Layer>
+            </Layers>
+          </CheckButton>
+
+          <CheckButton parentKey="DisplayChargesOnLinked" name="$parentDisplayChargesOnLinked" inherits="UICheckButtonTemplate">
+            <Size x="28" y="28"/>
+
+            <Scripts>
+              <OnLoad>
+                self.Text:SetText("Count charges on linked items");
+              </OnLoad>
+              <OnClick>
+                PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
+                DisplayChargesClick(self)
+              </OnClick>
+            </Scripts>
+
+            <Anchors>
+              <Anchor point="LEFT" relativeTo="$parentFanfareCheck" relativePoint="LEFT">
+                <Offset>
+                  <AbsDimension y="-40"/>
+                </Offset>
+              </Anchor>
+            </Anchors>
+
+            <Layers>
+              <Layer level="OVERLAY">
+                <FontString name="$parentText" parentKey="Text" inherits="GameFontWhite" justifyH="LEFT">
+                  <Anchors>
+                    <Anchor point="LEFT" relativeTo="$parent" relativePoint="Right">
+                    </Anchor>
+                  </Anchors>
+                </FontString>
+              </Layer>
+            </Layers>
+          </CheckButton>
+
           <Slider parentKey="Opacity" name="$parentOpacity" inherits="OptionsSliderTemplate" minValue="0" maxValue="1" valueStep="0.01" defaultValue="1">
             <Anchors>
-              <Anchor point="TOPLEFT" relativeTo="$parentLinkedCounterCheckButton" relativePoint="BOTTOMLEFT">
+              <Anchor point="TOPLEFT" relativeTo="$parentMuteDisplayBankOnLinked" relativePoint="BOTTOMLEFT">
                 <Offset x="10" y="-40"/>
               </Anchor>
             </Anchors>
@@ -207,6 +339,49 @@
               </OnLoad>
               <OnValueChanged>
                   OpacityValueChanged(self)
+                  self.Value:SetText(string.format("%d%s", self:GetValue() * 100, "%"))
+              </OnValueChanged>
+            </Scripts>
+          </Slider>
+
+          <Slider parentKey="OpacityOnHover" name="$parentOpacityOnHover" inherits="OptionsSliderTemplate" minValue="0" maxValue="1" valueStep="0.01" defaultValue="1" hidden="true">
+            <Anchors>
+              <Anchor point="TOPLEFT" relativeTo="$parentDisplayChargesOnLinked" relativePoint="BOTTOMLEFT">
+                <Offset x="10" y="-40"/>
+              </Anchor>
+            </Anchors>
+
+            <Layers>
+              <Layer level="ARTWORK">
+                <FontString name="$parentText" inherits="GameFontNormalSmall" text="Opacity when hovered">
+                  <Anchors>
+                    <Anchor point="TOP" relativeTo="$parent">
+                      <Offset>
+                        <AbsDimension x="0" y="11"/>
+                      </Offset>
+                    </Anchor>
+                  </Anchors>
+                </FontString>
+
+                <FontString parentKey="Value" name="$parentValue" inherits="GameFontHighlight">
+                  <Anchors>
+                    <Anchor point="BOTTOM" relativeTo="$parent">
+                      <Offset>
+                        <AbsDimension x="0" y="-15"/>
+                      </Offset>
+                    </Anchor>
+                  </Anchors>
+                </FontString>
+              </Layer>
+            </Layers>
+
+            <Scripts>
+              <OnLoad>
+                self.Low:SetText("0%")
+                self.High:SetText("100%")
+              </OnLoad>
+              <OnValueChanged>
+                  OpacityOnHoverValueChanged(self)
                   self.Value:SetText(string.format("%d%s", self:GetValue() * 100, "%"))
               </OnValueChanged>
             </Scripts>

@@ -8,6 +8,8 @@ local addonName = select(1, ...)
 
 ---@class TodoChecklisterFrame
 local TodoChecklisterFrame = TodoAddon.TodoChecklisterFrame
+---@class Settings
+local Settings = TodoAddon.Settings
 
 --------------------------------------
 -- Declarations
@@ -17,19 +19,30 @@ TodoAddon.MinimapIcon = {}
 ---@class MinimapIcon
 local MinimapIcon = TodoAddon.MinimapIcon
 
----
----The SavedVariable where the map settings are stored into
----@class TodoMapIcon
-local DB = TodoChecklisterMapIcon
-
 --------------------------------------
 -- Lifecycle Events
 --------------------------------------
 ---
+---Load required configuration for this class
+function MinimapIcon:LoadCFG()
+	if LibStub("LibDBIcon-1.0", true) then
+		local icon = LibStub("LibDBIcon-1.0")
+		if (Settings:DisplayMinimapIcon()) then
+			icon:Show(addonName)
+		else
+			icon:Hide(addonName)
+		end
+	end
+end
+
+---
 ---Initializes the minimap icon if the user can have it
 function MinimapIcon:Init()
-	if type(DB) ~= "table" then
-		DB = {hide = false}
+	if type(TodoChecklisterMapIcon) ~= "table" then
+		---
+		---The SavedVariable where the map settings are stored into
+		---@class TodoMapIcon
+		TodoChecklisterMapIcon = {hide = false}
 	end
 
 	if LibStub("LibDBIcon-1.0", true) then
@@ -50,6 +63,7 @@ function MinimapIcon:Init()
 			}
 		)
 
-		LibStub("LibDBIcon-1.0"):Register(addonName, minimapIconLDB, DB)
+		LibStub("LibDBIcon-1.0"):Register(addonName, minimapIconLDB, TodoChecklisterMapIcon)
+		self:LoadCFG()
 	end
 end

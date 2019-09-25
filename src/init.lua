@@ -26,7 +26,7 @@ local MinimapIcon = TodoAddon.MinimapIcon
 -- Init keybindings
 --------------------------------------
 BINDING_HEADER_TC_HEADER = addonName
-BINDING_NAME_TC_TOGGLE_FRAME = "Toggle log visibility"
+BINDING_NAME_TC_TOGGLE_FRAME = "Toggle window"
 
 -- Export the method TodoChecklisterFrame:Toggle to a global function
 -- so that it can be called from a keybind
