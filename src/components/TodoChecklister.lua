@@ -221,6 +221,14 @@ function TodoChecklisterFrame:PaintItem(frame, todoItem, index)
 	frame.TodoContent:SetWidth(TodoItemsScrollFrame:GetWidth() - frame.RemoveButton:GetWidth() - 23)
 
 	if (self.displayLinked) then
+		local identifier
+
+		if (todoItem.id) then
+			identifier = todoItem.id
+		else
+			identifier = todoItem.text
+		end
+
 		FunctionUtils:Memoize(
 			function()
 				-- Startup regex process by storing string values
@@ -267,8 +275,8 @@ function TodoChecklisterFrame:PaintItem(frame, todoItem, index)
 					frame.TodoContent.FontText:SetText(todoItem.text)
 				end
 			end,
-			todoItem.id .. self.memoizationId,
-			todoItem.id .. "Count"
+			identifier .. self.memoizationId,
+			identifier .. "Count"
 		)
 	else
 		frame.TodoContent.FontText:SetText(todoItem.text)
