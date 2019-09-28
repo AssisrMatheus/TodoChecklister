@@ -229,7 +229,8 @@ function TodoChecklisterFrame:PaintItem(frame, todoItem, index)
 			identifier = todoItem.text
 		end
 
-		FunctionUtils:Memoize(
+		local text =
+			FunctionUtils:Memoize(
 			function()
 				-- Startup regex process by storing string values
 				local finalString = ""
@@ -269,15 +270,17 @@ function TodoChecklisterFrame:PaintItem(frame, todoItem, index)
 
 				-- If the final string has been set
 				if (string.len(finalString) > 0) then
-					frame.TodoContent.FontText:SetText(finalString .. remainingString)
+					return finalString .. remainingString
 				else
 					-- If not, the string doesn't have links
-					frame.TodoContent.FontText:SetText(todoItem.text)
+					return todoItem.text
 				end
 			end,
 			identifier .. self.memoizationId,
 			identifier .. "Count"
 		)
+
+		frame.TodoContent.FontText:SetText(text)
 	else
 		frame.TodoContent.FontText:SetText(todoItem.text)
 	end
