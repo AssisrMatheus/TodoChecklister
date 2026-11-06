@@ -2,17 +2,18 @@
 #
 # Bump the version in the toc, commit, push. This workflow then:
 #   1. creates the git tag for that version (you never tag by hand)
-#   2. builds one package per flavor with the BigWigs packager, named the way Wago's GitHub release
-#      automation expects (https://addons.wago.io: .zip = Retail, -mists, -bcc, -classic = Classic Era, -forever)
-#   3. uploads them to CurseForge and one GitHub Release (plus a release.json listing each file's flavor)
-#   4. Wago is not uploaded to here: its release automation imports the files from the GitHub Release
-#   5. uploads two combined zips to WoWInterface, which has one page (one current file) per client family:
+#   2. builds one package per flavor with the BigWigs packager, named with Wago's convention
+#      (.zip = Retail, -mists, -bcc, -classic = Classic Era, -forever)
+#   3. uploads them to CurseForge, Wago and one GitHub Release (plus a release.json listing each file's flavor).
+#      Wago's own "Releases Automation" (GitHub webhook import) must stay off, or Wago gets every file twice
+#   4. uploads two combined zips to WoWInterface, which has one page (one current file) per client family:
 #      25349 gets Retail + Forever (both run the mainline client), 25348 gets Mists + TBC + Classic Era
 #
 # Pushes that leave the version unchanged (or reuse an already released version) do nothing.
 #
 # A site is uploaded to only when its ID and its token are both set: CurseForge ## X-Curse-Project-ID in the
-# toc + CF_API_TOKEN, WoWInterface "-w <id>" per step + WOWI_API_TOKEN. GitHub uses GITHUB_TOKEN.
+# toc + CF_API_TOKEN, Wago ## X-Wago-ID + WAGO_API_TOKEN, WoWInterface "-w <id>" per step + WOWI_API_TOKEN.
+# GitHub uses GITHUB_TOKEN.
 # Each step only gets the tokens of the sites it should upload to.
 
 name: Release
@@ -89,6 +90,7 @@ jobs:
         if: ${{ !cancelled() && steps.packager.outcome == 'success' }}
         env:
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          WAGO_API_TOKEN: ${{ secrets.WAGO_API_TOKEN }}
           GH_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           GITHUB_EVENT_NAME=release bash "$RUNNER_TEMP/release.sh" -g retail -w 0 \
@@ -98,6 +100,7 @@ jobs:
         if: ${{ !cancelled() && steps.packager.outcome == 'success' }}
         env:
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          WAGO_API_TOKEN: ${{ secrets.WAGO_API_TOKEN }}
           GH_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           GITHUB_EVENT_NAME=release bash "$RUNNER_TEMP/release.sh" -g mists -w 0 \
@@ -108,6 +111,7 @@ jobs:
         if: ${{ !cancelled() && steps.packager.outcome == 'success' }}
         env:
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          WAGO_API_TOKEN: ${{ secrets.WAGO_API_TOKEN }}
           GH_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           GITHUB_EVENT_NAME=release bash "$RUNNER_TEMP/release.sh" -g bcc -w 0 \
@@ -118,6 +122,7 @@ jobs:
         if: ${{ !cancelled() && steps.packager.outcome == 'success' }}
         env:
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          WAGO_API_TOKEN: ${{ secrets.WAGO_API_TOKEN }}
           GH_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           GITHUB_EVENT_NAME=release bash "$RUNNER_TEMP/release.sh" -g classic -w 0 \
@@ -127,6 +132,7 @@ jobs:
         if: ${{ !cancelled() && steps.packager.outcome == 'success' }}
         env:
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          WAGO_API_TOKEN: ${{ secrets.WAGO_API_TOKEN }}
           GH_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           GITHUB_EVENT_NAME=release bash "$RUNNER_TEMP/release.sh" -g forever -w 0 \
