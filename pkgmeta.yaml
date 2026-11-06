@@ -5,6 +5,7 @@ ignore: # Files and directories beginning with a dot (such as .git) are automati
     - icon.png
     - README.md
     - CLAUDE.md
+    - CONTRIBUTING.md
     - package.json
     - pkgmeta.yaml
     - scripts
