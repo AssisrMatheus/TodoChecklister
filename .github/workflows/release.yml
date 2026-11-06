@@ -1,0 +1,100 @@
+# Releases the addon when "## Version" in TodoChecklister.toc changes on master.
+#
+# Bump the version in the toc, commit, push. This workflow then:
+#   1. creates the git tag for that version (you never tag by hand)
+#   2. builds two packages with the BigWigs packager: "<version> - Retail" and "<version> - Forever"
+#   3. uploads both to CurseForge, Wago and one GitHub Release
+#
+# Pushes that leave the version unchanged (or reuse an already released version) do nothing.
+#
+# A site is uploaded to only when its ID is in the toc (## X-Curse-Project-ID, ## X-Wago-ID)
+# AND its token is a repo secret (CF_API_TOKEN, WAGO_API_TOKEN). Missing either one: that site
+# is skipped and the run still succeeds (release.sh upload_wago/upload_curseforge return early).
+# GitHub uses GITHUB_TOKEN and always runs.
+
+name: Release
+
+on:
+  push:
+    branches: [master]
+    paths: [TodoChecklister.toc]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+env:
+  PACKAGER_VERSION: v2.7.0
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history + tags: needed for the tag check and the changelog
+
+      - name: Read version from toc
+        id: version
+        run: |
+          version=$(sed -n 's/^## Version:[[:space:]]*//p' TodoChecklister.toc | tr -d '\r[:space:]')
+          if [[ ! $version =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]; then
+            echo "::error file=TodoChecklister.toc::## Version \"$version\" is not x.y or x.y.z"
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if git rev-parse -q --verify "refs/tags/$version" >/dev/null; then
+            echo "Version $version is already released, nothing to do."
+            echo "new=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "new=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Tag version
+        if: steps.version.outputs.new == 'true'
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$VERSION" -m "Version $VERSION"
+          git push origin "refs/tags/$VERSION"
+
+      - name: Set up packager
+        if: steps.version.outputs.new == 'true'
+        run: |
+          # pkgmeta externals are svn repos (repos.wowace.com); ubuntu-latest has no svn
+          sudo apt-get install -yq subversion >/dev/null
+          curl -fsSL "https://raw.githubusercontent.com/BigWigsMods/packager/$PACKAGER_VERSION/release.sh" -o "$RUNNER_TEMP/release.sh"
+          # Stock release.sh replaces spaces in upload labels with "_" ("1.2.4_-_Retail").
+          # Run the label through the filter with skip_invalid, like its own "-n" validation does.
+          sed -i 's/archive_label="\$( filename_filter "\$label_template" )"/archive_label="$( skip_invalid=true filename_filter "$label_template" )"/' "$RUNNER_TEMP/release.sh"
+          grep -q 'archive_label="$( skip_invalid=true filename_filter' "$RUNNER_TEMP/release.sh" \
+            || { echo "::error::Label patch did not apply to packager $PACKAGER_VERSION"; exit 1; }
+
+      # release.sh refuses to package a branch push whose HEAD carries a tag ("Found future tag"),
+      # expecting a separate tag-triggered run. Tags pushed with GITHUB_TOKEN start no workflows,
+      # so the build runs here, with GITHUB_EVENT_NAME overridden for release.sh only.
+      - name: Package and upload Retail
+        if: steps.version.outputs.new == 'true'
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          WAGO_API_TOKEN: ${{ secrets.WAGO_API_TOKEN }}
+          GH_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          GITHUB_EVENT_NAME=release bash "$RUNNER_TEMP/release.sh" -g retail \
+            -n "{package-name}-{project-version}-Retail:{project-version} - Retail"
+
+      - name: Package and upload Forever
+        if: steps.version.outputs.new == 'true'
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          WAGO_API_TOKEN: ${{ secrets.WAGO_API_TOKEN }}
+          GH_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          GITHUB_EVENT_NAME=release bash "$RUNNER_TEMP/release.sh" -g forever \
+            -n "{package-name}-{project-version}-Forever:{project-version} - Forever"
