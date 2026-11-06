@@ -2,7 +2,7 @@
 ## Title: TodoChecklister
 ## Author: Matheus Assis Rios (github.com/AssisrMatheus)
 ## Notes: I have bad memory so I made this. A todolist/checklist AddOn for World of Warcraft.
-## Version: 2.0
+## Version: 2.0.1
 ## X-Curse-Project-ID: 341737
 ## X-Wago-ID: YK9xDw6L
 ## DefaultState: enabled
