@@ -16,6 +16,8 @@ local TodoChecklisterFrame = TodoAddon.TodoChecklisterFrame
 local InterfaceOptions = TodoAddon.InterfaceOptions
 ---@class Settings
 local Settings = TodoAddon.Settings
+---@class TodoList
+local TodoList = TodoAddon.TodoList
 
 --------------------------------------
 -- Declarations
@@ -49,6 +51,38 @@ Chat.commands = {
     ["chk"] = function(indexToCheck)
         TodoChecklisterFrame:CheckItemWithIndex(tonumber(indexToCheck))
     end,
+    ["lists"] = function()
+        Chat:Print("Saved lists:")
+        for index, name in ipairs(TodoList:GetListNames()) do
+            if (name == TodoList:GetSelectedListName()) then
+                Chat:Print("|cff00cc66" .. index .. ". " .. name .. "|r (displayed)")
+            else
+                Chat:Print(index .. ". " .. name)
+            end
+        end
+    end,
+    ["switch"] = function(...)
+        -- Accepts the position shown by "/todo lists" or the list name (case-insensitive, may contain spaces)
+        local query = strjoin(" ", ...)
+        local names = TodoList:GetListNames()
+        local position = tonumber(query)
+        local name = position and names[position]
+        if (not name) then
+            for _, listName in ipairs(names) do
+                if (listName:lower() == query:lower()) then
+                    name = listName
+                end
+            end
+        end
+
+        if (name) then
+            TodoChecklisterFrame:SwitchList(name)
+            InterfaceOptions:LoadCFG()
+            Chat:Print("Displaying |cff00cc66" .. name .. "|r")
+        else
+            Chat:Print("No list matches |cffff2211" .. query .. "|r. Type |cff00cc66/todo lists|r to see them")
+        end
+    end,
     ["help"] = function()
         print(" ")
         Chat:Print("List of commands:")
@@ -60,6 +94,10 @@ Chat.commands = {
             "|cff00cc66/todo mv|r |cffff2211original_position target_position|r - Move item from |cffff2211original_position|r to |cffff2211target_position|r"
         )
         Chat:Print("|cff00cc66/todo chk|r |cffff2211position|r - Check or unchecks an item in |cffff2211position|r")
+        Chat:Print("|cff00cc66/todo lists|r - Show every saved list")
+        Chat:Print(
+            "|cff00cc66/todo switch|r |cffff2211position or name|r - Display the list in |cffff2211position|r (from |cff00cc66/todo lists|r) or with that |cffff2211name|r"
+        )
         print(" ")
     end,
     ["reload"] = function()

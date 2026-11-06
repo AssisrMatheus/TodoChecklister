@@ -389,6 +389,45 @@
             </Scripts>
           </Slider>
 
+          <!-- Lists: pick, create and delete the lists shared by every character -->
+          <DropdownButton parentKey="ListDropdown" name="$parentListDropdown" inherits="WowStyle1DropdownTemplate">
+            <Size x="200" y="25"/>
+            <Anchors>
+              <Anchor point="TOPLEFT" relativeTo="$parentOpacity" relativePoint="BOTTOMLEFT">
+                <Offset x="-10" y="-60"/>
+              </Anchor>
+            </Anchors>
+            <Layers>
+              <Layer level="ARTWORK">
+                <FontString parentKey="Label" inherits="GameFontNormal" text="Displayed list" justifyH="LEFT">
+                  <Anchors>
+                    <Anchor point="BOTTOMLEFT" relativePoint="TOPLEFT">
+                      <Offset x="0" y="8"/>
+                    </Anchor>
+                  </Anchors>
+                </FontString>
+              </Layer>
+            </Layers>
+          </DropdownButton>
+
+          <Button parentKey="NewListButton" name="$parentNewListButton" inherits="UIPanelButtonTemplate" text="New list">
+            <Size x="100" y="22"/>
+            <Anchors>
+              <Anchor point="LEFT" relativeTo="$parentListDropdown" relativePoint="RIGHT">
+                <Offset x="12" y="0"/>
+              </Anchor>
+            </Anchors>
+          </Button>
+
+          <Button parentKey="DeleteListButton" name="$parentDeleteListButton" inherits="UIPanelButtonTemplate" text="Delete list">
+            <Size x="100" y="22"/>
+            <Anchors>
+              <Anchor point="LEFT" relativeTo="$parentNewListButton" relativePoint="RIGHT">
+                <Offset x="6" y="0"/>
+              </Anchor>
+            </Anchors>
+          </Button>
+
           <!-- Footer github url -->
           <Button parentKey="Obs" name="$parentObs" hidden="false">
             <Size x="300" y="15"/>

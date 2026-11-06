@@ -177,6 +177,44 @@ function TodoChecklisterFrame:ClearSelected()
 end
 
 ---
+---Makes the window display another saved list
+---@param name string @The name of an existing list
+function TodoChecklisterFrame:SwitchList(name)
+	TodoList:SelectList(name)
+	self:OnListChanged()
+end
+
+---
+---Creates a new empty list and switches to it
+---@param name string @The name of the new list
+---@return boolean @Whether or not the list was created. False when the name is empty or already taken
+function TodoChecklisterFrame:CreateList(name)
+	if (not TodoList:CreateList(name)) then
+		return false
+	end
+	self:SwitchList(name)
+	return true
+end
+
+---
+---Deletes a list. If it was the displayed one, the window falls back to the character's default list
+---@param name string @The name of the list to delete
+function TodoChecklisterFrame:DeleteList(name)
+	TodoList:DeleteList(name)
+	self:OnListChanged()
+end
+
+---
+---Resets the window state after the displayed list changed
+function TodoChecklisterFrame:OnListChanged()
+	self:ClearSelected()
+	self.frame.Title:SetText(TodoList:GetSelectedListName())
+	self.frame.ScrollFrame.scrollBar:SetValue(0)
+	self.memoizationId = self.memoizationId + 1
+	self:OnUpdate()
+end
+
+---
 ---Toggle the frame's visibility
 function TodoChecklisterFrame:Toggle()
 	if (self.frame:IsShown()) then
@@ -549,7 +587,7 @@ function TodoChecklisterFrame:Init()
 	self.frame = frame
 
 	-- Display window title
-	self.frame.Title:SetText(UnitName("player") .. "'s List")
+	self.frame.Title:SetText(TodoList:GetSelectedListName())
 
 	-- Change window close button to minimize button
 	_G["TodoChecklisterClose"]:SetNormalTexture("Interface\\Buttons\\UI-Panel-HideButton-Up")

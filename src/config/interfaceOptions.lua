@@ -14,6 +14,8 @@ local BlizzardSettings = _G.Settings
 local Constants = TodoAddon.Constants
 ---@class Settings
 local Settings = TodoAddon.Settings
+---@class TodoList
+local TodoList = TodoAddon.TodoList
 ---@class MinimapIcon
 local MinimapIcon = TodoAddon.MinimapIcon
 
@@ -64,6 +66,8 @@ function InterfaceOptions:LoadCFG()
     self.frame.SettingsContainer.ToggleMapButton:SetChecked(Settings:DisplayMinimapIcon())
     self.frame.SettingsContainer.DisplayBankOnLinked:SetChecked(Settings:DisplayBankOnLinked())
     self.frame.SettingsContainer.DisplayChargesOnLinked:SetChecked(Settings:DisplayChargesOnLinked())
+    -- Refresh the dropdown text after the displayed list changed
+    self.frame.SettingsContainer.ListDropdown:GenerateMenu()
   end
 
   if (TodoAddon.TodoChecklisterFrame) then
@@ -101,9 +105,9 @@ function InterfaceOptions:Init()
   StaticPopupDialogs[addonName .. "WEBSITE"] = {
     text = "Copy the url and paste it on your browser",
     button1 = "Done",
-    OnShow = function(self, data)
-      self.editBox:SetText("https://github.com/AssisrMatheus/TodoChecklister/issues")
-      self.editBox:SetWidth(260)
+    OnShow = function(dialog, data)
+      dialog:GetEditBox():SetText("https://github.com/AssisrMatheus/TodoChecklister/issues")
+      dialog:GetEditBox():SetWidth(260)
     end,
     hasEditBox = true,
     exclusive = true,
@@ -120,9 +124,114 @@ function InterfaceOptions:Init()
     end
   )
 
+  self:InitLists()
+
   self:LoadCFG()
   local category = BlizzardSettings.RegisterCanvasLayoutCategory(self.frame, addonName)
   BlizzardSettings.RegisterAddOnCategory(category)
+end
+
+---
+---Sets up the lists section: the dropdown and the new/delete list dialogs
+function InterfaceOptions:InitLists()
+  local container = self.frame.SettingsContainer
+
+  -- Lists are read at the time the menu opens, so new and deleted lists always show up
+  container.ListDropdown:SetupMenu(
+    function(dropdown, rootDescription)
+      local function IsSelected(name)
+        return name == TodoList:GetSelectedListName()
+      end
+      local function SetSelected(name)
+        TodoAddon.TodoChecklisterFrame:SwitchList(name)
+        self:LoadCFG()
+      end
+
+      for _, name in ipairs(TodoList:GetListNames()) do
+        rootDescription:CreateRadio(name, IsSelected, SetSelected, name)
+      end
+    end
+  )
+
+  StaticPopupDialogs[addonName .. "NEWLIST"] = {
+    text = "Name of the new list",
+    button1 = "Create",
+    button2 = "Cancel",
+    hasEditBox = true,
+    maxLetters = 64,
+    OnShow = function(dialog)
+      dialog:GetButton1():Disable()
+    end,
+    OnAccept = function(dialog)
+      local name = strtrim(dialog:GetEditBox():GetText())
+      if (not TodoAddon.TodoChecklisterFrame:CreateList(name)) then
+        TodoAddon.Chat:Print("A list named |cffff2211" .. name .. "|r already exists")
+      end
+      self:LoadCFG()
+    end,
+    EditBoxOnTextChanged = function(editBox)
+      StaticPopup_StandardNonEmptyTextHandler(editBox)
+    end,
+    EditBoxOnEnterPressed = function(editBox)
+      local dialog = editBox:GetParent()
+      if (dialog:GetButton1():IsEnabled()) then
+        dialog:GetButton1():Click()
+      end
+    end,
+    EditBoxOnEscapePressed = StaticPopup_StandardEditBoxOnEscapePressed,
+    timeout = 0,
+    exclusive = true,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3
+  }
+
+  -- Deleting needs the user to type DELETE, in all caps
+  StaticPopupDialogs[addonName .. "DELETELIST"] = {
+    text = 'Delete the list "%s" and all its items?\n\nType DELETE to confirm.',
+    button1 = "Delete",
+    button2 = "Cancel",
+    hasEditBox = true,
+    maxLetters = 6,
+    OnShow = function(dialog)
+      dialog:GetButton1():Disable()
+    end,
+    OnAccept = function(dialog, name)
+      TodoAddon.TodoChecklisterFrame:DeleteList(name)
+      self:LoadCFG()
+    end,
+    EditBoxOnTextChanged = function(editBox)
+      editBox:GetParent():GetButton1():SetEnabled(editBox:GetText() == "DELETE")
+    end,
+    EditBoxOnEnterPressed = function(editBox)
+      local dialog = editBox:GetParent()
+      if (dialog:GetButton1():IsEnabled()) then
+        dialog:GetButton1():Click()
+      end
+    end,
+    EditBoxOnEscapePressed = StaticPopup_StandardEditBoxOnEscapePressed,
+    timeout = 0,
+    exclusive = true,
+    whileDead = true,
+    hideOnEscape = true,
+    showAlert = true,
+    preferredIndex = 3
+  }
+
+  container.NewListButton:SetScript(
+    "OnClick",
+    function()
+      StaticPopup_Show(addonName .. "NEWLIST")
+    end
+  )
+
+  container.DeleteListButton:SetScript(
+    "OnClick",
+    function()
+      local name = TodoList:GetSelectedListName()
+      StaticPopup_Show(addonName .. "DELETELIST", name, nil, name)
+    end
+  )
 end
 
 --------------------------------------

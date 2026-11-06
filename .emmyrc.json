@@ -23,6 +23,7 @@
       "TodoChecklisterDB",
       "TodoChecklisterSettingsDB",
       "TodoChecklisterMapIcon",
+      "TodoChecklisterCharacterDB",
       "TodoChecklister",
       "TodoItemsScrollFrame",
       "TodoChecklister_BACKDROP",
@@ -38,7 +39,10 @@
       "HybridScrollFrame_Update",
       "HybridScrollFrame_GetOffset",
       "StackSplitFrame",
-      "ChatFrameUtil"
+      "ChatFrameUtil",
+      "StaticPopup_StandardNonEmptyTextHandler",
+      "StaticPopup_StandardEditBoxOnEscapePressed",
+      "NameUtil"
     ],
     "globalsRegex": [
       "^SLASH_",

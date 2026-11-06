@@ -71,13 +71,13 @@ UI-facing modules implement up to three methods:
 - `LoadCFG()`: idempotent. Re-reads `Settings` and applies the values to the UI. Call it after any setting changes; it is the "refresh" entry point.
 - `Defaults()`: resets to defaults, then calls `LoadCFG()`.
 
-When a setting changes, the flow fans out like this: XML handler (global function) → `Settings:SetX(value)` → `InterfaceOptions:LoadCFG()` → `TodoChecklisterFrame:LoadCFG()` → `TodoChecklisterFrame:OnUpdate()`. The Blizzard options panel hooks in through `frame.refresh = LoadCFG` and `frame.default = Defaults`.
+When a setting changes, the flow fans out like this: XML handler (global function) → `Settings:SetX(value)` → `InterfaceOptions:LoadCFG()` → `TodoChecklisterFrame:LoadCFG()` → `TodoChecklisterFrame:OnUpdate()`. The Blizzard settings panel hooks in through `frame.OnRefresh = LoadCFG` and `frame.OnDefault = Defaults`.
 
 ### Responsibilities, and which entry point to call
 
-- **`TodoList`** (`model/todoList.lua`) is the data layer over `TodoChecklisterDB`. It has no knowledge of frames.
+- **`TodoList`** (`model/todoList.lua`) is the data layer over `TodoChecklisterDB` and `TodoChecklisterCharacterDB`. It has no knowledge of frames. Item functions (`AddItem`, `GetItems`, `Move`...) act on the list the current character has selected.
 - **`Settings`** (`model/settings.lua`) is getter/setter pairs over `TodoChecklisterSettingsDB`. Nothing else touches that table directly.
-- **`TodoChecklisterFrame`** (`components/TodoChecklister.lua`) is the controller and view for the main window. It owns UI state: `selectedItem` (an index; `0` means none) and `memoizationId`. Its mutators (`AddItem`, `RemoveItemWithIndex`, `Move`, `CheckItemWithIndex`, `SelectItem`) call `TodoList`, keep the selection pointing at the same item across index shifts, bump `memoizationId`, and call `OnUpdate()`.
+- **`TodoChecklisterFrame`** (`components/TodoChecklister.lua`) is the controller and view for the main window. It owns UI state: `selectedItem` (an index; `0` means none) and `memoizationId`. Its mutators (`AddItem`, `RemoveItemWithIndex`, `Move`, `CheckItemWithIndex`, `SelectItem`, and for lists `SwitchList`, `CreateList`, `DeleteList`) call `TodoList`, keep the selection pointing at the same item across index shifts, bump `memoizationId`, and call `OnUpdate()`.
 - **Other modules mutate the list through `TodoChecklisterFrame`, never through `TodoList` directly.** `Chat` and `MinimapIcon` follow this rule. Calling `TodoList` directly skips the selection fix-up and the repaint.
 - **`Chat`** (`modules/chat.lua`): the `/todo` command table `Chat.commands` maps a lowercase verb to a function that receives the remaining space-split args. A nested table makes a sub-command. `Chat:Print` is the only chat output path and honors `Settings:ChatMuted()`.
 
@@ -101,7 +101,7 @@ Inline XML scripts can't see the private `TodoAddon` table, and the game resolve
 
 | Kind | Names | Defined in |
 |---|---|---|
-| SavedVariables (must match `.toc`) | `TodoChecklisterDB`, `TodoChecklisterSettingsDB`, `TodoChecklisterMapIcon` | model `Init`s, `MinimapIcon:Init` |
+| SavedVariables (must match `.toc`) | Account-wide: `TodoChecklisterDB`, `TodoChecklisterSettingsDB`, `TodoChecklisterMapIcon`. Per character (`SavedVariablesPerCharacter`): `TodoChecklisterCharacterDB` | model `Init`s, `MinimapIcon:Init` |
 | Keybinding (resolved by `bindings.xml`) | `BINDING_HEADER_TC_HEADER`, `BINDING_NAME_TC_TOGGLE_FRAME`, `GLOBAL_TodoChecklisterFrameToggle` | `src/init.lua` |
 | Slash commands | `SLASH_TodoChecklister1` + `SlashCmdList.TodoChecklister`; debug only: `SLASH_RELOADUI1`, `SLASH_FRAMESTK1` | `chat.lua`, `debug.lua` |
 | Named frames (XML `name=` / `CreateFrame` name) | `TodoChecklister` (the window frame, not the `TodoChecklisterFrame` module), `TodoItemsScrollFrame`, `TodoChecklisterInterfaceOptions`, `TODODragButton`, `TodoChecklisterMAINFRAME`, and `$parent...` children | XML, `Init`s |
@@ -124,7 +124,7 @@ Blizzard globals (`NORMAL_FONT_COLOR`, `SOUNDKIT`, `GameFont*`, `HybridScrollFra
 
 **Add a setting:** add the `---@field` to the `TodoSettings` annotation and the getter/setter pair in `Settings`. Add the default in `Settings:Defaults` and a `nil`-check default in `Settings:Init`; the `nil`-check is how users upgrading from older versions get the new key. Then add the control (with a `parentKey`) to `TodoChecklisterInterfaceOptionsTemplate` in `interfaceOptions.xml`, add a handler that calls the setter and then `InterfaceOptions:LoadCFG()`, reflect the value in `InterfaceOptions:LoadCFG`, and apply it in the consuming module's `LoadCFG`.
 
-**Add a chat command:** add a key to `Chat.commands` that calls a `TodoChecklisterFrame` method, and add a line to `commands.help`.
+**Add a chat command:** add a key to `Chat.commands` that calls a `TodoChecklisterFrame` method, and add a line to `commands.help`. `lists`/`switch` show the pattern for commands that take a multi-word argument (`strjoin(" ", ...)`).
 
 **Add a module:** create the file with the standard header, add it to the correct folder manifest (its layer decides what it can import at file scope), and add its `:Init()` call to `TodoAddon:Init` in `src/init.lua`.
 
@@ -137,7 +137,9 @@ Blizzard globals (`NORMAL_FONT_COLOR`, `SOUNDKIT`, `GameFont*`, `HybridScrollFra
 
 - `Settings:Init` checks `displayChargesOnLinked == nil` twice. The first check was meant to be `displayBankOnLinked`, so an upgraded install never gets that default.
 - `ClearSelected` calls `Settings.KeepFocus()` with a dot. It works only because the getter doesn't use `self`.
-- `TodoChecklisterDB` is a flat array of `TodoItem { id, text, isChecked }`. The nested pages/categories comment in `todoList.lua` describes an idea that was never built.
+- `TodoChecklisterDB` is account-wide: `{ lists = { [name] = TodoItem[] } }`, where `TodoItem` is `{ id, text, isChecked }`. Lists are keyed by name, so names are unique. Any character can view any list.
+- `TodoChecklisterCharacterDB` is per character: `{ selectedList = name }`. `TodoList:EnsureSelectedList()` falls back to `"<Name>'s List"` (and creates it) when the character never picked a list or its list was deleted. `<Name>` comes from `NameUtil.GetUnmodifiedUnitFullName("player")`: name plus surname on Forever, just the name elsewhere.
+- Before lists, `TodoChecklisterDB` was a flat `TodoItem[]`. `TodoList:Init` migrates it into the first character's default list.
 
 ## Game version and API references
 

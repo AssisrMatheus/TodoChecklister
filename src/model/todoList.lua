@@ -20,25 +20,15 @@ local TodoList = TodoAddon.TodoList
 ---@field public text string @The text content of an item
 ---@field public isChecked boolean @Whether or not this item is done
 
--- {
---   pages = [
---     {
---       name,
---       categories = [
---         {
---           name,
---           todos: [
---             {
---               id: 0
---               content: "",
---               done: false
---             }
---           ]
---         }
---       ]
---     }
---   ]
--- }
+---
+---Account-wide SavedVariable: every list, keyed by its name. Lists are shared by all characters
+---@class TodoListsDB
+---@field public lists table<string, TodoItem[]>
+
+---
+---Per-character SavedVariable
+---@class TodoCharacterDB
+---@field public selectedList string|nil @Name of the list this character is viewing
 
 --------------------------------------
 -- TodoList functions
@@ -49,12 +39,9 @@ local TodoList = TodoAddon.TodoList
 function TodoList:AddItem(text)
 	-- If text is not empty
 	if (text and text ~= nil and text ~= "") then
+		local items = self:GetItems()
 		-- Adds one at the end of array
-		table.insert(
-			TodoChecklisterDB,
-			#TodoChecklisterDB + 1,
-			{text = text, isChecked = false, id = text .. (#TodoChecklisterDB + 1)}
-		)
+		table.insert(items, #items + 1, {text = text, isChecked = false, id = text .. (#items + 1)})
 	end
 end
 
@@ -62,8 +49,9 @@ end
 ---Removes an element from a given position, moving down other elements to close space and decrementing the size of the array
 ---@param indexToRemove number @The ONE-based location in the array to remove.
 function TodoList:RemoveItem(indexToRemove)
-	if (indexToRemove > 0 and TodoChecklisterDB and TodoChecklisterDB[indexToRemove]) then
-		table.remove(TodoChecklisterDB, indexToRemove)
+	local items = self:GetItems()
+	if (indexToRemove > 0 and items[indexToRemove]) then
+		table.remove(items, indexToRemove)
 		return true
 	end
 	return false
@@ -74,10 +62,10 @@ end
 ---@param indexToUpdate number @The ONE-based location in the array to remove.
 ---@param updatedItem TodoItem @Source object
 function TodoList:UpdateItem(indexToUpdate, updatedItem)
-	local item = TodoChecklisterDB[indexToUpdate]
-	-- If the list exists and the item exists on the list
-	if (indexToUpdate > 0 and TodoChecklisterDB and TodoChecklisterDB[indexToUpdate] and updatedItem) then
-		TodoChecklisterDB[indexToUpdate] = TableUtils:Assign({}, TodoChecklisterDB[indexToUpdate], updatedItem)
+	local items = self:GetItems()
+	-- If the item exists on the list
+	if (indexToUpdate > 0 and items[indexToUpdate] and updatedItem) then
+		items[indexToUpdate] = TableUtils:Assign({}, items[indexToUpdate], updatedItem)
 		return true
 	end
 	return false
@@ -88,14 +76,14 @@ end
 ---@param fromIndex number @The ONE-based location in the array to move from.
 ---@param toIndex number @The ONE-based location in the array to move to.
 function TodoList:Move(fromIndex, toIndex)
-	TableUtils:Move(TodoChecklisterDB, fromIndex, toIndex)
+	TableUtils:Move(self:GetItems(), fromIndex, toIndex)
 end
 
 ---
----Return every item
+---Return every item of the selected list
 ---@return TodoItem[] @The saved list of items
 function TodoList:GetItems()
-	return TodoChecklisterDB
+	return TodoChecklisterDB.lists[self:GetSelectedListName()]
 end
 
 ---
@@ -104,9 +92,9 @@ end
 ---@return number @The index of such item
 function TodoList:GetIndexByItem(todoItem)
 	if (todoItem and todoItem.id) then
-		return TodoList:GetIndexById(todoItem.id)
+		return self:GetIndexById(todoItem.id)
 	elseif (todoItem) then
-		return TodoList:GetIndexByText(todoItem.text)
+		return self:GetIndexByText(todoItem.text)
 	else
 		return 0
 	end
@@ -118,7 +106,7 @@ end
 ---@return number @The index of such item
 function TodoList:GetIndexByText(text)
 	return TableUtils:FindIndex(
-		TodoChecklisterDB,
+		self:GetItems(),
 		function(x)
 			return x.text == text
 		end
@@ -131,28 +119,104 @@ end
 ---@return number @The index of such item
 function TodoList:GetIndexById(id)
 	return TableUtils:FindIndex(
-		TodoChecklisterDB,
+		self:GetItems(),
 		function(x)
 			return x.id == id
 		end
 	)
 end
 
+--------------------------------------
+-- Lists functions
+--------------------------------------
+---
+---@return string @The name of the list a character gets when it has not picked one
+function TodoList:GetDefaultListName()
+	-- WoW: Forever characters have a surname. Blizzard loads a different NameUtil per game:
+	-- on Forever it returns the name plus surname, elsewhere just the name
+	return NameUtil.GetUnmodifiedUnitFullName("player") .. "'s List"
+end
+
+---
+---@return string @The name of the list this character is viewing
+function TodoList:GetSelectedListName()
+	return TodoChecklisterCharacterDB.selectedList
+end
+
+---
+---@return string[] @The names of every saved list, sorted alphabetically
+function TodoList:GetListNames()
+	local names = {}
+	for name in pairs(TodoChecklisterDB.lists) do
+		table.insert(names, name)
+	end
+	table.sort(names)
+	return names
+end
+
+---
+---@param name string @The name of the list to check
+---@return boolean @Whether or not a list with this name exists
+function TodoList:HasList(name)
+	return TodoChecklisterDB.lists[name] ~= nil
+end
+
+---
+---Creates a new empty list
+---@param name string @The name of the new list
+---@return boolean @Whether or not the list was created. False when the name is empty or already taken
+function TodoList:CreateList(name)
+	if (not name or name == "" or self:HasList(name)) then
+		return false
+	end
+	TodoChecklisterDB.lists[name] = {}
+	return true
+end
+
+---
+---Makes this character view the given list
+---@param name string @The name of an existing list
+function TodoList:SelectList(name)
+	if (self:HasList(name)) then
+		TodoChecklisterCharacterDB.selectedList = name
+	end
+end
+
+---
+---Deletes a list and all its items. A character viewing it falls back to its default list
+---@param name string @The name of the list to delete
+function TodoList:DeleteList(name)
+	TodoChecklisterDB.lists[name] = nil
+	self:EnsureSelectedList()
+end
+
+---
+---Makes sure this character views an existing list.
+---When it has not picked one, or the picked one was deleted, it views (and creates) its default list
+function TodoList:EnsureSelectedList()
+	if (not self:HasList(self:GetSelectedListName())) then
+		local name = self:GetDefaultListName()
+		self:CreateList(name)
+		TodoChecklisterCharacterDB.selectedList = name
+	end
+end
+
 ---
 ---Gets the message of the day value based on available items the user currently has
 ---@return string @MOTD value
 function TodoList:GetMOTD()
-	if (TodoChecklisterDB and #TodoChecklisterDB > 0) then
+	local items = self:GetItems()
+	if (#items > 0) then
 		local completedList =
 			TableUtils:Filter(
-			TodoChecklisterDB,
+			items,
 			function(x)
 				return x.isChecked == true
 			end
 		)
 		local notList =
 			TableUtils:Filter(
-			TodoChecklisterDB,
+			items,
 			function(x)
 				return x.isChecked == false
 			end
@@ -198,10 +262,20 @@ end
 ---
 ---Initializes required properties for this class
 function TodoList:Init()
-	if (not TodoChecklisterDB) then
-		---
-		---The SavedVariable where the items are stored into
-		---@type TodoItem[]|nil
-		TodoChecklisterDB = {}
+	-- Older versions saved a single flat array of items. It becomes the list of the first character that loads
+	if (type(TodoChecklisterDB) ~= "table" or not TodoChecklisterDB.lists) then
+		local oldItems = TodoChecklisterDB or {}
+		---@type TodoListsDB
+		TodoChecklisterDB = {lists = {}}
+		if (#oldItems > 0) then
+			TodoChecklisterDB.lists[self:GetDefaultListName()] = oldItems
+		end
 	end
+
+	if (type(TodoChecklisterCharacterDB) ~= "table") then
+		---@type TodoCharacterDB
+		TodoChecklisterCharacterDB = {}
+	end
+
+	self:EnsureSelectedList()
 end

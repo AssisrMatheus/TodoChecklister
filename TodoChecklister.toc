@@ -6,6 +6,7 @@
 ## DefaultState: enabled
 ## OptionalDeps: LibStub, LibDataBroker
 ## SavedVariables: TodoChecklisterDB, TodoChecklisterMapIcon, TodoChecklisterSettingsDB
+## SavedVariablesPerCharacter: TodoChecklisterCharacterDB
 
 src\init.xml
 src\init.lua
