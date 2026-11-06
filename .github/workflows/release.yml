@@ -2,23 +2,18 @@
 #
 # Bump the version in the toc, commit, push. This workflow then:
 #   1. creates the git tag for that version (you never tag by hand)
-#   2. builds three packages with the BigWigs packager: "<version> - Retail", "<version> - Classic"
-#      (one zip for Mists of Pandaria Classic, TBC Anniversary and Classic Era) and "<version> - Forever"
-#   3. uploads all of them to CurseForge, Wago and one GitHub Release
-#   4. uploads to WoWInterface, which has two pages (one file each):
-#      25349 gets a Retail + Forever zip (both run the mainline client), 25348 gets the Classic zip
+#   2. builds one package per flavor with the BigWigs packager, named the way Wago's GitHub release
+#      automation expects (https://addons.wago.io: .zip = Retail, -mists, -bcc, -classic = Classic Era, -forever)
+#   3. uploads them to CurseForge and one GitHub Release (plus a release.json listing each file's flavor)
+#   4. Wago is not uploaded to here: its release automation imports the files from the GitHub Release
+#   5. uploads two combined zips to WoWInterface, which has one page (one current file) per client family:
+#      25349 gets Retail + Forever (both run the mainline client), 25348 gets Mists + TBC + Classic Era
 #
 # Pushes that leave the version unchanged (or reuse an already released version) do nothing.
 #
-# A site is uploaded to only when its ID is in the toc (## X-Curse-Project-ID, ## X-Wago-ID)
-# AND its token is a repo secret (CF_API_TOKEN, WAGO_API_TOKEN). Missing either one: that site
-# is skipped and the run still succeeds (release.sh upload_wago/upload_curseforge return early).
-#
-# WoWInterface IDs are passed per step with "-w" (the toc can hold one ## X-WoWI-ID, there are two pages).
-# A page keeps one current file and each upload archives the previous one, so the retail and forever
-# zips can't both go to 25349. They are uploaded with "-w 0" and a separate step builds one zip carrying
-# both interfaces for 25349. Uploads need the WOWI_API_TOKEN secret; without it WoWInterface is skipped.
-# GitHub uses GITHUB_TOKEN and always runs.
+# A site is uploaded to only when its ID and its token are both set: CurseForge ## X-Curse-Project-ID in the
+# toc + CF_API_TOKEN, WoWInterface "-w <id>" per step + WOWI_API_TOKEN. GitHub uses GITHUB_TOKEN.
+# Each step only gets the tokens of the sites it should upload to.
 
 name: Release
 
@@ -88,54 +83,59 @@ jobs:
       # release.sh refuses to package a branch push whose HEAD carries a tag ("Found future tag"),
       # expecting a separate tag-triggered run. Tags pushed with GITHUB_TOKEN start no workflows,
       # so the build runs here, with GITHUB_EVENT_NAME overridden for release.sh only.
+      #
+      # Package steps run even when an earlier one failed, so one site's error doesn't skip the other flavors.
       - name: Package and upload Retail
-        # Runs even when an earlier package step failed, so one site's error doesn't skip the other flavors
         if: ${{ !cancelled() && steps.packager.outcome == 'success' }}
         env:
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-          WAGO_API_TOKEN: ${{ secrets.WAGO_API_TOKEN }}
           GH_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           GITHUB_EVENT_NAME=release bash "$RUNNER_TEMP/release.sh" -g retail -w 0 \
-            -n "{package-name}-{project-version}-retail:{project-version} - Retail"
+            -n "{package-name}-{project-version}:{project-version} - Retail"
 
-      # One zip for every Classic client in the toc (Mists 50xxx, TBC Anniversary 20xxx, Classic Era 11xxx).
-      # Forever (16xxx) and retail are left out: they have their own zips.
-      # "-g" takes game versions (x.y.z) as a list, so the interfaces are converted: 50504 -> 5.5.4
-      - name: Package and upload Classic
-        # Runs even when an earlier package step failed, so one site's error doesn't skip the other flavors
+      - name: Package and upload Mists Classic
         if: ${{ !cancelled() && steps.packager.outcome == 'success' }}
         env:
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-          WAGO_API_TOKEN: ${{ secrets.WAGO_API_TOKEN }}
-          WOWI_API_TOKEN: ${{ secrets.WOWI_API_TOKEN }}
           GH_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          versions=$(sed -n 's/^## Interface:[[:space:]]*//p' TodoChecklister.toc | tr -d '\r ' | tr ',' '\n' \
-            | awk '/^([52][0-9][0-9][0-9][0-9]|11[0-9][0-9][0-9])$/ { printf "%s%d.%d.%d", sep, $1 / 10000, ($1 / 100) % 100, $1 % 100; sep = "," }')
-          if [[ -z $versions ]]; then
-            echo "::error file=TodoChecklister.toc::## Interface has no Mists (50xxx), TBC (20xxx) or Classic Era (11xxx) version"
-            exit 1
-          fi
-          echo "Classic game versions: $versions"
-          GITHUB_EVENT_NAME=release bash "$RUNNER_TEMP/release.sh" -g "$versions" -w 25348 \
-            -n "{package-name}-{project-version}-classic:{project-version} - Classic"
+          GITHUB_EVENT_NAME=release bash "$RUNNER_TEMP/release.sh" -g mists -w 0 \
+            -n "{package-name}-{project-version}-mists:{project-version} - Mists"
 
-      - name: Package and upload Forever
-        # Runs even when an earlier package step failed, so one site's error doesn't skip the other flavors
+      # TBC Classic Anniversary is the packager's "bcc" game type (interface 20xxx)
+      - name: Package and upload TBC Anniversary
         if: ${{ !cancelled() && steps.packager.outcome == 'success' }}
         env:
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-          WAGO_API_TOKEN: ${{ secrets.WAGO_API_TOKEN }}
+          GH_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          GITHUB_EVENT_NAME=release bash "$RUNNER_TEMP/release.sh" -g bcc -w 0 \
+            -n "{package-name}-{project-version}-bcc:{project-version} - TBC"
+
+      # Classic Era is the packager's "classic" game type (interface 11xxx)
+      - name: Package and upload Classic Era
+        if: ${{ !cancelled() && steps.packager.outcome == 'success' }}
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          GH_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          GITHUB_EVENT_NAME=release bash "$RUNNER_TEMP/release.sh" -g classic -w 0 \
+            -n "{package-name}-{project-version}-classic:{project-version} - Classic Era"
+
+      - name: Package and upload Forever
+        if: ${{ !cancelled() && steps.packager.outcome == 'success' }}
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           GH_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           GITHUB_EVENT_NAME=release bash "$RUNNER_TEMP/release.sh" -g forever -w 0 \
             -n "{package-name}-{project-version}-forever:{project-version} - Forever"
 
-      # WoWInterface only (no CurseForge, Wago or GitHub tokens): one zip whose toc keeps the retail
-      # (6 digits, 120105 -> 12.1.5) and Forever (16xxx -> 1.60.1) interfaces, so page 25349 serves both
-      - name: Package and upload Retail + Forever to WoWInterface
-        # Runs even when an earlier package step failed, so one site's error doesn't skip the other flavors
+      # WoWInterface only (no CurseForge or GitHub token). "-g" takes game versions (x.y.z) as a list,
+      # so the toc interfaces are converted (120105 -> 12.1.5) and the zip's toc keeps all of them.
+      # Retail is 6 digits, Forever 16xxx
+      - name: Upload Retail + Forever to WoWInterface
         if: ${{ !cancelled() && steps.packager.outcome == 'success' }}
         env:
           WOWI_API_TOKEN: ${{ secrets.WOWI_API_TOKEN }}
@@ -148,4 +148,20 @@ jobs:
           fi
           echo "Retail + Forever game versions: $versions"
           GITHUB_EVENT_NAME=release bash "$RUNNER_TEMP/release.sh" -g "$versions" -w 25349 \
-            -n "{package-name}-{project-version}-retail:{project-version} - Retail"
+            -n "{package-name}-{project-version}:{project-version} - Retail"
+
+      # Mists 50xxx, TBC Anniversary 20xxx, Classic Era 11xxx
+      - name: Upload Mists + TBC + Classic Era to WoWInterface
+        if: ${{ !cancelled() && steps.packager.outcome == 'success' }}
+        env:
+          WOWI_API_TOKEN: ${{ secrets.WOWI_API_TOKEN }}
+        run: |
+          versions=$(sed -n 's/^## Interface:[[:space:]]*//p' TodoChecklister.toc | tr -d '\r ' | tr ',' '\n' \
+            | awk '/^([52][0-9][0-9][0-9][0-9]|11[0-9][0-9][0-9])$/ { printf "%s%d.%d.%d", sep, $1 / 10000, ($1 / 100) % 100, $1 % 100; sep = "," }')
+          if [[ -z $versions ]]; then
+            echo "::error file=TodoChecklister.toc::## Interface has no Mists (50xxx), TBC (20xxx) or Classic Era (11xxx) version"
+            exit 1
+          fi
+          echo "Classic game versions: $versions"
+          GITHUB_EVENT_NAME=release bash "$RUNNER_TEMP/release.sh" -g "$versions" -w 25348 \
+            -n "{package-name}-{project-version}-classic:{project-version} - Classic"
