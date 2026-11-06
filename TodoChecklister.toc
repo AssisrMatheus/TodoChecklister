@@ -1,4 +1,4 @@
-## Interface: 120105, 16001
+## Interface: 120105, 50504, 20506, 11509, 16001
 ## Title: TodoChecklister
 ## Author: Matheus Assis Rios (github.com/AssisrMatheus)
 ## Notes: I have bad memory so I made this. A todolist/checklist AddOn for World of Warcraft.

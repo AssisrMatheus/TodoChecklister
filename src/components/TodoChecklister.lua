@@ -498,15 +498,18 @@ hooksecurefunc(
 )
 
 -- Shift-click on a bag stack also opens the stack split frame, close it while linking
-hooksecurefunc(
-	StackSplitFrame,
-	"OpenStackSplitFrame",
-	function(stackSplitFrame)
-		if (TodoChecklisterFrame.frame and TodoChecklisterFrame.frame.TodoText:HasFocus()) then
-			stackSplitFrame:Hide()
-		end
+local function CloseStackSplitWhileLinking()
+	if (TodoChecklisterFrame.frame and TodoChecklisterFrame.frame.TodoText:HasFocus()) then
+		StackSplitFrame:Hide()
 	end
-)
+end
+if (StackSplitFrame.OpenStackSplitFrame) then
+	-- Retail and Forever: a method of StackSplitMixin
+	hooksecurefunc(StackSplitFrame, "OpenStackSplitFrame", CloseStackSplitWhileLinking)
+else
+	-- Classic clients (Mists, TBC Anniversary, Era): a global function (Blizzard_FrameXML/Classic/StackSplitFrame.lua)
+	hooksecurefunc("OpenStackSplitFrame", CloseStackSplitWhileLinking)
+end
 
 --------------------------------------
 -- XML Events
