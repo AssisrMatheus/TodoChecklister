@@ -46,7 +46,7 @@ Chat.commands = {
         TodoChecklisterFrame:RemoveItemWithIndex(tonumber(indexToRemove))
     end,
     ["mv"] = function(indexFrom, indexTo)
-        TodoChecklisterFrame:Move(tonumber(indexFrom), tonumber(indexTo), true)
+        TodoChecklisterFrame:Move(tonumber(indexFrom), tonumber(indexTo))
     end,
     ["chk"] = function(indexToCheck)
         TodoChecklisterFrame:CheckItemWithIndex(tonumber(indexToCheck))

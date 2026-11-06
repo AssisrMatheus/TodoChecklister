@@ -39,13 +39,13 @@
         </Anchors>
 
         <Frames>
-          <!-- "Keep focus" checkbox -->
+          <!-- "Quick add" checkbox -->
           <CheckButton parentKey="FocusCheckButton" name="$parentFocusCheckButton" inherits="UICheckButtonTemplate">
             <Size x="28" y="28"/>
 
             <Scripts>
               <OnLoad>
-                self.Text:SetText("Display 'Keep focus' checkbox");
+                self.Text:SetText("Display 'Quick add' checkbox");
               </OnLoad>
               <OnClick>
                 PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
@@ -76,7 +76,7 @@
 
             <Scripts>
               <OnLoad>
-                self.Text:SetText("Keep focus");
+                self.Text:SetText("Quick add: keep typing after adding an item");
               </OnLoad>
               <OnClick>
                 PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);

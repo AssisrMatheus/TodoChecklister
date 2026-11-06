@@ -30,7 +30,6 @@ globals = {
 
 	-- TodoChecklister
 	"TodoChecklisterDB",
-	"TodoItemsScrollFrame",
 	"TodoChecklister",
 	"TodoChecklisterSettingsDB",
 	"TodoChecklisterMapIcon",
@@ -43,6 +42,11 @@ globals = {
 	"StaticPopup_StandardNonEmptyTextHandler",
 	"StaticPopup_StandardEditBoxOnEscapePressed",
 	"NameUtil",
+	"CreateScrollBoxListLinearView",
+	"CreateDataProvider",
+	"ScrollUtil",
+	"ScrollBoxConstants",
+	"DragIntersectionArea",
 
 	-- misc custom
 	"AceGUIWeakAurasMultiLineEditBoxInsertLink",
@@ -61,12 +65,9 @@ globals = {
 	"KuiNameplatesPlayerAnchor",
 
 	-- wow misc
-	"HybridScrollFrame_GetOffset",
 	"GameFontDarkGraySmall",
 	"GameFontNormalSmall",
 	"DISABLED_FONT_COLOR",
-	"HybridScrollFrame_Update",
-	"HybridScrollFrame_CreateButtons",
 	"InterfaceOptionsFrame",
 
 	-- FrameXML misc

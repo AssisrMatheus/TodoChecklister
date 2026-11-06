@@ -197,7 +197,7 @@ function Settings:Init()
 		self:SetDisplayMinimapIcon(true)
 	end
 
-	if (TodoChecklisterSettingsDB.displayChargesOnLinked == nil) then
+	if (TodoChecklisterSettingsDB.displayBankOnLinked == nil) then
 		self:SetDisplayBankOnLinked(true)
 	end
 

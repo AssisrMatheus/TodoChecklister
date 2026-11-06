@@ -83,7 +83,9 @@ When a setting changes, the flow fans out like this: XML handler (global functio
 
 ### Rendering and memoization
 
-- The list uses `HybridScrollFrame` with a pool of `TodoItemTemplate` buttons. `OnUpdate()` repaints every visible button from `TodoList:GetItems()` plus the scroll offset, and re-binds the drag/hover scripts each time. `PaintItem(frame, item, index)` renders a single row; the floating drag clone (`TODODragButton`) reuses it.
+- The list is a `WowScrollBoxList` (`frame.Background.ScrollBox`, nested so its clipped rows draw above the translucent backdrop) with a `WowTrimScrollBar` (`frame.ScrollBar`, hidden when nothing scrolls), set up in `InitScrollBox()`. Only visible rows exist; they are pooled `TodoItemTemplate` buttons. `OnUpdate()` hands `TodoList:GetItems()` to the ScrollBox as a new `CreateDataProvider(...)`, which re-runs `PaintItem(row, item, index)` on the visible rows only. Don't use `HybridScrollFrame`: both clients mark it deprecated.
+- Drag and drop is Blizzard's `ScrollUtil.InitDefaultLinearDragBehavior`. `SetCursorFactory` paints the clone that follows the cursor (same row, with backdrop and locked highlight), `SetDropEnter` places a `DropIndicatorTemplate` line, and `SetPostDrop` applies the move to the saved list through `TodoChecklisterFrame:Move(from, to)`, where `to` is the final position.
+- No script runs every frame while idle. The resize grip only sets `OnUpdate` while it is right-dragged to scale. Keep it that way.
 - Linked-item counts (`|Hitem:...|r` links in the text, plus `GetItemCount`) are cached with `FunctionUtils:Memoize(fn, comparator, name)`. The cache key includes `self.memoizationId`, so **any change that affects row text must increment `memoizationId` before `OnUpdate()`**. `BAG_UPDATE_DELAYED`, scrolling and `LoadCFG` already increment it.
 - Shift-clicking an item inserts its link into the input box through `hooksecurefunc("HandleModifiedItemClick", ...)` (and a hook on `StackSplitFrame:OpenStackSplitFrame` that closes the split frame while the input box has focus), installed when `TodoChecklister.lua` loads.
 
@@ -91,9 +93,9 @@ When a setting changes, the flow fans out like this: XML handler (global functio
 
 **Declare UI in XML, and use Lua only for what XML can't express.** This is how the existing code is split:
 
-- **XML (`*.xml`):** virtual templates (`TodoItemTemplate`, `TodoChecklisterTemplate`, `TodoChecklisterResponsiveFrameTemplate`, `TodoChecklisterInterfaceOptionsTemplate`, `CollapseButtonTemplate`, `DropIndicatorTemplate`), layout, anchors, sizes, layers, fonts, textures, inheritance from Blizzard templates (`UIPanelDialogTemplate`, `UICheckButtonTemplate`, `InputBoxTemplate`, `HybridScrollFrameTemplate`, `GameTooltipTemplate`), static text set in `<OnLoad>`, and `<Scripts>` handlers that delegate to Lua.
-- **Lua:** instantiating templates (`CreateFrame(type, name, parent, "Template")` in `Init`), anything that depends on runtime data (row painting, titles with the player name, version text), event registration, scripts that need module closures (drag and drop, the close button override), and pooled or dynamic frames (`HybridScrollFrame_CreateButtons`).
-- Child frames are addressed with `parentKey` (`self.frame.TodoText`, `frame.TodoContent.FontText`, `self.frame.SettingsContainer.FanfareCheck`). Give every new child a `parentKey` and use that from Lua. Avoid `_G[...]` lookups by name; the only one in the code is `TodoChecklisterClose`, which comes from `UIPanelDialogTemplate`'s `$parentClose` and has no `parentKey`.
+- **XML (`*.xml`):** virtual templates (`TodoItemTemplate`, `TodoChecklisterTemplate`, `TodoChecklisterResponsiveFrameTemplate`, `TodoChecklisterInterfaceOptionsTemplate`, `DropIndicatorTemplate`), layout, anchors, sizes, layers, fonts, textures, inheritance from Blizzard templates (`UIPanelDialogTemplate`, `UICheckButtonTemplate`, `InputBoxTemplate`, `WowScrollBoxList`, `WowTrimScrollBar`, `GameTooltipTemplate`), static text set in `<OnLoad>`, and `<Scripts>` handlers that delegate to Lua.
+- **Lua:** instantiating templates (`CreateFrame(type, name, parent, "Template")` in `Init`), anything that depends on runtime data (row painting, titles with the player name, version text), event registration, scripts that need module closures (drag and drop, the close button override), and pooled or dynamic frames (ScrollBox views and data providers).
+- Child frames are addressed with `parentKey` (`self.frame.TodoText`, `row.TodoCheckButton`, `self.frame.SettingsContainer.FanfareCheck`). Give every new child a `parentKey` and use that from Lua. Avoid `_G[...]` lookups by name; the only one in the code is `TodoChecklisterClose`, which comes from `UIPanelDialogTemplate`'s `$parentClose` and has no `parentKey`.
 
 ### Globals: what is global, why, and how to add one
 
@@ -104,9 +106,8 @@ Inline XML scripts can't see the private `TodoAddon` table, and the game resolve
 | SavedVariables (must match `.toc`) | Account-wide: `TodoChecklisterDB`, `TodoChecklisterSettingsDB`, `TodoChecklisterMapIcon`. Per character (`SavedVariablesPerCharacter`): `TodoChecklisterCharacterDB` | model `Init`s, `MinimapIcon:Init` |
 | Keybinding (resolved by `bindings.xml`) | `BINDING_HEADER_TC_HEADER`, `BINDING_NAME_TC_TOGGLE_FRAME`, `GLOBAL_TodoChecklisterFrameToggle` | `src/init.lua` |
 | Slash commands | `SLASH_TodoChecklister1` + `SlashCmdList.TodoChecklister`; debug only: `SLASH_RELOADUI1`, `SLASH_FRAMESTK1` | `chat.lua`, `debug.lua` |
-| Named frames (XML `name=` / `CreateFrame` name) | `TodoChecklister` (the window frame, not the `TodoChecklisterFrame` module), `TodoItemsScrollFrame`, `TodoChecklisterInterfaceOptions`, `TODODragButton`, `TodoChecklisterMAINFRAME`, and `$parent...` children | XML, `Init`s |
-| XML script handlers | `OnShow`, `OnSizeChanged`, `OnSaveItem`, `OnRemoveItem`, `OnCheckItem`, `OnSelectItem`, `ToggleFocusSettings`, `ToggleFocusLoad`, `OnEnter`, `OnLeave` | bottom of `TodoChecklister.lua` |
-| | `OnLoad`, `OnUpdate`, `OnMouseDown`, `OnMouseUp` | bottom of `ResponsiveFrame.lua` |
+| Named frames (XML `name=` / `CreateFrame` name) | `TodoChecklister` (the window frame, not the `TodoChecklisterFrame` module), `TodoChecklisterInterfaceOptions`, `TodoChecklisterMAINFRAME`, and `$parent...` children | XML, `Init`s |
+| XML script handlers | `OnShow`, `OnSaveItem`, `OnRemoveItem`, `OnCheckItem`, `OnSelectItem`, `ToggleFocusSettings` | bottom of `TodoChecklister.lua` |
 | | `ShowKeepFocusClick`, `KeepFocusClick`, `OpacityValueChanged`, `OpacityOnHoverValueChanged`, `OnFanfarreCheck`, `DisplayLinkedCountClick`, `ToggleMapClick`, `MuteChatClick`, `DisplayBankClick`, `DisplayChargesClick` | bottom of `interfaceOptions.lua` |
 | Misc | `printDBG` (debug print), `StaticPopupDialogs["TodoChecklisterWEBSITE"]` | `debug.lua`, `interfaceOptions.lua` |
 | XML-referenced data | `TodoChecklister_BACKDROP` (the `backdropInfo` of `BackdropTemplate` frames) | `constants.lua` |
@@ -114,11 +115,12 @@ Inline XML scripts can't see the private `TodoAddon` table, and the game resolve
 The XML handler globals have generic names (`OnLoad`, `OnUpdate`, `OnShow`) that any other addon can overwrite, and they are not namespaced. When adding UI behavior:
 
 - Keep the handler a thin adapter. It sits in the "XML Events" section at the bottom of the component's Lua file and immediately calls a module method (`OnCheckItem(frame)` → `TodoChecklisterFrame:CheckItem(frame:GetParent().todoItem)`).
+- XML template names (`name="..." virtual="true"`) share the same global namespace as Blizzard's. Before naming a template, grep both `vendor/retail` and `vendor/forever-export` for `name="ThatName"`; a clash breaks Blizzard's template or ours (this happened with `CollapseButtonTemplate`). Prefix new templates with `TodoChecklister`.
 - Prefix any **new** global with `TodoChecklister_` (for example `TodoChecklister_OnClearClick`). Don't add more bare names. Renaming the existing ones is a separate refactor; rename the XML and the Lua together.
 - If the logic needs module closures, set the script from Lua in `Init` with `SetScript` / `HookScript` instead of adding a global.
 - Every new global must also go into `diagnostics.globals` in `.emmyrc.json` and `globals` in `.luacheckrc`.
 
-Blizzard globals (`NORMAL_FONT_COLOR`, `SOUNDKIT`, `GameFont*`, `HybridScrollFrame_*`, `UIParent`) are used directly. When the retail annotations don't know one, which happens with Classic-era or removed APIs, add it to both allow-lists rather than declaring a stub.
+Blizzard globals (`NORMAL_FONT_COLOR`, `SOUNDKIT`, `GameFont*`, `ScrollUtil`, `UIParent`) are used directly. When the retail annotations don't know one, which happens with Classic-era or removed APIs, add it to both allow-lists rather than declaring a stub.
 
 ### Recipes
 
@@ -135,15 +137,13 @@ Blizzard globals (`NORMAL_FONT_COLOR`, `SOUNDKIT`, `GameFont*`, `HybridScrollFra
 
 ### Known quirks in existing code
 
-- `Settings:Init` checks `displayChargesOnLinked == nil` twice. The first check was meant to be `displayBankOnLinked`, so an upgraded install never gets that default.
-- `ClearSelected` calls `Settings.KeepFocus()` with a dot. It works only because the getter doesn't use `self`.
 - `TodoChecklisterDB` is account-wide: `{ lists = { [name] = TodoItem[] } }`, where `TodoItem` is `{ id, text, isChecked }`. Lists are keyed by name, so names are unique. Any character can view any list.
 - `TodoChecklisterCharacterDB` is per character: `{ selectedList = name }`. `TodoList:EnsureSelectedList()` falls back to `"<Name>'s List"` (and creates it) when the character never picked a list or its list was deleted. `<Name>` comes from `NameUtil.GetUnmodifiedUnitFullName("player")`: name plus surname on Forever, just the name elsewhere.
 - Before lists, `TodoChecklisterDB` was a flat `TodoItem[]`. `TodoList:Init` migrates it into the first character's default list.
 
 ## Game version and API references
 
-- The `.toc` says `## Interface: 16001` (WoW: Forever 1.60.1). The addon was written for Classic 1.13.2 (`11302`) and ported to Forever: removed globals were replaced with their namespaced versions (`C_Item.GetItemInfo`, `C_Item.GetItemCount`, `C_AddOns.GetAddOnMetadata`, `C_AddOns.LoadAddOn`), the options panel registers through `Settings.RegisterCanvasLayoutCategory` + `Settings.RegisterAddOnCategory` with `OnDefault`/`OnRefresh` on the frame, and XML `<Backdrop>` was replaced by `inherits="BackdropTemplate"` + a `backdropInfo` KeyValue. Don't reintroduce un-namespaced APIs; grep the Forever export first.
+- The `.toc` says `## Interface: 120105, 16001`: one build for retail (Midnight 12.1.5) and WoW: Forever 1.60.1. Every API and template used must exist in both `vendor/retail` and `vendor/forever-export`; grep both. When one side lacks something, feature-detect (`NameUtil` only exists on Forever, so `TodoList:GetDefaultListName` falls back to `UnitName`). The addon was written for Classic 1.13.2 (`11302`) and ported to Forever: removed globals were replaced with their namespaced versions (`C_Item.GetItemInfo`, `C_Item.GetItemCount`, `C_AddOns.GetAddOnMetadata`, `C_AddOns.LoadAddOn`), the options panel registers through `Settings.RegisterCanvasLayoutCategory` + `Settings.RegisterAddOnCategory` with `OnDefault`/`OnRefresh` on the frame, and XML `<Backdrop>` was replaced by `inherits="BackdropTemplate"` + a `backdropInfo` KeyValue. Don't reintroduce un-namespaced APIs; grep the Forever export first.
 - The addon's `Settings` and `Constants` modules shadow Blizzard's global `Settings` and `Constants` tables. Reach the Blizzard ones through `_G` (`interfaceOptions.lua` captures `BlizzardSettings = _G.Settings`; `debug.lua` reads `_G.Constants.ChatFrameConstants`).
 - Don't use anything defined in `Blizzard_Deprecated*` addons or `Blizzard_FrameXML/DeprecatedTemplates.*`. Those files show the replacement (e.g. `OptionsSliderTemplate` = `UISliderTemplateWithLabels` + `<Size x="144" y="17"/>`).
 - WoW: Forever runs on the **retail client**, not the Classic client, despite its 1.60 version number. Its UI code is closest to `vendor/retail`. Blizzard's tocs load `[Family]` = Mainline files plus `[Game]` = `Camelot/` overrides (`AllowLoadGameType camelot`), so check both folders in the export.

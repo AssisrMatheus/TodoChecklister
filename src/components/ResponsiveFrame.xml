@@ -6,12 +6,6 @@
   <Frame name="TodoChecklisterResponsiveFrameTemplate" resizable="true" enableMouse="true" movable="true" topLevel="true" hidden="true" inherits="UIPanelDialogTemplate" virtual="true">
     <Size x="300" y="300"/>
 
-    <Scripts>
-      <OnLoad>
-        OnLoad(self)
-      </OnLoad>
-    </Scripts>
-
     <Layers>
       <Layer level="OVERLAY">
         <FontString parentKey="Title" inherits="GameFontHighlight">
@@ -25,7 +19,8 @@
     </Layers>
 
     <Frames>
-      <Button name="$parentResize">
+      <!-- Left-drag resizes the window, right-drag scales it. Scripts are set in ResponsiveFrame:OnLoad -->
+      <Button parentKey="ResizeButton" name="$parentResize">
         <Size x="16" y="16"/>
 
         <Anchors>
@@ -33,18 +28,6 @@
             <Offset x="-5" y="7"/>
           </Anchor>
         </Anchors>
-
-        <Scripts>
-          <OnMouseDown>
-            OnMouseDown(self, button)
-          </OnMouseDown>
-          <OnMouseUp>						
-            OnMouseUp(self, button)
-          </OnMouseUp>
-          <OnUpdate>
-            OnUpdate(self)
-          </OnUpdate>
-        </Scripts>
 
         <NormalTexture file="Interface\ChatFrame\UI-ChatIM-SizeGrabber-Up" setAllPoints="true"/>
         <PushedTexture file="Interface\ChatFrame\UI-ChatIM-SizeGrabber-Down" setAllPoints="true"/>

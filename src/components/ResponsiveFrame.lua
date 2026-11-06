@@ -12,23 +12,51 @@ TodoAddon.ResponsiveFrame = {}
 ---@class ResponsiveFrame
 local ResponsiveFrame = TodoAddon.ResponsiveFrame
 
+ResponsiveFrame.minWidth = 120
+ResponsiveFrame.minHeight = 147
+ResponsiveFrame.minScale = 0.5
+
 --------------------------------------
 -- ResponsiveFrame functions
 --------------------------------------
 ---
----Sets up required properties so the frame can properly function
-function ResponsiveFrame:OnLoad(frame)
-  self.frame = frame
+---Pins the frame to UIParent by one corner, where it is now. Sizing and scaling grow it away from that corner
+---@param frame Frame
+---@param point "TOPLEFT"|"BOTTOMLEFT"
+local function AnchorCorner(frame, point)
+  local left = frame:GetLeft()
+  local y = point == "TOPLEFT" and frame:GetTop() or frame:GetBottom()
+  frame:ClearAllPoints()
+  frame:SetPoint(point, UIParent, "BOTTOMLEFT", left, y)
+end
 
+---
+---Scales the frame so its right edge follows the cursor, keeping the bottom left corner in place
+---@param frame Frame
+local function ScaleToCursor(frame)
+  local scale = frame:GetScale()
+  local cursorX = GetCursorPosition() / frame:GetEffectiveScale()
+  local newScale = scale * (cursorX - frame:GetLeft()) / frame:GetWidth()
+
+  if (newScale > ResponsiveFrame.minScale) then
+    -- Point offsets are in the frame's own scale, so convert the corner to the new one
+    local left, bottom = frame:GetLeft() * scale / newScale, frame:GetBottom() * scale / newScale
+    frame:SetScale(newScale)
+    frame:ClearAllPoints()
+    frame:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", left, bottom)
+  end
+end
+
+---
+---Makes the frame movable by dragging it, resizable with the grip's left button and scalable with its right button
+---@param frame Frame @A frame created from TodoChecklisterResponsiveFrameTemplate
+function ResponsiveFrame:OnLoad(frame)
+  frame:SetResizeBounds(self.minWidth, self.minHeight)
   frame:RegisterForDrag("LeftButton")
-  frame:SetScale(1)
-  frame.x = frame:GetLeft()
-  frame.y = (frame:GetTop() - frame:GetHeight())
 
   frame:SetScript(
     "OnDragStart",
     function(frame)
-      frame.isMoving = true
       frame:StartMoving()
     end
   )
@@ -36,100 +64,39 @@ function ResponsiveFrame:OnLoad(frame)
   frame:SetScript(
     "OnDragStop",
     function(frame)
-      frame.isMoving = false
       frame:StopMovingOrSizing()
-      frame.x = frame:GetLeft()
-      frame.y = (frame:GetTop() - frame:GetHeight())
-      frame:ClearAllPoints()
-      frame:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", frame.x, frame.y)
+      AnchorCorner(frame, "BOTTOMLEFT")
     end
   )
 
-  frame:SetScript(
-    "OnUpdate",
-    function(frame)
-      if frame.isMoving == true then
-        frame.x = frame:GetLeft()
-        frame.y = (frame:GetTop() - frame:GetHeight())
-        frame:ClearAllPoints()
-        frame:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", frame.x, frame.y)
+  local grip = frame.ResizeButton
+
+  grip:SetScript(
+    "OnMouseDown",
+    function(grip, button)
+      if (button == "LeftButton") then
+        -- The grip drags the bottom right corner, so the opposite corner must stay put
+        AnchorCorner(frame, "TOPLEFT")
+        frame:StartSizing("BOTTOMRIGHT")
+      elseif (button == "RightButton") then
+        AnchorCorner(frame, "BOTTOMLEFT")
+        -- Only runs every frame while the button is held
+        grip:SetScript(
+          "OnUpdate",
+          function()
+            ScaleToCursor(frame)
+          end
+        )
       end
     end
   )
-end
 
---------------------------------------
--- XML Events
---------------------------------------
-function OnLoad(frame)
-  ResponsiveFrame:OnLoad(frame)
-end
-
-function OnUpdate(self)
-  if (self.isSizing == true) then
-    -- If the width or height is less than the allowed ammount
-    -- stop resizing
-    local width, height = self:GetParent():GetWidth(), self:GetParent():GetHeight()
-    if (width <= 105 or height <= 140) then
-      self.isSizing = false
-      self:GetParent():StopMovingOrSizing()
+  grip:SetScript(
+    "OnMouseUp",
+    function(grip)
+      grip:SetScript("OnUpdate", nil)
+      frame:StopMovingOrSizing()
+      AnchorCorner(frame, "BOTTOMLEFT")
     end
-  end
-
-  if self.isScaling == true then
-    local cx, cy = GetCursorPosition()
-    cx = cx / self:GetEffectiveScale() - self:GetParent():GetLeft()
-    cy = self:GetParent():GetHeight() - (cy / self:GetEffectiveScale() - self:GetParent():GetBottom())
-
-    local tNewScale = cx / self:GetParent():GetWidth()
-    local tx, ty = self:GetParent().x / tNewScale, self:GetParent().y / tNewScale
-    local newScale = self:GetParent():GetScale() * tNewScale
-
-    if (newScale > 0) then
-      local finalScale = self:GetParent():GetScale() * tNewScale
-      if (finalScale > 0.5) then
-        self:GetParent():ClearAllPoints()
-        self:GetParent():SetScale(self:GetParent():GetScale() * tNewScale)
-        self:GetParent():SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", tx, ty)
-        self:GetParent().x, self:GetParent().y = tx, ty
-      end
-    end
-  end
-end
-
-function OnMouseUp(self, button)
-  if button == "LeftButton" then
-    self.isSizing = false
-    self:GetParent():StopMovingOrSizing()
-  elseif button == "RightButton" then
-    self.isScaling = false
-  end
-end
-
-function OnMouseDown(self, button)
-  local width, height = self:GetParent():GetWidth(), self:GetParent():GetHeight()
-
-  -- If the width or height is less than the allowed ammount
-  -- Resets the size and don't do anything
-  if (width <= 116) then
-    self:GetParent():SetWidth(120)
-  end
-
-  if (height <= 146) then
-    self:GetParent():SetHeight(147)
-  end
-
-  -- Fix a bug if you click too much in the scale button
-  self:GetParent():StartMoving()
-  self:GetParent():StopMovingOrSizing()
-
-  if button == "LeftButton" then
-    self.isSizing = true
-    self:GetParent():StartSizing("BOTTOMRIGHT")
-    self:GetParent():SetUserPlaced(true)
-  end
-
-  if button == "RightButton" then
-    self.isScaling = true
-  end
+  )
 end

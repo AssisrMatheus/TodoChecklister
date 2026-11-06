@@ -132,9 +132,10 @@ end
 ---
 ---@return string @The name of the list a character gets when it has not picked one
 function TodoList:GetDefaultListName()
-	-- WoW: Forever characters have a surname. Blizzard loads a different NameUtil per game:
-	-- on Forever it returns the name plus surname, elsewhere just the name
-	return NameUtil.GetUnmodifiedUnitFullName("player") .. "'s List"
+	-- WoW: Forever characters have a surname, which its NameUtil adds to the name.
+	-- Retail has no NameUtil, and no surnames
+	local name = NameUtil and NameUtil.GetUnmodifiedUnitFullName("player") or UnitName("player")
+	return name .. "'s List"
 end
 
 ---

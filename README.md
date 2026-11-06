@@ -19,7 +19,7 @@ A todolist/checklist AddOn for World of Warcraft. Save the bad guy's names, the 
 - List is saved even when you log out
 - Drag items around to move them
 - Click to edit
-- Multi-add items with "Keep focus" option!
+- Multi-add items with the "Quick add" option!
 - More options like opacity or toggling in "Esc" -> Interface Options -> Addons -> Todochecklister
 
 ## How to install it

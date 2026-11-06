@@ -23,8 +23,22 @@ TodoAddon.TodoChecklisterFrame = {}
 ---@class TodoChecklisterFrame
 local TodoChecklisterFrame = TodoAddon.TodoChecklisterFrame
 
----@class TodoItemFrame : ButtonFrame
+---@class TodoItemFrame : Button
+---@field todoItem TodoItem
+---@field TodoCheckButton CheckButton
+---@field RemoveButton Button
+---@field Text FontString
+---@field Strikethrough Texture
+---@class TodoListBackgroundFrame : Frame
+---@field BlankText FontString
+---@field ScrollBox Frame
 ---@class TodoChecklisterWindowFrame : Frame
+---@field Title FontString
+---@field TodoText EditBox
+---@field KeepFocus CheckButton
+---@field Background TodoListBackgroundFrame
+---@field ScrollBar Frame
+---@field ResizeButton Button
 
 --------------------------------------
 -- TodoChecklisterFrame functions
@@ -87,19 +101,13 @@ end
 ---
 ---Moves an item from a given position of an array to a new one, moving up other elements
 ---@param fromIndex number @The ONE-based location in the array to move from.
----@param toIndex number @The ONE-based location in the array to move to.
----@param fromChat boolean @Whether or not is removing from chatbox slash command
-function TodoChecklisterFrame:Move(fromIndex, toIndex, fromChat)
-	if
-		(fromIndex and type(fromIndex) == "number" and fromIndex > 0 and toIndex and type(toIndex) == "number" and toIndex > 0)
-	 then
+---@param toIndex number @The ONE-based location the item ends up in.
+function TodoChecklisterFrame:Move(fromIndex, toIndex)
+	local items = TodoList:GetItems()
+	if (type(fromIndex) == "number" and type(toIndex) == "number" and items[fromIndex] and items[toIndex]) then
 		local selectedItem
 		if (self.selectedItem and self.selectedItem > 0) then
-			selectedItem = TodoList:GetItems()[self.selectedItem]
-		end
-
-		if (not fromChat and fromIndex < toIndex) then
-			toIndex = toIndex - 1
+			selectedItem = items[self.selectedItem]
 		end
 
 		TodoList:Move(fromIndex, toIndex)
@@ -148,8 +156,7 @@ end
 ---
 ---Set the given item as selected
 ---@param todoItem TodoItem @The item to be marked as selected
----@param buttonFrame ButtonFrame @The button frame to set as highlighted
-function TodoChecklisterFrame:SelectItem(todoItem, buttonFrame)
+function TodoChecklisterFrame:SelectItem(todoItem)
 	local indexToSelect = TodoList:GetIndexByItem(todoItem)
 
 	-- If index is different = select a new item
@@ -171,7 +178,7 @@ end
 function TodoChecklisterFrame:ClearSelected()
 	self.selectedItem = 0
 	self.frame.TodoText:SetText("")
-	if (not Settings.KeepFocus()) then
+	if (not Settings:KeepFocus()) then
 		self.frame.TodoText:ClearFocus()
 	end
 end
@@ -209,7 +216,7 @@ end
 function TodoChecklisterFrame:OnListChanged()
 	self:ClearSelected()
 	self.frame.Title:SetText(TodoList:GetSelectedListName())
-	self.frame.ScrollFrame.scrollBar:SetValue(0)
+	self.frame.Background.ScrollBox:ScrollToBegin()
 	self.memoizationId = self.memoizationId + 1
 	self:OnUpdate()
 end
@@ -232,278 +239,145 @@ end
 ---Get the color based on the given item's properties
 ---@param todoItem TodoItem @The item to get the color to
 function TodoChecklisterFrame:GetColor(todoItem)
-	local highlightColor = NORMAL_FONT_COLOR
-
 	if (todoItem.isChecked) then
-		highlightColor = DISABLED_FONT_COLOR
+		return DISABLED_FONT_COLOR
 	end
+	return NORMAL_FONT_COLOR
+end
 
-	return highlightColor
+---
+---Appends the bag count after every item link in the text: "[Chipped Claw](2)"
+---@param text string @The item text
+---@return string
+function TodoChecklisterFrame:GetTextWithItemCounts(text)
+	local includeBank, includeCharges = self.displayBankOnLinked, self.displayChargesOnLinked
+	return (text:gsub(
+		"|Hitem:.-|r",
+		function(link)
+			local count = C_Item.GetItemCount(link, includeBank, includeCharges, includeBank, includeBank)
+			if (count and count > 0) then
+				return link .. "(" .. count .. ")"
+			end
+		end
+	))
 end
 
 ---
 ---Set the given frame's properties to the given item ones
----@param frame TodoItemFrame @The item to get the color to
----@param todoItem TodoItem @The item to get the color to
----@param index number @The current item index on the list
+---@param frame TodoItemFrame @The row to paint
+---@param todoItem TodoItem @The item displayed by the row
+---@param index number @The current item index on the list, 0 for the drag clone
 function TodoChecklisterFrame:PaintItem(frame, todoItem, index)
-	index = index or 0
-
 	frame.todoItem = todoItem
-	-- Update button values
+
 	if (todoItem.isChecked) then
-		frame.TodoContent.FontText:SetFontObject(GameFontDarkGraySmall)
+		frame:SetNormalFontObject(GameFontDarkGraySmall)
 	else
-		frame.TodoContent.FontText:SetFontObject(GameFontNormalSmall)
+		frame:SetNormalFontObject(GameFontNormalSmall)
 	end
-	frame.TodoContent:SetWidth(TodoItemsScrollFrame:GetWidth() - frame.RemoveButton:GetWidth() - 23)
 
-	if (self.displayLinked) then
-		local identifier
-
-		if (todoItem.id) then
-			identifier = todoItem.id
-		else
-			identifier = todoItem.text
-		end
-
-		local text =
+	local text = todoItem.text
+	if (self.displayLinked and text:find("|Hitem:", 1, true)) then
+		-- Links only change their count when bags change, so it's cached until memoizationId changes
+		local identifier = todoItem.id or todoItem.text
+		text =
 			FunctionUtils:Memoize(
 			function()
-				-- Startup regex process by storing string values
-				local finalString = ""
-				local remainingString = todoItem.text
-
-				-- If the remaining string still has linked items
-				while (remainingString and not (not C_Item.GetItemInfo(remainingString))) do
-					-- Find the linked item position
-					local st, en = string.find(remainingString, "|Hitem:.-|r")
-
-					if (en) then
-						-- Set the final string to:
-						local count = C_Item.GetItemCount(remainingString,self.displayBankOnLinked, self.displayChargesOnLinked)
-						if (count and count > 0) then
-							finalString =
-								table.concat {
-								finalString, -- Current final string
-								remainingString:sub(1, en), -- Current string until now
-								"(",
-								count,
-								")"
-							}
-						else
-							finalString =
-								table.concat {
-								finalString, -- Current final string
-								remainingString:sub(1, en) -- Current string until now
-							}
-						end
-
-						-- Remove the current linked item from the remaining string to continue the process
-						remainingString = remainingString:sub(en + 1)
-					else
-						remainingString = ""
-					end
-				end
-
-				-- If the final string has been set
-				if (string.len(finalString) > 0) then
-					return finalString .. remainingString
-				else
-					-- If not, the string doesn't have links
-					return todoItem.text
-				end
+				return self:GetTextWithItemCounts(todoItem.text)
 			end,
 			identifier .. self.memoizationId,
 			identifier .. "Count"
 		)
+	end
+	frame:SetText(text)
 
-		frame.TodoContent.FontText:SetText(text)
+	-- A drag starts on mouse down, so the row can be left in its pushed state
+	frame:SetButtonState("NORMAL")
+	local highlightColor = self:GetColor(todoItem)
+	frame:GetHighlightTexture():SetVertexColor(highlightColor.r, highlightColor.g, highlightColor.b)
+	if (index > 0 and self.selectedItem == index) then
+		frame:LockHighlight()
 	else
-		frame.TodoContent.FontText:SetText(todoItem.text)
+		frame:UnlockHighlight()
 	end
 
-	if (self.selectedItem == index) then
-		local highlightColor = self:GetColor(todoItem)
-
-		frame.TodoContent.ButtonHighlightFrame.ButtonHighlightTexture:SetVertexColor(
-			highlightColor.r,
-			highlightColor.g,
-			highlightColor.b
-		)
-		frame.TodoContent.ButtonHighlightFrame:Show()
-	else
-		frame.TodoContent.ButtonHighlightFrame:Hide()
-	end
-
-	-- Update checkbox values
 	frame.TodoCheckButton:SetChecked(todoItem.isChecked)
+
+	frame.Strikethrough:SetShown(todoItem.isChecked)
 end
 
 ---
----Creates and returns the floating button frame to drag and drop items
----@param parent TodoChecklisterWindowFrame @The parent frame for all items
----@return TodoItemFrame @The item to get the color to
-function TodoChecklisterFrame:FloatingButton(parent)
-	-- Create an initial offset based on where the mouse is
-	local cx = GetCursorPosition()
-	local xOffset = cx / self.frame:GetEffectiveScale() - (parent:GetLeft())
+---Sets up the scrolling list: one pooled row per visible item, and drag and drop to reorder
+function TodoChecklisterFrame:InitScrollBox()
+	local scrollBox = self.frame.Background.ScrollBox
 
-	-- Create or reuse a frame
-	local floatingFrame = self.floatingFrame or CreateFrame("Frame", "TODODragButton", UIParent, "TodoItemTemplate")
+	local view = CreateScrollBoxListLinearView()
+	view:SetElementInitializer(
+		"TodoItemTemplate",
+		function(row, todoItem)
+			self:PaintItem(row, todoItem, row:GetElementDataIndex())
+		end
+	)
+	ScrollUtil.InitScrollBoxListWithScrollBar(scrollBox, self.frame.ScrollBar, view)
 
-	floatingFrame.todoItem = parent:GetParent().todoItem
-	-- Fill the frame's values
-	self:PaintItem(floatingFrame, floatingFrame.todoItem)
+	local dragBehavior = ScrollUtil.InitDefaultLinearDragBehavior(scrollBox)
+	dragBehavior:SetReorderable(true)
 
-	-- When moving
-	floatingFrame:SetScript(
-		"OnUpdate",
-		function(frame)
-			-- Make the clone follow the mouse
-			parent:GetParent().BottomDropIndicator:Hide()
-			if frame.isMoving then
-				local cx, cy = GetCursorPosition()
-				local x, y = cx / self.frame:GetEffectiveScale(), cy / self.frame:GetEffectiveScale()
-				frame:ClearAllPoints()
-				frame:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", x - xOffset + 30, y - 25)
+	-- Over half the row height: the drop always goes above or below a row, never swaps with it
+	dragBehavior:SetAreaIntersectMargin(16)
+
+	-- The clone that follows the cursor: the same row, with a backdrop and highlighted
+	dragBehavior:SetCursorFactory(
+		function()
+			return "TodoItemTemplate", function(cursorRow, sourceRow, todoItem)
+				cursorRow:SetSize(sourceRow:GetSize())
+				self:PaintItem(cursorRow, todoItem, 0)
+				cursorRow:SetBackdrop(TodoChecklister_BACKDROP)
+				cursorRow:LockHighlight()
 			end
 		end
 	)
 
-	floatingFrame:SetScale(self.frame:GetScale())
-	floatingFrame:SetMovable(true)
-	floatingFrame:SetToplevel(true)
-	floatingFrame:SetFrameStrata("TOOLTIP")
-	floatingFrame.Background:Show()
-	return floatingFrame
+	dragBehavior:SetDropEnter(
+		function(factory, candidate)
+			local indicator = factory("DropIndicatorTemplate")
+			if (candidate.area == DragIntersectionArea.Above) then
+				indicator:SetPoint("BOTTOMLEFT", candidate.frame, "TOPLEFT", 0, -2)
+				indicator:SetPoint("BOTTOMRIGHT", candidate.frame, "TOPRIGHT", 0, -2)
+			else
+				indicator:SetPoint("TOPLEFT", candidate.frame, "BOTTOMLEFT", 0, 2)
+				indicator:SetPoint("TOPRIGHT", candidate.frame, "BOTTOMRIGHT", 0, 2)
+			end
+		end
+	)
+
+	-- The data provider is already reordered here. Apply the same move to the saved list
+	dragBehavior:SetPostDrop(
+		function(contextData)
+			self:Move(contextData.sourceData.elementDataIndex, contextData.newSourceData.elementDataIndex)
+		end
+	)
 end
 
 ---
----The main update function for this class
----(Used to update the scrollbar and the view)
+---The main update function for this class: repaints the visible rows from the saved list
 function TodoChecklisterFrame:OnUpdate()
-	local scrollFrame = TodoItemsScrollFrame
-	local list = TodoList:GetItems()
-	if (self.frame and scrollFrame and scrollFrame.buttons and list) then
-		local offset = HybridScrollFrame_GetOffset(scrollFrame)
+	if (not self.frame) then
+		return
+	end
 
-		if (#list > 0) then
-			self.frame.Background.BlankText:SetText("")
-		else
-			self.frame.Background.BlankText:SetText(
-				"You have no items on your list \r\n\r\n Start by typing them in the box above \r\n\r\n =)"
-			)
-		end
+	local items = TodoList:GetItems()
+	if (#items > 0) then
+		self.frame.Background.BlankText:SetText("")
+	else
+		self.frame.Background.BlankText:SetText(
+			"You have no items on your list \r\n\r\n Start by typing them in the box above \r\n\r\n =)"
+		)
+	end
 
-		for i = 1, #scrollFrame.buttons do
-			local idx = i + offset
-			local button = scrollFrame.buttons[i]
-
-			if (idx <= #list) then
-				local todoItem = list[idx]
-				self:PaintItem(button, todoItem, idx)
-
-				-- Setup drag
-				button.TodoContent:RegisterForDrag("LeftButton")
-				button.TodoContent:SetScript(
-					"OnDragStart",
-					function(todoContent)
-						-- Clone the original button as a floating window
-						self.floatingFrame = self:FloatingButton(todoContent)
-
-						-- Display the window and drag it with the mouse
-						self.floatingFrame:Show()
-						self.floatingFrame.isMoving = true
-						self.floatingFrame:StartMoving()
-
-						-- Show that this item is being moved
-						button.isMoving = true
-						-- todoContent.ButtonHighlightFrame:Show()
-					end
-				)
-
-				button.TodoContent:SetScript(
-					"OnDragStop",
-					function(todoContent)
-						-- Hide that this item is being moved
-						button.isMoving = false
-						-- todoContent.ButtonHighlightFrame:Hide()
-
-						-- Hide the floating window
-						self.floatingFrame.isMoving = false
-						self.floatingFrame:StopMovingOrSizing()
-						self.floatingFrame:Hide()
-
-						-- Resets fake animation
-						todoContent.FontText:ClearAllPoints()
-						todoContent.FontText:SetPoint("LEFT", todoContent, "LEFT", 0, 0)
-
-						if (self.floatingFrame.targetIndex and self.floatingFrame.targetIndex > 0) then
-							button.BottomDropIndicator:Hide()
-							button.TopDropIndicator:Hide()
-
-							local moveIndex = TodoList:GetIndexByItem(self.floatingFrame.todoItem)
-							self:Move(moveIndex, self.floatingFrame.targetIndex)
-						end
-
-						self.floatingFrame.targetIndex = 0
-						self.floatingFrame.todoItem = nil
-					end
-				)
-
-				local highlightColor = self:GetColor(todoItem)
-				button.TodoContent:SetScript(
-					"OnUpdate",
-					function(todoContent)
-						if (self.selectedItem ~= idx) then
-							todoContent.ButtonHighlightFrame:Hide()
-						end
-
-						-- If dragging
-						if (self.floatingFrame and self.floatingFrame.isMoving) then
-							button.BottomDropIndicator:Hide()
-							button.TopDropIndicator:Hide()
-
-							-- Every item have highlight on the top
-							local topOffset = 10
-							if (idx == 1) then
-								topOffset = 800
-							end
-							if (todoContent:IsMouseOver(topOffset)) then
-								self.floatingFrame.targetIndex = idx
-								-- Highlight where dragged item will be dropped
-								button.TopDropIndicator:Show()
-							end
-
-							if (idx == #list and todoContent:IsMouseOver(0, -800)) then
-								self.floatingFrame.targetIndex = idx + 1
-								button.BottomDropIndicator:Show()
-							end
-						else
-							button.BottomDropIndicator:Hide()
-							button.TopDropIndicator:Hide()
-							-- If not dragging but hovering
-							if (todoContent:IsMouseOver(5, 5)) then
-								-- Display hover effect
-								todoContent.ButtonHighlightFrame.ButtonHighlightTexture:SetVertexColor(
-									highlightColor.r,
-									highlightColor.g,
-									highlightColor.b
-								)
-								todoContent.ButtonHighlightFrame:Show()
-							end
-						end
-					end
-				)
-
-				button:Show()
-			else
-				button:Hide()
-			end
-		end
-
-		HybridScrollFrame_Update(scrollFrame, (scrollFrame.buttons[1]:GetHeight()) * #list, scrollFrame:GetHeight())
+	-- Hidden windows are repainted by OnShow
+	if (self.frame:IsShown()) then
+		self.frame.Background.ScrollBox:SetDataProvider(CreateDataProvider(items), ScrollBoxConstants.RetainScrollPosition)
 	end
 end
 
@@ -515,7 +389,7 @@ end
 function TodoChecklisterFrame:Defaults()
 	self.frame:SetSize(300, 300)
 	self.frame:ClearAllPoints()
-	self.frame:SetPoint("BOTTOMRIGHT", "$parent", "BOTTOMRIGHT", -120, 30)
+	self.frame:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", -120, 30)
 	self.frame:SetScale(1)
 	self.frame:SetAlpha(1)
 	self.memoizationId = 0
@@ -538,19 +412,12 @@ function TodoChecklisterFrame:LoadCFG()
 		self.frame.KeepFocus:SetChecked(Settings:KeepFocus())
 
 		if (not Settings:KeepFocus()) then
-			TodoChecklister.TodoText:ClearFocus()
+			self.frame.TodoText:ClearFocus()
 		end
 
 		if (Settings:Opacity()) then
 			self.frame:SetAlpha(Settings:Opacity())
 		end
-
-		-- Set up scroll bar
-		self.frame.ScrollFrame.update = function()
-			self.memoizationId = self.memoizationId + 1
-			self:OnUpdate()
-		end
-		HybridScrollFrame_CreateButtons(self.frame.ScrollFrame, "TodoItemTemplate")
 
 		self.displayLinked = Settings:DisplayLinked()
 		self.displayBankOnLinked = Settings:DisplayBankOnLinked()
@@ -585,6 +452,7 @@ function TodoChecklisterFrame:Init()
 
 	--- @class TodoChecklisterWindowFrame
 	self.frame = frame
+	self:InitScrollBox()
 
 	-- Display window title
 	self.frame.Title:SetText(TodoList:GetSelectedListName())
@@ -647,14 +515,8 @@ function OnShow(frame)
 	TodoChecklisterFrame:OnUpdate()
 end
 
-function OnSizeChanged(frame)
-	frame.ScrollFrame:SetHeight(frame.Background:GetHeight())
-	HybridScrollFrame_CreateButtons(frame.ScrollFrame, "TodoItemTemplate")
-	TodoChecklisterFrame:OnUpdate()
-end
-
 function OnSaveItem(frame)
-	local text = TodoChecklister.TodoText:GetText()
+	local text = TodoChecklisterFrame.frame.TodoText:GetText()
 	if (not text or text == "") then
 		text = ""
 	else
@@ -673,28 +535,10 @@ function OnCheckItem(frame)
 end
 
 function OnSelectItem(frame)
-	TodoChecklisterFrame:SelectItem(frame:GetParent().todoItem)
+	TodoChecklisterFrame:SelectItem(frame.todoItem)
 end
 
 function ToggleFocusSettings(frame)
 	Settings:ToggleFocus()
 	TodoChecklisterFrame:LoadCFG()
-end
-
-function ToggleFocusLoad(frame)
-	frame:SetChecked(Settings:KeepFocus())
-end
-
-function OnEnter(frame)
-	-- if (Settings:OpacityOnHover()) then
-	-- 	frame:SetAlpha(Settings:OpacityOnHover())
-	-- end
-end
-
-function OnLeave(frame)
-	-- if (Settings:Opacity()) then
-	-- 	frame:SetAlpha(Settings:Opacity())
-	-- else
-	-- 	frame:SetAlpha(1)
-	-- end
 end
