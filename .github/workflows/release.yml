@@ -73,6 +73,7 @@ jobs:
           git push origin "refs/tags/$VERSION"
 
       - name: Set up packager
+        id: packager
         if: steps.version.outputs.new == 'true'
         run: |
           # pkgmeta externals are svn repos (repos.wowace.com); ubuntu-latest has no svn
@@ -88,7 +89,8 @@ jobs:
       # expecting a separate tag-triggered run. Tags pushed with GITHUB_TOKEN start no workflows,
       # so the build runs here, with GITHUB_EVENT_NAME overridden for release.sh only.
       - name: Package and upload Retail
-        if: steps.version.outputs.new == 'true'
+        # Runs even when an earlier package step failed, so one site's error doesn't skip the other flavors
+        if: ${{ !cancelled() && steps.packager.outcome == 'success' }}
         env:
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           WAGO_API_TOKEN: ${{ secrets.WAGO_API_TOKEN }}
@@ -101,7 +103,8 @@ jobs:
       # Forever (16xxx) and retail are left out: they have their own zips.
       # "-g" takes game versions (x.y.z) as a list, so the interfaces are converted: 50504 -> 5.5.4
       - name: Package and upload Classic
-        if: steps.version.outputs.new == 'true'
+        # Runs even when an earlier package step failed, so one site's error doesn't skip the other flavors
+        if: ${{ !cancelled() && steps.packager.outcome == 'success' }}
         env:
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           WAGO_API_TOKEN: ${{ secrets.WAGO_API_TOKEN }}
@@ -119,7 +122,8 @@ jobs:
             -n "{package-name}-{project-version}-classic:{project-version} - Classic"
 
       - name: Package and upload Forever
-        if: steps.version.outputs.new == 'true'
+        # Runs even when an earlier package step failed, so one site's error doesn't skip the other flavors
+        if: ${{ !cancelled() && steps.packager.outcome == 'success' }}
         env:
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           WAGO_API_TOKEN: ${{ secrets.WAGO_API_TOKEN }}
@@ -131,7 +135,8 @@ jobs:
       # WoWInterface only (no CurseForge, Wago or GitHub tokens): one zip whose toc keeps the retail
       # (6 digits, 120105 -> 12.1.5) and Forever (16xxx -> 1.60.1) interfaces, so page 25349 serves both
       - name: Package and upload Retail + Forever to WoWInterface
-        if: steps.version.outputs.new == 'true'
+        # Runs even when an earlier package step failed, so one site's error doesn't skip the other flavors
+        if: ${{ !cancelled() && steps.packager.outcome == 'success' }}
         env:
           WOWI_API_TOKEN: ${{ secrets.WOWI_API_TOKEN }}
         run: |
