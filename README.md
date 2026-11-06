@@ -67,3 +67,28 @@ WowFolder
 - [Documentation reference](http://wowprogramming.com/docs.html)
 - [Widget API](https://wowwiki.fandom.com/wiki/Widget_API)
 - [Widget API-2](https://wow.gamepedia.com/Widget_API)
+
+## Development
+
+Editor tooling uses [EmmyLua Analyzer Rust](https://github.com/EmmyLuaLs/emmylua-analyzer-rust) (`emmylua_ls`) with [Ketho's WoW API annotations](https://github.com/Ketho/vscode-wow-api).
+
+```sh
+brew install emmylua_ls   # or: cargo install emmylua_ls
+pnpm bootstrap              # fetches WoW API annotations + emmylua_check
+pnpm check                # run diagnostics from the CLI
+pnpm vendor               # clone/update Blizzard UI source into ./vendor (gitignored)
+```
+
+Config lives in `.emmyrc.json`. VS Code: install the recommended `EmmyLua` extension (it bundles `emmylua_ls`). Neovim: `vim.lsp.enable("emmylua_ls")` via nvim-lspconfig.
+
+`./vendor` holds read-only Blizzard UI source from [Gethe/wow-ui-source](https://github.com/Gethe/wow-ui-source), one folder per flavor: `retail` (live), `classic` (Mists), `classic_era`, `anniversary` (TBC), `forever` (WoW: Forever: 1.60 content on the retail client, UI code mostly shared with `retail`). Update one with `pnpm vendor forever`.
+
+`./vendor/<flavor>-export/` holds the client's own `ExportInterfaceFiles code|art` output (launch with `-console`, press `` ` `` at the login screen). See [Viewing Blizzard's interface code](https://warcraft.wiki.gg/wiki/Viewing_Blizzard%27s_interface_code).
+
+### References
+
+- [World of Warcraft API](https://warcraft.wiki.gg/wiki/World_of_Warcraft_API) ([Wowpedia mirror](https://wowpedia.fandom.com/wiki/World_of_Warcraft_API))
+- [Widget API](https://warcraft.wiki.gg/wiki/Widget_API) ([Wowpedia mirror](https://wowpedia.fandom.com/wiki/Widget_API))
+- [wowprogramming.com docs](https://wowprogramming.com/docs.html) (older, still useful for concepts)
+- [Extracting WoW user interface files](https://wowwiki-archive.fandom.com/wiki/Extracting_WoW_user_interface_files) (archive)
+- [WoWInterface forums](https://www.wowinterface.com/forums)

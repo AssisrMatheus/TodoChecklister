@@ -40,3 +40,10 @@ luac.out
 *.hex
 
 CHANGES.txt
+# Dev tooling (pnpm bootstrap)
+node_modules/
+.annotations/
+.tools/
+
+# Blizzard UI source references (pnpm vendor)
+vendor/

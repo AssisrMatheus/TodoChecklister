@@ -1,0 +1,9 @@
+{
+  "files.watcherExclude": {
+    "**/vendor/**": true,
+    "**/.annotations/**": true
+  },
+  "search.exclude": {
+    "**/vendor/*-export/BlizzardInterfaceArt/**": true
+  }
+}

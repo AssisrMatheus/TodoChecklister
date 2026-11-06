@@ -1,0 +1,62 @@
+{
+  "$schema": "https://raw.githubusercontent.com/EmmyLuaLs/emmylua-analyzer-rust/refs/heads/main/crates/emmylua_code_analysis/resources/schema.json",
+  "runtime": {
+    "version": "Lua5.1"
+  },
+  "workspace": {
+    "library": [
+      ".annotations/wow-api/Annotations/Core"
+    ],
+    "ignoreDir": [
+      ".annotations/wow-api/.git",
+      "node_modules",
+      ".tools",
+      "vendor"
+    ],
+    "ignoreGlobs": [
+      "**/libs/**",
+      "vendor/**"
+    ]
+  },
+  "diagnostics": {
+    "globals": [
+      "TodoChecklisterDB",
+      "TodoChecklisterSettingsDB",
+      "TodoChecklisterMapIcon",
+      "TodoChecklister",
+      "TodoItemsScrollFrame",
+      "SOUNDKIT",
+      "SlashCmdList",
+      "StaticPopupDialogs",
+      "StaticPopup_Show",
+      "DEFAULT_CHAT_FRAME",
+      "NUM_CHAT_WINDOWS",
+      "ReloadUI",
+      "LoadAddOn",
+      "GetAddOnMetadata",
+      "GetContainerItemLink",
+      "GetMinimapShape",
+      "ChatEdit_GetActiveWindow",
+      "FrameStackTooltip_Toggle",
+      "HybridScrollFrame_CreateButtons",
+      "HybridScrollFrame_Update",
+      "HybridScrollFrame_GetOffset",
+      "InterfaceOptionsFrame",
+      "InterfaceOptions_AddCategory",
+      "TradeSkillFrame",
+      "CommunitiesFrame",
+      "MacroFrameText",
+      "BrowseName",
+      "StackSplitFrame",
+      "SocialPostFrame",
+      "Social_IsShown"
+    ],
+    "globalsRegex": [
+      "^SLASH_",
+      "^BINDING_"
+    ],
+    "disable": [
+      "duplicate-type"
+    ]
+  }
+}

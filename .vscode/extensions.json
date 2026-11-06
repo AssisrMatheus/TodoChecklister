@@ -1,0 +1,4 @@
+{
+  "recommendations": ["tangzx.emmylua"],
+  "unwantedRecommendations": ["sumneko.lua", "ketho.wow-api"]
+}

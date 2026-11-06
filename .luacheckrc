@@ -1,7 +1,11 @@
 std = "lua51"
 max_line_length = false
 exclude_files = {
-	".luacheckrc"
+	".luacheckrc",
+	".annotations",
+	"node_modules",
+	"src/libs",
+	"vendor"
 }
 ignore = {
 	"11./SLASH_.*", -- Setting an undefined (Slash handler) global variable
