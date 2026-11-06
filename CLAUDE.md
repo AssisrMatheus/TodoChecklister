@@ -85,7 +85,7 @@ When a setting changes, the flow fans out like this: XML handler (global functio
 
 - The list uses `HybridScrollFrame` with a pool of `TodoItemTemplate` buttons. `OnUpdate()` repaints every visible button from `TodoList:GetItems()` plus the scroll offset, and re-binds the drag/hover scripts each time. `PaintItem(frame, item, index)` renders a single row; the floating drag clone (`TODODragButton`) reuses it.
 - Linked-item counts (`|Hitem:...|r` links in the text, plus `GetItemCount`) are cached with `FunctionUtils:Memoize(fn, comparator, name)`. The cache key includes `self.memoizationId`, so **any change that affects row text must increment `memoizationId` before `OnUpdate()`**. `BAG_UPDATE_DELAYED`, scrolling and `LoadCFG` already increment it.
-- Shift-clicking a bag item inserts its link into the input box through `hooksecurefunc("ContainerFrameItemButton_OnModifiedClick", ...)`, installed when `TodoChecklister.lua` loads.
+- Shift-clicking an item inserts its link into the input box through `hooksecurefunc("HandleModifiedItemClick", ...)` (and a hook on `StackSplitFrame:OpenStackSplitFrame` that closes the split frame while the input box has focus), installed when `TodoChecklister.lua` loads.
 
 ### UI: XML first
 
@@ -109,6 +109,7 @@ Inline XML scripts can't see the private `TodoAddon` table, and the game resolve
 | | `OnLoad`, `OnUpdate`, `OnMouseDown`, `OnMouseUp` | bottom of `ResponsiveFrame.lua` |
 | | `ShowKeepFocusClick`, `KeepFocusClick`, `OpacityValueChanged`, `OpacityOnHoverValueChanged`, `OnFanfarreCheck`, `DisplayLinkedCountClick`, `ToggleMapClick`, `MuteChatClick`, `DisplayBankClick`, `DisplayChargesClick` | bottom of `interfaceOptions.lua` |
 | Misc | `printDBG` (debug print), `StaticPopupDialogs["TodoChecklisterWEBSITE"]` | `debug.lua`, `interfaceOptions.lua` |
+| XML-referenced data | `TodoChecklister_BACKDROP` (the `backdropInfo` of `BackdropTemplate` frames) | `constants.lua` |
 
 The XML handler globals have generic names (`OnLoad`, `OnUpdate`, `OnShow`) that any other addon can overwrite, and they are not namespaced. When adding UI behavior:
 
@@ -140,8 +141,10 @@ Blizzard globals (`NORMAL_FONT_COLOR`, `SOUNDKIT`, `GameFont*`, `HybridScrollFra
 
 ## Game version and API references
 
-- The `.toc` says `## Interface: 11302` (Classic 1.13.2, from when the addon was written). The code uses APIs that were later removed or renamed in modern clients: `GetContainerItemLink`, `InterfaceOptions_AddCategory`, `GetAddOnMetadata`, `InterfaceOptionsFrame`.
-- WoW: Forever runs on the **retail client**, not the Classic client, despite its 1.60 version number. Its UI code is closest to `vendor/retail`.
+- The `.toc` says `## Interface: 16001` (WoW: Forever 1.60.1). The addon was written for Classic 1.13.2 (`11302`) and ported to Forever: removed globals were replaced with their namespaced versions (`C_Item.GetItemInfo`, `C_Item.GetItemCount`, `C_AddOns.GetAddOnMetadata`, `C_AddOns.LoadAddOn`), the options panel registers through `Settings.RegisterCanvasLayoutCategory` + `Settings.RegisterAddOnCategory` with `OnDefault`/`OnRefresh` on the frame, and XML `<Backdrop>` was replaced by `inherits="BackdropTemplate"` + a `backdropInfo` KeyValue. Don't reintroduce un-namespaced APIs; grep the Forever export first.
+- The addon's `Settings` and `Constants` modules shadow Blizzard's global `Settings` and `Constants` tables. Reach the Blizzard ones through `_G` (`interfaceOptions.lua` captures `BlizzardSettings = _G.Settings`; `debug.lua` reads `_G.Constants.ChatFrameConstants`).
+- Don't use anything defined in `Blizzard_Deprecated*` addons or `Blizzard_FrameXML/DeprecatedTemplates.*`. Those files show the replacement (e.g. `OptionsSliderTemplate` = `UISliderTemplateWithLabels` + `<Size x="144" y="17"/>`).
+- WoW: Forever runs on the **retail client**, not the Classic client, despite its 1.60 version number. Its UI code is closest to `vendor/retail`. Blizzard's tocs load `[Family]` = Mainline files plus `[Game]` = `Camelot/` overrides (`AllowLoadGameType camelot`), so check both folders in the export.
 - `vendor/<flavor>/` holds Blizzard's FrameXML/UI source per flavor, from Gethe/wow-ui-source. `vendor/forever-export/` is the client's own `ExportInterfaceFiles code|art` output. The art folder is about 10G, so don't search it broadly. Before using an API or template, grep `vendor/` to see how Blizzard's own code uses it on the target flavor.
 - `.annotations/wow-api` holds Ketho's WoW API type annotations, which the language server uses. They describe retail.
 

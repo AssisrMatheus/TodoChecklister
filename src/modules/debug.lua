@@ -25,7 +25,7 @@ local Debug = TodoAddon.Debug
 function Debug:Init()
 	if (Constants.debugMode) then
 		-- allows using left and right buttons to move through chat 'edit' box
-		for i = 1, NUM_CHAT_WINDOWS do
+		for i = 1, _G.Constants.ChatFrameConstants.MaxChatWindows do
 			_G["ChatFrame" .. i .. "EditBox"]:SetAltArrowKeyMode(false)
 		end
 
@@ -37,7 +37,7 @@ function Debug:Init()
 
 		SLASH_FRAMESTK1 = "/fs" -- new slash command for showing framestack tool
 		SlashCmdList.FRAMESTK = function()
-			LoadAddOn("Blizzard_DebugTools")
+			C_AddOns.LoadAddOn("Blizzard_DebugTools")
 			FrameStackTooltip_Toggle()
 		end
 	end

@@ -34,6 +34,11 @@ globals = {
 	"TodoChecklister",
 	"TodoChecklisterSettingsDB",
 	"TodoChecklisterMapIcon",
+	"TodoChecklister_BACKDROP",
+
+	-- Blizzard globals missing from the list below
+	"ChatFrameUtil",
+	"StackSplitFrame",
 
 	-- misc custom
 	"AceGUIWeakAurasMultiLineEditBoxInsertLink",

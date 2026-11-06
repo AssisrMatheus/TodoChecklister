@@ -7,6 +7,9 @@ local TodoAddon = select(2, ...)
 ---@type string
 local addonName = select(1, ...)
 
+-- Blizzard's settings panel API. Captured before the addon's own Settings module shadows the name below
+local BlizzardSettings = _G.Settings
+
 ---@class Constants
 local Constants = TodoAddon.Constants
 ---@class Settings
@@ -76,20 +79,20 @@ function InterfaceOptions:Init()
     CreateFrame(
     "Frame",
     addonName .. "InterfaceOptions",
-    InterfaceOptionsFrame,
+    nil,
     "TodoChecklisterInterfaceOptionsTemplate"
   )
-  self.frame.name = addonName
-  self.frame.default = function(frame)
+  -- Called by the Blizzard settings panel
+  self.frame.OnDefault = function(frame)
     self:Defaults()
   end
-  self.frame.refresh = function(frame)
+  self.frame.OnRefresh = function(frame)
     self:LoadCFG()
   end
 
   -- Set up fixed values
   self.frame.Title:SetText(addonName)
-  self.frame.Version:SetText("v" .. GetAddOnMetadata(addonName, "version"))
+  self.frame.Version:SetText("v" .. C_AddOns.GetAddOnMetadata(addonName, "Version"))
   self.frame.SettingsContainer.Obs.Text:SetText(
     "To report bugs visit: https://github.com/AssisrMatheus/TodoChecklister/issues"
   )
@@ -118,7 +121,8 @@ function InterfaceOptions:Init()
   )
 
   self:LoadCFG()
-  InterfaceOptions_AddCategory(self.frame)
+  local category = BlizzardSettings.RegisterCanvasLayoutCategory(self.frame, addonName)
+  BlizzardSettings.RegisterAddOnCategory(category)
 end
 
 --------------------------------------

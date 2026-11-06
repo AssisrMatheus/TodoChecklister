@@ -237,13 +237,13 @@ function TodoChecklisterFrame:PaintItem(frame, todoItem, index)
 				local remainingString = todoItem.text
 
 				-- If the remaining string still has linked items
-				while (remainingString and not (not GetItemInfo(remainingString))) do
+				while (remainingString and not (not C_Item.GetItemInfo(remainingString))) do
 					-- Find the linked item position
 					local st, en = string.find(remainingString, "|Hitem:.-|r")
 
 					if (en) then
 						-- Set the final string to:
-						local count = GetItemCount(remainingString, self.displayBankOnLinked, self.displayChargesOnLinked)
+						local count = C_Item.GetItemCount(remainingString,self.displayBankOnLinked, self.displayChargesOnLinked)
 						if (count and count > 0) then
 							finalString =
 								table.concat {
@@ -573,32 +573,32 @@ function TodoChecklisterFrame:Init()
 	end
 end
 
+-- Shift-clicking an item calls HandleModifiedItemClick(link), which only knows about
+-- Blizzard's own edit boxes. Insert the link into ours when it has focus.
 hooksecurefunc(
-	"ContainerFrameItemButton_OnModifiedClick",
-	function(self, button)
-		-- If any of these conditions are true, the link will have been posted
-		-- to another UI element by the time this hook is called.
+	"HandleModifiedItemClick",
+	function(link)
 		if
-			not TodoChecklisterFrame.frame.TodoText:HasFocus() or
-				(ChatEdit_GetActiveWindow() or (BrowseName and BrowseName:IsVisible()) or
-					(MacroFrameText and MacroFrameText:HasFocus()) or
-					(TradeSkillFrame and TradeSkillFrame.SearchBox and TradeSkillFrame.SearchBox:HasFocus()) or
-					(CommunitiesFrame and CommunitiesFrame.ChatEditBox and CommunitiesFrame.ChatEditBox:HasFocus()) or
-					(SocialPostFrame and Social_IsShown()))
+			not link or not IsModifiedClick("CHATLINK") or not TodoChecklisterFrame.frame or
+				not TodoChecklisterFrame.frame.TodoText:HasFocus() or
+				ChatFrameUtil.GetActiveWindow()
 		 then
-			-- Link will have been posted to one of the above areas. Ignore.
-			return false
-		end
-
-		local bag = self:GetParent():GetID()
-		local slot = self:GetID()
-		local link = GetContainerItemLink(bag, slot)
-
-		if self.hasStackSplit == 1 then
-			StackSplitFrame:Hide()
+			-- Link will have been posted to the chat box instead. Ignore.
+			return
 		end
 
 		TodoChecklisterFrame.frame.TodoText:Insert(link)
+	end
+)
+
+-- Shift-click on a bag stack also opens the stack split frame, close it while linking
+hooksecurefunc(
+	StackSplitFrame,
+	"OpenStackSplitFrame",
+	function(stackSplitFrame)
+		if (TodoChecklisterFrame.frame and TodoChecklisterFrame.frame.TodoText:HasFocus()) then
+			stackSplitFrame:Hide()
+		end
 	end
 )
 

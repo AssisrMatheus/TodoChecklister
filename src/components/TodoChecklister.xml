@@ -111,7 +111,7 @@
       </Button>
 
       <!-- Background frame shown when dragging -->
-      <Frame parentKey="Background" name="$parentBackground" hidden="true">
+      <Frame parentKey="Background" name="$parentBackground" inherits="BackdropTemplate" hidden="true">
         <Anchors>
           <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
             <Offset>
@@ -124,17 +124,9 @@
             </Offset>
           </Anchor>
         </Anchors>
-        <Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\Tooltips\UI-Tooltip-Border" tile="true">
-          <BackgroundInsets>
-            <AbsInset left="4" right="4" top="4" bottom="4" />
-          </BackgroundInsets>
-          <TileSize>
-            <AbsValue val="16" />
-          </TileSize>
-          <EdgeSize>
-            <AbsValue val="16" />
-          </EdgeSize>
-        </Backdrop>
+        <KeyValues>
+          <KeyValue key="backdropInfo" value="TodoChecklister_BACKDROP" type="global"/>
+        </KeyValues>
 
         <Layers>
           <Layer level="OVERLAY">
@@ -293,7 +285,7 @@
         <NormalTexture file="Interface\Buttons\UI-PlusButton-Up" />
       </Button>
 
-      <Frame parentKey="Background" name="$parentBackground">
+      <Frame parentKey="Background" name="$parentBackground" inherits="BackdropTemplate">
         <Anchors>
           <Anchor point="TOPLEFT" relativeTo="$parentTodoText" relativePoint="BOTTOMLEFT">
             <Offset>
@@ -306,17 +298,9 @@
             </Offset>
           </Anchor>
         </Anchors>
-        <Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\Tooltips\UI-Tooltip-Border" tile="true">
-          <BackgroundInsets>
-            <AbsInset left="4" right="4" top="4" bottom="4" />
-          </BackgroundInsets>
-          <TileSize>
-            <AbsValue val="16" />
-          </TileSize>
-          <EdgeSize>
-            <AbsValue val="16" />
-          </EdgeSize>
-        </Backdrop>
+        <KeyValues>
+          <KeyValue key="backdropInfo" value="TodoChecklister_BACKDROP" type="global"/>
+        </KeyValues>
 
         <Layers>
           <Layer level="OVERLAY">

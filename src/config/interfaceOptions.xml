@@ -4,7 +4,7 @@
   <Script file="interfaceOptions.lua"/>
 
 
-  <Frame name="TodoChecklisterInterfaceOptionsTemplate" virtual="true" parent="UIParent">
+  <Frame name="TodoChecklisterInterfaceOptionsTemplate" virtual="true" hidden="true">
     <Layers>
       <Layer level="OVERLAY">
         <FontString name="$parentTitle" parentKey="Title" inherits="GameFontNormalLarge" justifyH="LEFT" justifyV="TOP">
@@ -301,7 +301,8 @@
             </Layers>
           </CheckButton>
 
-          <Slider parentKey="Opacity" name="$parentOpacity" inherits="OptionsSliderTemplate" minValue="0" maxValue="1" valueStep="0.01" defaultValue="1">
+          <Slider parentKey="Opacity" name="$parentOpacity" inherits="UISliderTemplateWithLabels" minValue="0" maxValue="1" valueStep="0.01" defaultValue="1">
+            <Size x="144" y="17"/>
             <Anchors>
               <Anchor point="TOPLEFT" relativeTo="$parentMuteDisplayBankOnLinked" relativePoint="BOTTOMLEFT">
                 <Offset x="10" y="-40"/>
@@ -344,7 +345,8 @@
             </Scripts>
           </Slider>
 
-          <Slider parentKey="OpacityOnHover" name="$parentOpacityOnHover" inherits="OptionsSliderTemplate" minValue="0" maxValue="1" valueStep="0.01" defaultValue="1" hidden="true">
+          <Slider parentKey="OpacityOnHover" name="$parentOpacityOnHover" inherits="UISliderTemplateWithLabels" minValue="0" maxValue="1" valueStep="0.01" defaultValue="1" hidden="true">
+            <Size x="144" y="17"/>
             <Anchors>
               <Anchor point="TOPLEFT" relativeTo="$parentDisplayChargesOnLinked" relativePoint="BOTTOMLEFT">
                 <Offset x="10" y="-40"/>
