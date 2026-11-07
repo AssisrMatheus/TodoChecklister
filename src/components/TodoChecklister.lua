@@ -258,6 +258,16 @@ function TodoChecklisterFrame:SelectItem(todoItem)
 end
 
 ---
+---Stops editing the selected item without saving: the item keeps its text, and the input box empties
+function TodoChecklisterFrame:CancelEdit()
+	if (self.selectedItem and self.selectedItem > 0) then
+		self:ClearSelected()
+		self.memoizationId = self.memoizationId + 1
+		self:OnUpdate()
+	end
+end
+
+---
 ---Set the given item as selected
 ---@param todoItem TodoItem @The item to be marked as checked
 function TodoChecklisterFrame:ClearSelected()
@@ -642,6 +652,14 @@ function TodoChecklisterFrame:Init()
 
 	self.frame.TodoText:SetHyperlinksEnabled(true)
 	self.frame:SetHyperlinksEnabled(true)
+	-- InputBoxTemplate's Escape only drops focus. While editing an item it also cancels the edit, so the next Enter
+	-- doesn't overwrite the item. A new item being typed keeps its text
+	self.frame.TodoText:HookScript(
+		"OnEscapePressed",
+		function()
+			self:CancelEdit()
+		end
+	)
 
 	-- Set up defaults
 	self:LoadCFG()
