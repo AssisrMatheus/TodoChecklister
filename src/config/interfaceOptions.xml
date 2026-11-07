@@ -447,6 +447,53 @@
             </Anchors>
           </Button>
 
+          <!-- Separates the options from the feature guide below -->
+          <Frame parentKey="Divider" name="$parentDivider">
+            <Size y="16"/>
+            <Anchors>
+              <Anchor point="TOPLEFT" relativeTo="$parentListDropdown" relativePoint="BOTTOMLEFT">
+                <Offset x="0" y="-20"/>
+              </Anchor>
+              <Anchor point="RIGHT" relativeTo="$parent" relativePoint="RIGHT">
+                <Offset x="-10" y="0"/>
+              </Anchor>
+            </Anchors>
+            <Layers>
+              <Layer level="ARTWORK">
+                <Texture parentKey="Line" atlas="Options_HorizontalDivider" useAtlasSize="true">
+                  <Anchors>
+                    <Anchor point="LEFT"/>
+                    <Anchor point="RIGHT"/>
+                  </Anchors>
+                </Texture>
+              </Layer>
+            </Layers>
+          </Frame>
+
+          <!-- How to use the addon. The text is set in InterfaceOptions:Init -->
+          <Frame parentKey="Guide" name="$parentGuide">
+            <Anchors>
+              <Anchor point="TOPLEFT" relativeTo="$parentDivider" relativePoint="BOTTOMLEFT">
+                <Offset x="5" y="-4"/>
+              </Anchor>
+              <Anchor point="RIGHT" relativeTo="$parentDivider" relativePoint="RIGHT"/>
+              <!-- Stops above the footer url (15px tall). Anchored to the container because Obs is declared later -->
+              <Anchor point="BOTTOM" relativeTo="$parent" relativePoint="BOTTOM">
+                <Offset x="0" y="25"/>
+              </Anchor>
+            </Anchors>
+            <Layers>
+              <Layer level="OVERLAY">
+                <FontString parentKey="Text" inherits="GameFontHighlight" justifyH="LEFT" justifyV="TOP" spacing="3">
+                  <Anchors>
+                    <Anchor point="TOPLEFT"/>
+                    <Anchor point="BOTTOMRIGHT"/>
+                  </Anchors>
+                </FontString>
+              </Layer>
+            </Layers>
+          </Frame>
+
           <!-- Footer github url -->
           <Button parentKey="Obs" name="$parentObs" hidden="false">
             <Size x="300" y="15"/>

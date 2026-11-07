@@ -101,6 +101,34 @@ function InterfaceOptions:Init()
     "To report bugs visit: https://github.com/AssisrMatheus/TodoChecklister/issues"
   )
 
+  -- Feature guide under the options, same content as the README's Features section
+  local heading = "|cffffd100%s|r"
+  local key = "|cff00cc66%s|r"
+  self.frame.SettingsContainer.Guide.Text:SetText(
+    table.concat(
+      {
+        heading:format("How to use"),
+        "- " .. heading:format("Track items: ") .. key:format("Shift-click") ..
+          " an item in your bags while typing to link it. The list shows how many you carry.",
+        "- " .. heading:format("Folders: ") .. key:format("Right-click") ..
+          " an item to turn it into a folder, then drag items into it. " ..
+            key:format("Left-click") .. " a folder to rename it, and use its +/- button to open or close it.",
+        "- " .. heading:format("Reorder: ") .. "drag any item up or down the list.",
+        "- " .. heading:format("Quick add: ") ..
+          "tick it at the top of the window and the text box stays open after Enter.",
+        "- " .. heading:format("Lists: ") ..
+          "every character on your account sees your lists. Pick the one this character shows in " ..
+            key:format("Displayed list") .. " above.",
+        "- " .. heading:format("Share: ") .. key:format("Export list") ..
+          " gives you a code to send a friend. They paste it into " ..
+            key:format("Import list") .. " and get a copy, folders and checks included.",
+        "",
+        "Type " .. key:format("/todo") .. " in chat to see every command."
+      },
+      "\n"
+    )
+  )
+
   -- Set up the github popup
   StaticPopupDialogs[addonName .. "WEBSITE"] = {
     text = "Copy the url and paste it on your browser",

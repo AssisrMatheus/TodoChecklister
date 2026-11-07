@@ -18,12 +18,12 @@ It also runs on Retail, Classic Era, TBC Anniversary and Mists of Pandaria Class
 
 Open the window with the minimap button, a keybind (Esc > Options > Keybindings > AddOns) or `/todo tg`.
 
-1. **Track items:** shift-click an item in your bags while typing and the addon puts its link in the text. The list then shows how many of it you carry.
-2. **Folders:** right-click an item to turn it into a folder, then drag items into it. Click a folder's +/- button to open or close it, and left-click its name to rename it.
+1. **Track items:** shift-click an item in your bags while typing to link it. The list shows how many you carry.
+2. **Folders:** right-click an item to turn it into a folder, then drag items into it. Left-click a folder to rename it, and use its +/- button to open or close it.
 3. **Reorder:** drag any item up or down the list.
-4. **Quick add:** tick it at the top of the window and the text box stays open after Enter, so you can type the next item right away.
-5. **Lists for all your characters:** keep as many named lists as you want. Every character on your account sees them, and each one picks the list its window shows. Create, switch and delete lists in Esc > Options > AddOns > TodoChecklister.
-6. **Share with friends:** click Export list in the same options panel and copy the code it shows. Your friend pastes it into Import list and gets the list with its folders and checked items. Codes work across game versions.
+4. **Quick add:** tick it at the top of the window and the text box stays open after Enter.
+5. **Lists:** every character on your account sees your lists. Pick the one each character shows in Displayed list, under Esc > Options > AddOns > TodoChecklister.
+6. **Share:** Export list, in the same options panel, gives you a code to send a friend. They paste it into Import list and get a copy, folders and checks included.
 
 ## Chat commands
 
