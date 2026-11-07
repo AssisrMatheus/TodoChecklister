@@ -23,9 +23,22 @@ TodoAddon.TodoChecklisterFrame = {}
 ---@class TodoChecklisterFrame
 local TodoChecklisterFrame = TodoAddon.TodoChecklisterFrame
 
+-- How far right the items inside a folder are drawn
+local FOLDER_ITEM_INDENT = 8
+-- Rows are 30 high. A drop margin of 16 only leaves above/below; 9 leaves the middle of a folder row to drop into it
+local DROP_MARGIN = 16
+local FOLDER_DROP_MARGIN = 9
+-- DragIntersectionArea to the names TodoList:ResolveMove uses
+local DROP_AREAS = {
+	[DragIntersectionArea.Above] = "above",
+	[DragIntersectionArea.Below] = "below",
+	[DragIntersectionArea.Inside] = "inside"
+}
+
 ---@class TodoItemFrame : Button
 ---@field todoItem TodoItem
 ---@field TodoCheckButton CheckButton
+---@field FolderIcon Texture
 ---@field RemoveButton Button
 ---@field Text FontString
 ---@field Strikethrough Texture
@@ -44,13 +57,14 @@ local TodoChecklisterFrame = TodoAddon.TodoChecklisterFrame
 -- TodoChecklisterFrame functions
 --------------------------------------
 ---
----Appends a new TodoItem to the list
+---Appends a new TodoItem to the list, or renames the selected one
 ---@param text string @New element to be appended to the list
-function TodoChecklisterFrame:AddItem(text)
+---@param isFolder boolean|nil @Whether or not a new element is a folder
+function TodoChecklisterFrame:AddItem(text, isFolder)
 	if (text ~= "" and text ~= nil and text) then
 		-- If the item is not selected
 		if (self.selectedItem == nil or self.selectedItem == 0) then
-			TodoList:AddItem(text)
+			TodoList:AddItem(text, isFolder)
 		else
 			TodoList:UpdateItem(self.selectedItem, {text = text})
 		end
@@ -103,21 +117,90 @@ end
 ---@param fromIndex number @The ONE-based location in the array to move from.
 ---@param toIndex number @The ONE-based location the item ends up in.
 function TodoChecklisterFrame:Move(fromIndex, toIndex)
-	local items = TodoList:GetItems()
-	if (type(fromIndex) == "number" and type(toIndex) == "number" and items[fromIndex] and items[toIndex]) then
-		local selectedItem
-		if (self.selectedItem and self.selectedItem > 0) then
-			selectedItem = items[self.selectedItem]
+	if (type(fromIndex) == "number" and type(toIndex) == "number") then
+		self:KeepSelection(
+			function()
+				return TodoList:Move(fromIndex, toIndex)
+			end
+		)
+	end
+end
+
+---
+---Moves an item next to or into another one. A folder moves with its items
+---@param todoItem TodoItem @The item being moved
+---@param targetItem TodoItem @The item it is dropped on
+---@param area "above"|"below"|"inside" @Where it is dropped relative to targetItem
+function TodoChecklisterFrame:MoveRelative(todoItem, targetItem, area)
+	self:KeepSelection(
+		function()
+			return TodoList:MoveRelative(TodoList:GetIndexByItem(todoItem), TodoList:GetIndexByItem(targetItem), area)
 		end
+	)
+end
 
-		TodoList:Move(fromIndex, toIndex)
+---
+---Runs a change that can shift indexes, then points the selection back at the same item and repaints
+---@param change fun():boolean @Changes the list, returns whether or not it did
+function TodoChecklisterFrame:KeepSelection(change)
+	local selectedItem
+	if (self.selectedItem and self.selectedItem > 0) then
+		selectedItem = TodoList:GetItems()[self.selectedItem]
+	end
 
+	if (change()) then
 		if (selectedItem) then
 			self.selectedItem = TodoList:GetIndexByItem(selectedItem)
 		end
-
 		self.memoizationId = self.memoizationId + 1
 		self:OnUpdate()
+	end
+end
+
+---
+---Turns an item into a folder, or a folder back into an item
+---@param todoItem TodoItem @The item to turn
+function TodoChecklisterFrame:ToggleFolder(todoItem)
+	local index = TodoList:GetIndexByItem(todoItem)
+	if (index > 0 and todoItem.inFolder) then
+		TodoAddon.Chat:Print("Folders cannot be placed inside folders. Drag the item out of its folder first")
+		return
+	end
+	if (index > 0 and TodoList:ToggleFolder(index)) then
+		self.memoizationId = self.memoizationId + 1
+		self:OnUpdate()
+	end
+end
+
+---
+---Opens or closes a folder. Closing it clears the selection when the selected item gets hidden
+---@param todoItem TodoItem @The folder
+function TodoChecklisterFrame:ToggleCollapsed(todoItem)
+	local index = TodoList:GetIndexByItem(todoItem)
+	if (index > 0 and todoItem.isFolder) then
+		TodoList:ToggleCollapsed(index)
+		if (todoItem.isCollapsed and self.selectedItem and self.selectedItem > 0) then
+			if (TodoList:GetFolderIndex(self.selectedItem) == index) then
+				self:ClearSelected()
+			end
+		end
+		self.memoizationId = self.memoizationId + 1
+		self:OnUpdate()
+	end
+end
+
+---
+---What a click on a row does: middle click turns it into a folder (or back), left click on a folder opens or closes it,
+---any other click selects it for editing
+---@param todoItem TodoItem @The clicked item
+---@param button string @The mouse button
+function TodoChecklisterFrame:ClickItem(todoItem, button)
+	if (button == "MiddleButton") then
+		self:ToggleFolder(todoItem)
+	elseif (todoItem.isFolder and button == "LeftButton") then
+		self:ToggleCollapsed(todoItem)
+	else
+		self:SelectItem(todoItem)
 	end
 end
 
@@ -127,6 +210,10 @@ end
 function TodoChecklisterFrame:CheckItemWithIndex(indexToCheck)
 	if (indexToCheck and type(indexToCheck) == "number" and indexToCheck > 0) then
 		local item = TodoList:GetItems()[indexToCheck]
+		-- Folders can't be checked
+		if (not item or item.isFolder) then
+			return
+		end
 		TodoList:UpdateItem(indexToCheck, {isChecked = (not item.isChecked)})
 		self.memoizationId = self.memoizationId + 1
 		self:OnUpdate()
@@ -135,7 +222,7 @@ function TodoChecklisterFrame:CheckItemWithIndex(indexToCheck)
 				TableUtils:Every(
 					TodoList:GetItems(),
 					function(item)
-						return item.isChecked == true
+						return item.isFolder or item.isChecked == true
 					end
 				))
 		 then
@@ -270,10 +357,24 @@ end
 function TodoChecklisterFrame:PaintItem(frame, todoItem, index)
 	frame.todoItem = todoItem
 
-	if (todoItem.isChecked) then
+	if (todoItem.isFolder) then
+		frame:SetNormalFontObject(GameFontHighlightSmall)
+	elseif (todoItem.isChecked) then
 		frame:SetNormalFontObject(GameFontDarkGraySmall)
 	else
 		frame:SetNormalFontObject(GameFontNormalSmall)
+	end
+
+	-- Items inside a folder sit slightly to the right. Text, highlight and strikethrough follow the checkbox
+	frame.TodoCheckButton:ClearAllPoints()
+	frame.TodoCheckButton:SetPoint("LEFT", todoItem.inFolder and FOLDER_ITEM_INDENT or 0, 0)
+	-- A folder shows a +/- in place of the checkbox
+	frame.TodoCheckButton:SetShown(not todoItem.isFolder)
+	frame.FolderIcon:SetShown(todoItem.isFolder == true)
+	if (todoItem.isFolder) then
+		frame.FolderIcon:SetTexture(
+			todoItem.isCollapsed and "Interface\\Buttons\\UI-PlusButton-Up" or "Interface\\Buttons\\UI-MinusButton-Up"
+		)
 	end
 
 	local text = todoItem.text
@@ -289,13 +390,25 @@ function TodoChecklisterFrame:PaintItem(frame, todoItem, index)
 			identifier .. "Count"
 		)
 	end
+	if (todoItem.isFolder) then
+		-- Checked and total items, in gray: "Raid prep (2/5)"
+		local folderIndex = TodoList:GetIndexByItem(todoItem)
+		if (folderIndex > 0) then
+			local checked, total = TodoList:GetFolderProgress(folderIndex)
+			if (total > 0) then
+				text = text .. " |cff808080(" .. checked .. "/" .. total .. ")|r"
+			end
+		end
+	end
 	frame:SetText(text)
 
 	-- A drag starts on mouse down, so the row can be left in its pushed state
 	frame:SetButtonState("NORMAL")
 	local highlightColor = self:GetColor(todoItem)
 	frame:GetHighlightTexture():SetVertexColor(highlightColor.r, highlightColor.g, highlightColor.b)
-	if (index > 0 and self.selectedItem == index) then
+	-- Rows only show visible items, so their index isn't the saved one. Compare the items instead
+	local selectedItem = self.selectedItem and self.selectedItem > 0 and TodoList:GetItems()[self.selectedItem]
+	if (index > 0 and selectedItem == todoItem) then
 		frame:LockHighlight()
 	else
 		frame:UnlockHighlight()
@@ -303,7 +416,7 @@ function TodoChecklisterFrame:PaintItem(frame, todoItem, index)
 
 	frame.TodoCheckButton:SetChecked(todoItem.isChecked)
 
-	frame.Strikethrough:SetShown(todoItem.isChecked)
+	frame.Strikethrough:SetShown(todoItem.isChecked and not todoItem.isFolder)
 end
 
 ---
@@ -323,8 +436,24 @@ function TodoChecklisterFrame:InitScrollBox()
 	local dragBehavior = ScrollUtil.InitDefaultLinearDragBehavior(scrollBox)
 	dragBehavior:SetReorderable(true)
 
-	-- Over half the row height: the drop always goes above or below a row, never swaps with it
-	dragBehavior:SetAreaIntersectMargin(16)
+	-- Over half the row height: the drop goes above or below a row, never swaps with it.
+	-- Except an item over a folder: the middle of the folder row drops the item into it
+	dragBehavior:SetAreaIntersectMargin(
+		function(targetItem, _, contextData)
+			local sourceItem = contextData.sourceData and contextData.sourceData.elementData
+			if (targetItem.isFolder and sourceItem and not sourceItem.isFolder) then
+				return FOLDER_DROP_MARGIN
+			end
+			return DROP_MARGIN
+		end
+	)
+
+	-- Only offer drops TodoList accepts (folders can't go inside folders)
+	dragBehavior:SetDropPredicate(
+		function(sourceItem, candidate)
+			return self:ResolveDrop(sourceItem, candidate) ~= nil
+		end
+	)
 
 	-- The clone that follows the cursor: the same row, with a backdrop and highlighted
 	dragBehavior:SetCursorFactory(
@@ -340,23 +469,57 @@ function TodoChecklisterFrame:InitScrollBox()
 
 	dragBehavior:SetDropEnter(
 		function(factory, candidate)
+			-- Remembered for PostDrop, which doesn't receive the drop area
+			self.dropTarget = {elementData = candidate.elementData, area = DROP_AREAS[candidate.area]}
+
+			if (candidate.area == DragIntersectionArea.Inside) then
+				-- Into a folder: a box around the folder row
+				local box = factory("ScrollBoxDragBoxTemplate")
+				box:SetPoint("TOPLEFT", candidate.frame, "TOPLEFT", 0, -3)
+				box:SetPoint("BOTTOMRIGHT", candidate.frame, "BOTTOMRIGHT", 0, 3)
+				return
+			end
+
+			-- A line, indented when the item would end up inside a folder
+			local _, inFolder = self:ResolveDrop(dragBehavior.sourceData.elementData, candidate)
+			local indent = inFolder and FOLDER_ITEM_INDENT or 0
 			local indicator = factory("DropIndicatorTemplate")
 			if (candidate.area == DragIntersectionArea.Above) then
-				indicator:SetPoint("BOTTOMLEFT", candidate.frame, "TOPLEFT", 0, -2)
+				indicator:SetPoint("BOTTOMLEFT", candidate.frame, "TOPLEFT", indent, -2)
 				indicator:SetPoint("BOTTOMRIGHT", candidate.frame, "TOPRIGHT", 0, -2)
 			else
-				indicator:SetPoint("TOPLEFT", candidate.frame, "BOTTOMLEFT", 0, 2)
+				indicator:SetPoint("TOPLEFT", candidate.frame, "BOTTOMLEFT", indent, 2)
 				indicator:SetPoint("TOPRIGHT", candidate.frame, "BOTTOMRIGHT", 0, 2)
 			end
 		end
 	)
 
-	-- The data provider is already reordered here. Apply the same move to the saved list
+	-- The data provider is already reordered here, but it only holds the visible rows.
+	-- Apply the move to the saved list instead, and OnUpdate replaces the data provider
 	dragBehavior:SetPostDrop(
 		function(contextData)
-			self:Move(contextData.sourceData.elementDataIndex, contextData.newSourceData.elementDataIndex)
+			local dropTarget = self.dropTarget
+			self.dropTarget = nil
+			if (dropTarget) then
+				self:MoveRelative(contextData.sourceData.elementData, dropTarget.elementData, dropTarget.area)
+			else
+				self:OnUpdate()
+			end
 		end
 	)
+end
+
+---
+---Where a dragged item would land on a drop candidate
+---@param sourceItem TodoItem @The dragged item
+---@param candidate table @The drag behavior's candidate: elementData and area
+---@return number|nil, boolean|nil @See TodoList:ResolveMove
+function TodoChecklisterFrame:ResolveDrop(sourceItem, candidate)
+	local area = DROP_AREAS[candidate.area]
+	if (not area or not candidate.elementData) then
+		return nil
+	end
+	return TodoList:ResolveMove(TodoList:GetIndexByItem(sourceItem), TodoList:GetIndexByItem(candidate.elementData), area)
 end
 
 ---
@@ -366,8 +529,7 @@ function TodoChecklisterFrame:OnUpdate()
 		return
 	end
 
-	local items = TodoList:GetItems()
-	if (#items > 0) then
+	if (#TodoList:GetItems() > 0) then
 		self.frame.Background.BlankText:SetText("")
 	else
 		self.frame.Background.BlankText:SetText(
@@ -377,7 +539,10 @@ function TodoChecklisterFrame:OnUpdate()
 
 	-- Hidden windows are repainted by OnShow
 	if (self.frame:IsShown()) then
-		self.frame.Background.ScrollBox:SetDataProvider(CreateDataProvider(items), ScrollBoxConstants.RetainScrollPosition)
+		self.frame.Background.ScrollBox:SetDataProvider(
+			CreateDataProvider(TodoList:GetVisibleItems()),
+			ScrollBoxConstants.RetainScrollPosition
+		)
 	end
 end
 
@@ -526,7 +691,8 @@ function OnSaveItem(frame)
 		PlaySound(SOUNDKIT.IG_CHARACTER_INFO_OPEN)
 	end
 
-	TodoChecklisterFrame:AddItem(text)
+	-- Shift+Enter (or shift-clicking +) adds a folder
+	TodoChecklisterFrame:AddItem(text, IsShiftKeyDown())
 end
 
 function OnRemoveItem(frame)
@@ -537,8 +703,8 @@ function OnCheckItem(frame)
 	TodoChecklisterFrame:CheckItem(frame:GetParent().todoItem)
 end
 
-function OnSelectItem(frame)
-	TodoChecklisterFrame:SelectItem(frame.todoItem)
+function OnSelectItem(frame, button)
+	TodoChecklisterFrame:ClickItem(frame.todoItem, button)
 end
 
 function ToggleFocusSettings(frame)

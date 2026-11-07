@@ -138,6 +138,7 @@ Blizzard globals (`NORMAL_FONT_COLOR`, `SOUNDKIT`, `GameFont*`, `ScrollUtil`, `U
 ### Known quirks in existing code
 
 - `TodoChecklisterDB` is account-wide: `{ lists = { [name] = TodoItem[] } }`, where `TodoItem` is `{ id, text, isChecked }`. Lists are keyed by name, so names are unique. Any character can view any list.
+- Folders keep each list a flat array, so lists saved before folders load unchanged. A folder is an item with `isFolder` (and `isCollapsed`); the run of `inFolder` items right after it belongs to it. Folders can't nest or be checked. `TodoList:ResolveMove` decides where a drag lands, `GetVisibleItems` feeds the ScrollBox (so row indexes aren't saved indexes: compare items, not indexes), and `RepairFolders` in `Init` clears an `inFolder` with no folder above it.
 - `TodoChecklisterCharacterDB` is per character: `{ selectedList = name }`. `TodoList:EnsureSelectedList()` falls back to `"<Name>'s List"` (and creates it) when the character never picked a list or its list was deleted. `<Name>` comes from `NameUtil.GetUnmodifiedUnitFullName("player")`: name plus surname on Forever, just the name elsewhere.
 - Before lists, `TodoChecklisterDB` was a flat `TodoItem[]`. `TodoList:Init` migrates it into the first character's default list.
 
