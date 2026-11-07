@@ -43,6 +43,7 @@ globals = {
 	"StaticPopup_StandardNonEmptyTextHandler",
 	"StaticPopup_StandardEditBoxOnEscapePressed",
 	"NameUtil",
+	"UISpecialFrames",
 	"CreateScrollBoxListLinearView",
 	"CreateDataProvider",
 	"ScrollUtil",

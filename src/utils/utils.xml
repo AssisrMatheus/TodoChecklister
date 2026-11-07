@@ -3,4 +3,5 @@
 ..\FrameXML\UI.xsd">
   <Script file="functionUtils.lua"/>
   <Script file="tableUtils.lua"/>
+  <Script file="encodingUtils.lua"/>
 </Ui>

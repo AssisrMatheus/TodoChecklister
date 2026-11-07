@@ -25,6 +25,7 @@ It also runs on Retail, Classic Era, TBC Anniversary and Mists of Pandaria Class
 ## Features
 
 - **Shared lists:** keep as many named lists as you want. Every character on your account sees them, and each one picks which list its window shows. Create, switch and delete lists in Esc > Options > AddOns > TodoChecklister, or from chat with `/todo lists` and `/todo switch`.
+- **Share lists:** Export list in the options gives you a text to copy and send to anyone. They paste it into Import list and get a copy of the list, folders and checked items included. It works across every game version.
 - **Quick add:** tick it at the top of the window and the text box stays active after Enter, so you can type the next item right away.
 - **Item links:** shift-click an item from your bags and the list shows how many you carry.
 - Drag to reorder, click to edit, and checked items get a strikethrough.

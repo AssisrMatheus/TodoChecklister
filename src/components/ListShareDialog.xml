@@ -1,0 +1,70 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
+..\FrameXML\UI.xsd">
+  <Script file="ListShareDialog.lua"/>
+
+  <!-- Export and import dialog for share strings. Addons can't write to the clipboard, so like Blizzard's Edit Mode
+       import dialog it shows the text in a box for Ctrl+C / Ctrl+V. DIALOG strata keeps it above the settings panel -->
+  <Frame name="TodoChecklisterShareDialogTemplate" parent="UIParent" toplevel="true" enableMouse="true" hidden="true" frameStrata="DIALOG" virtual="true">
+    <Size x="400" y="300"/>
+    <Anchors>
+      <Anchor point="CENTER"/>
+    </Anchors>
+    <Layers>
+      <Layer level="ARTWORK">
+        <FontString parentKey="Title" inherits="GameFontNormalLarge">
+          <Anchors>
+            <Anchor point="TOP" y="-20"/>
+          </Anchors>
+        </FontString>
+        <FontString parentKey="Description" inherits="GameFontHighlight" justifyH="LEFT" justifyV="TOP">
+          <Size x="350"/>
+          <Anchors>
+            <Anchor point="TOP" relativeKey="$parent.Title" relativePoint="BOTTOM" y="-10"/>
+          </Anchors>
+        </FontString>
+        <!-- Import only: what the pasted text contains, or why it can't be imported -->
+        <FontString parentKey="Status" inherits="GameFontHighlightSmall" justifyH="LEFT" justifyV="TOP">
+          <Size x="350"/>
+          <Anchors>
+            <Anchor point="BOTTOM" y="48"/>
+          </Anchors>
+        </FontString>
+      </Layer>
+    </Layers>
+    <Frames>
+      <Frame parentKey="Border" inherits="DialogBorderTemplate"/>
+
+      <Button parentKey="CloseButton" inherits="UIPanelCloseButton">
+        <Anchors>
+          <Anchor point="TOPRIGHT" x="-4" y="-4"/>
+        </Anchors>
+      </Button>
+
+      <ScrollFrame parentKey="TextBox" inherits="InputScrollFrameTemplate">
+        <Size x="350" y="130"/>
+        <Anchors>
+          <Anchor point="TOP" y="-80"/>
+        </Anchors>
+        <KeyValues>
+          <KeyValue key="maxLetters" value="0" type="number"/>
+          <KeyValue key="hideCharCount" value="true" type="boolean"/>
+        </KeyValues>
+      </ScrollFrame>
+
+      <Button parentKey="AcceptButton" inherits="UIPanelButtonTemplate" text="Import">
+        <Size x="120" y="22"/>
+        <Anchors>
+          <Anchor point="BOTTOMRIGHT" relativePoint="BOTTOM" x="-6" y="20"/>
+        </Anchors>
+      </Button>
+
+      <Button parentKey="CancelButton" inherits="UIPanelButtonTemplate" text="Close">
+        <Size x="120" y="22"/>
+        <Anchors>
+          <Anchor point="BOTTOMLEFT" relativePoint="BOTTOM" x="6" y="20"/>
+        </Anchors>
+      </Button>
+    </Frames>
+  </Frame>
+</Ui>

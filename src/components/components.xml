@@ -3,4 +3,5 @@
 ..\FrameXML\UI.xsd">
   <Include file="ResponsiveFrame.xml"/>
   <Include file="TodoChecklister.xml"/>
+  <Include file="ListShareDialog.xml"/>
 </Ui>

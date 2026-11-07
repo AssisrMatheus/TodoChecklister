@@ -232,6 +232,21 @@ function InterfaceOptions:InitLists()
       StaticPopup_Show(addonName .. "DELETELIST", name, nil, name)
     end
   )
+
+  -- ListShareDialog is a component, which loads after this file
+  container.ExportListButton:SetScript(
+    "OnClick",
+    function()
+      TodoAddon.ListShareDialog:ShowExport(TodoList:GetSelectedListName())
+    end
+  )
+
+  container.ImportListButton:SetScript(
+    "OnClick",
+    function()
+      TodoAddon.ListShareDialog:ShowImport()
+    end
+  )
 end
 
 --------------------------------------
