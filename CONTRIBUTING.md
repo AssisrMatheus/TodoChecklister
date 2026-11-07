@@ -25,6 +25,15 @@ One codebase ships to five clients: Retail, Mists of Pandaria Classic, TBC Anniv
 
 `./vendor/<flavor>-export/` holds the client's own `ExportInterfaceFiles code|art` output. Launch the client with `-console`, press `` ` `` at the login screen and run the command. See [Viewing Blizzard's interface code](https://warcraft.wiki.gg/wiki/Viewing_Blizzard%27s_interface_code).
 
+## Saved data
+
+Never break people's saved lists. They can't be recovered, and players switch addon versions in both directions. Before changing anything that is saved, read the rules in "User data safety" in [CLAUDE.md](./CLAUDE.md) and at the top of `src/utils/migrationUtils.lua`. In short:
+
+- Add fields; never rename or remove them.
+- A change that can't be additive gets a new format version with an upgrade step.
+- Never edit an upgrade step that has shipped.
+- Test against the saved files of older releases.
+
 ## Testing in game
 
 Put the repository (or a symlink to it) at `Interface/AddOns/TodoChecklister` inside your client folder, then type `/reload` in game after each change.

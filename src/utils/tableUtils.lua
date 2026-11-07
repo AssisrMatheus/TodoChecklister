@@ -107,6 +107,22 @@ function TableUtils:Assign(target, ...)
 end
 
 ---
+---Copies a table and every table inside it, so changing the copy never changes the original
+---@generic T
+---@param value T @Any value. Tables are copied, other values are returned as they are
+---@return T
+function TableUtils:DeepCopy(value)
+	if (type(value) ~= "table") then
+		return value
+	end
+	local copy = {}
+	for key, inner in pairs(value) do
+		copy[self:DeepCopy(key)] = self:DeepCopy(inner)
+	end
+	return copy
+end
+
+---
 ---Determines whether all the members of an array satisfy the specified test.
 ---@generic T
 ---@param tb T[] @An INDEXED table where you want to find the occurrence
