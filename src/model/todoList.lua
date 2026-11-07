@@ -400,6 +400,40 @@ function TodoList:CreateList(name)
 end
 
 ---
+---@param name string @The name a new list wants
+---@return string @That name, or with a number added when it is taken: "Raid (2)", "Raid (3)"...
+function TodoList:GetUniqueListName(name)
+	local uniqueName = name
+	local copy = 2
+	while (self:HasList(uniqueName)) do
+		uniqueName = name .. " (" .. copy .. ")"
+		copy = copy + 1
+	end
+	return uniqueName
+end
+
+---
+---Saves a list someone shared, without touching any existing list.
+---When the name is taken, it gets a number: "Raid (2)", "Raid (3)"...
+---@param name string @The name it was shared with
+---@param items TodoItem[] @Its items. Their ids are replaced
+---@return string @The name it was saved under
+function TodoList:ImportList(name, items)
+	name = strtrim(name or "")
+	if (name == "") then
+		name = "Imported list"
+	end
+	local uniqueName = self:GetUniqueListName(name)
+
+	for index, item in ipairs(items) do
+		item.id = item.text .. index
+	end
+	self:RepairFolders(items)
+	TodoChecklisterDB.lists[uniqueName] = items
+	return uniqueName
+end
+
+---
 ---Makes this character view the given list
 ---@param name string @The name of an existing list
 function TodoList:SelectList(name)

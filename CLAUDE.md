@@ -30,11 +30,11 @@ The game loads `TodoChecklister.toc` → `src/init.xml` → `src/init.lua` → `
 | Order | Folder | Role | Depends on |
 |---|---|---|---|
 | 1 | `libs/` | LibStub, LibDataBroker, LibDBIcon (vendored externals, don't edit) | nothing |
-| 2 | `utils/` | `TableUtils`, `FunctionUtils`: pure helpers, no game state, no SavedVariables | nothing |
+| 2 | `utils/` | `TableUtils`, `FunctionUtils`, `EncodingUtils`: pure helpers, no game state, no SavedVariables | nothing |
 | 3 | `config/constants.lua` | `Constants`: theme colors, `debugMode` | game API only |
-| 4 | `model/` | `Settings`, `TodoList`: the only code that reads or writes SavedVariables | utils |
+| 4 | `model/` | `Settings`, `TodoList`, `ListShare`: the only code that reads or writes SavedVariables | utils |
 | 5 | `config/interfaceOptions.*` | `InterfaceOptions`: the Blizzard options panel | Settings, then later layers late-bound |
-| 6 | `components/` | `ResponsiveFrame` (movable/resizable/scalable template), `TodoChecklisterFrame` (main window controller) | model, utils |
+| 6 | `components/` | `ResponsiveFrame` (movable/resizable/scalable template), `TodoChecklisterFrame` (main window controller), `ListShareDialog` (export/import box) | model, utils |
 | 7 | `modules/` | `Debug`, `Utils`, `MinimapIcon`, `Chat`: integrations with the game (slash commands, minimap, chat output) | components, model |
 | 8 | `src/init.lua` | composition root: one `ADDON_LOADED` handler calls every `:Init()` | everything |
 
@@ -60,7 +60,7 @@ Rules that follow from this:
 
 - **File-scope imports only work for modules that loaded earlier.** A module that loads later is still `nil` when the file runs. To call into a later layer, look it up at call time instead: `TodoAddon.MinimapIcon:LoadCFG()`, `TodoAddon.Chat:Print(...)`. `interfaceOptions.lua` and `TodoChecklister.lua` do this. Don't "clean up" those calls into file-scope locals.
 - Modules are singletons, plain tables of `:`-methods. Per-instance state lives on the module table (`TodoChecklisterFrame.selectedItem`, `.memoizationId`, `.frame`).
-- `src/init.lua` is the only place that decides start-up order: Debug, Settings, TodoList, InterfaceOptions, TodoChecklisterFrame, Chat, MinimapIcon. Model `Init`s must run before any UI `Init` because they create the SavedVariables tables.
+- `src/init.lua` is the only place that decides start-up order: Debug, Settings, TodoList, InterfaceOptions, TodoChecklisterFrame, ListShareDialog, Chat, MinimapIcon. Model `Init`s must run before any UI `Init` because they create the SavedVariables tables.
 - Every file repeats `---@class TodoAddon` / `---@class X` annotations on these locals, which is the old EmmyLua style where repeated declarations merged. `duplicate-type` is disabled in `.emmyrc.json` for this. Keep the same header when adding a file.
 
 ### Lifecycle contract
@@ -106,7 +106,7 @@ Inline XML scripts can't see the private `TodoAddon` table, and the game resolve
 | SavedVariables (must match `.toc`) | Account-wide: `TodoChecklisterDB`, `TodoChecklisterSettingsDB`, `TodoChecklisterMapIcon`. Per character (`SavedVariablesPerCharacter`): `TodoChecklisterCharacterDB` | model `Init`s, `MinimapIcon:Init` |
 | Keybinding (resolved by `bindings.xml`) | `BINDING_HEADER_TC_HEADER`, `BINDING_NAME_TC_TOGGLE_FRAME`, `GLOBAL_TodoChecklisterFrameToggle` | `src/init.lua` |
 | Slash commands | `SLASH_TodoChecklister1` + `SlashCmdList.TodoChecklister`; debug only: `SLASH_RELOADUI1`, `SLASH_FRAMESTK1` | `chat.lua`, `debug.lua` |
-| Named frames (XML `name=` / `CreateFrame` name) | `TodoChecklister` (the window frame, not the `TodoChecklisterFrame` module), `TodoChecklisterInterfaceOptions`, `TodoChecklisterMAINFRAME`, and `$parent...` children | XML, `Init`s |
+| Named frames (XML `name=` / `CreateFrame` name) | `TodoChecklister` (the window frame, not the `TodoChecklisterFrame` module), `TodoChecklisterInterfaceOptions`, `TodoChecklisterShareDialog` (also in `UISpecialFrames` so Escape closes it), `TodoChecklisterMAINFRAME`, and `$parent...` children | XML, `Init`s |
 | XML script handlers | `OnShow`, `OnSaveItem`, `OnRemoveItem`, `OnCheckItem`, `OnSelectItem`, `ToggleFocusSettings`, `TodoChecklister_OnFolderButtonClick` | bottom of `TodoChecklister.lua` |
 | | `ShowKeepFocusClick`, `KeepFocusClick`, `OpacityValueChanged`, `OpacityOnHoverValueChanged`, `OnFanfarreCheck`, `DisplayLinkedCountClick`, `ToggleMapClick`, `MuteChatClick`, `DisplayBankClick`, `DisplayChargesClick` | bottom of `interfaceOptions.lua` |
 | Misc | `printDBG` (debug print), `StaticPopupDialogs["TodoChecklisterWEBSITE"]` | `debug.lua`, `interfaceOptions.lua` |
@@ -140,6 +140,7 @@ Blizzard globals (`NORMAL_FONT_COLOR`, `SOUNDKIT`, `GameFont*`, `ScrollUtil`, `U
 - `TodoChecklisterDB` is account-wide: `{ lists = { [name] = TodoItem[] } }`, where `TodoItem` is `{ id, text, isChecked }`. Lists are keyed by name, so names are unique. Any character can view any list.
 - Folders keep each list a flat array, so lists saved before folders load unchanged. A folder is an item with `isFolder` (and `isCollapsed`); the run of `inFolder` items right after it belongs to it. Folders can't nest or be checked. `TodoList:ResolveMove` decides where a drag lands, `GetVisibleItems` feeds the ScrollBox (so row indexes aren't saved indexes: compare items, not indexes), and `RepairFolders` in `Init` clears an `inFolder` with no folder above it.
 - `TodoChecklisterCharacterDB` is per character: `{ selectedList = name }`. `TodoList:EnsureSelectedList()` falls back to `"<Name>'s List"` (and creates it) when the character never picked a list or its list was deleted. `<Name>` comes from `NameUtil.GetUnmodifiedUnitFullName("player")`: name plus surname on Forever, just the name elsewhere.
+- Sharing a list (options panel, Export list / Import list) goes through `ListShare` (`model/listShare.lua`): `Export(name)` builds `!TodoChecklister:<version>:<minVersion>!` + `EncodingUtils:EncodeForPrint(payload)` (`minVersion` is the oldest reader that can read it, and empty extra fields let an additive newer format pass data that older readers skip), `Decode(text)` returns a `SharedList` or an error message without saving, and `TodoChecklisterFrame:ImportList` saves it under a free name (`"Raid (2)"`). The codec is pure Lua on purpose: `C_EncodingUtil` exists on every current client, but a string made with it can't be read where it's missing, so every client writes the same format. Never change what version 1 reads; add a new version to `readers` instead. Addons can't write the clipboard, so `ListShareDialog` shows the string highlighted for Ctrl+C.
 - Before lists, `TodoChecklisterDB` was a flat `TodoItem[]`. `TodoList:Init` migrates it into the first character's default list.
 
 ## Game version and API references

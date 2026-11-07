@@ -17,6 +17,8 @@ local TodoList = TodoAddon.TodoList
 local InterfaceOptions = TodoAddon.InterfaceOptions
 ---@class TodoChecklisterFrame
 local TodoChecklisterFrame = TodoAddon.TodoChecklisterFrame
+---@class ListShareDialog
+local ListShareDialog = TodoAddon.ListShareDialog
 ---@class Chat
 local Chat = TodoAddon.Chat
 ---@class MinimapIcon
@@ -55,6 +57,7 @@ function TodoAddon:Init(event, name)
     -- Components
     InterfaceOptions:Init()
     TodoChecklisterFrame:Init()
+    ListShareDialog:Init()
 
     -- Modules
     Chat:Init()

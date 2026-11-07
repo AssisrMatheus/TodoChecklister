@@ -428,6 +428,25 @@
             </Anchors>
           </Button>
 
+          <!-- Share lists as text: export the displayed list, import one someone else exported -->
+          <Button parentKey="ExportListButton" name="$parentExportListButton" inherits="UIPanelButtonTemplate" text="Export list">
+            <Size x="100" y="22"/>
+            <Anchors>
+              <Anchor point="LEFT" relativeTo="$parentDeleteListButton" relativePoint="RIGHT">
+                <Offset x="6" y="0"/>
+              </Anchor>
+            </Anchors>
+          </Button>
+
+          <Button parentKey="ImportListButton" name="$parentImportListButton" inherits="UIPanelButtonTemplate" text="Import list">
+            <Size x="100" y="22"/>
+            <Anchors>
+              <Anchor point="LEFT" relativeTo="$parentExportListButton" relativePoint="RIGHT">
+                <Offset x="6" y="0"/>
+              </Anchor>
+            </Anchors>
+          </Button>
+
           <!-- Footer github url -->
           <Button parentKey="Obs" name="$parentObs" hidden="false">
             <Size x="300" y="15"/>

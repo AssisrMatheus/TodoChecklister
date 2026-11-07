@@ -289,6 +289,16 @@ function TodoChecklisterFrame:CreateList(name)
 end
 
 ---
+---Saves a list someone shared and switches to it
+---@param list SharedList @Output of ListShare:Decode
+---@return string @The name it was saved under, which has a number added when the name was taken
+function TodoChecklisterFrame:ImportList(list)
+	local name = TodoList:ImportList(list.name, list.items)
+	self:SwitchList(name)
+	return name
+end
+
+---
 ---Deletes a list. If it was the displayed one, the window falls back to the character's default list
 ---@param name string @The name of the list to delete
 function TodoChecklisterFrame:DeleteList(name)

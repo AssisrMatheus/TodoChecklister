@@ -44,6 +44,7 @@
       "StaticPopup_StandardNonEmptyTextHandler",
       "StaticPopup_StandardEditBoxOnEscapePressed",
       "NameUtil",
+      "UISpecialFrames",
       "TodoChecklister_OnFolderButtonClick"
     ],
     "globalsRegex": [

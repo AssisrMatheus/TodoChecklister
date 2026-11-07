@@ -3,4 +3,5 @@
 ..\FrameXML\UI.xsd">
   <Script file="settings.lua"/>
   <Script file="todoList.lua"/>
+  <Script file="listShare.lua"/>
 </Ui>
