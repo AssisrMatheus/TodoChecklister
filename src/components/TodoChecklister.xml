@@ -19,7 +19,8 @@
     </Scripts>
   </Frame>
 
-  <!-- One row of the list. Clicking the row selects it, dragging it reorders the list.
+  <!-- One row of the list. Clicking the row selects it (or opens/closes a folder), middle-clicking turns it into a folder,
+       dragging it reorders the list.
        BackdropTemplate without backdropInfo: only the clone that follows the cursor while dragging gets a backdrop -->
   <Button name="TodoItemTemplate" inherits="BackdropTemplate" virtual="true">
     <Size x="200" y="30"/>
@@ -67,6 +68,15 @@
     <PushedTextOffset x="2" y="-2"/>
 
     <Layers>
+      <Layer level="ARTWORK">
+        <!-- Folders show +/- in place of the checkbox, which is hidden on them -->
+        <Texture parentKey="FolderIcon" file="Interface\Buttons\UI-MinusButton-Up" hidden="true">
+          <Size x="14" y="14"/>
+          <Anchors>
+            <Anchor point="CENTER" relativeKey="$parent.TodoCheckButton"/>
+          </Anchors>
+        </Texture>
+      </Layer>
       <Layer level="OVERLAY" textureSubLevel="7">
         <!-- Strikes through checked items, across the text area between the checkbox and the remove button -->
         <Texture parentKey="Strikethrough" hidden="true">
@@ -90,8 +100,12 @@
     </HighlightTexture>
 
     <Scripts>
+      <!-- prepend: BackdropTemplate has its own OnLoad -->
+      <OnLoad inherit="prepend">
+        self:RegisterForClicks("LeftButtonUp", "RightButtonUp", "MiddleButtonUp");
+      </OnLoad>
       <OnClick>
-        OnSelectItem(self)
+        OnSelectItem(self, button)
         PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
       </OnClick>
     </Scripts>
