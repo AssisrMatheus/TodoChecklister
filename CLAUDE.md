@@ -107,7 +107,7 @@ Inline XML scripts can't see the private `TodoAddon` table, and the game resolve
 | Keybinding (resolved by `bindings.xml`) | `BINDING_HEADER_TC_HEADER`, `BINDING_NAME_TC_TOGGLE_FRAME`, `GLOBAL_TodoChecklisterFrameToggle` | `src/init.lua` |
 | Slash commands | `SLASH_TodoChecklister1` + `SlashCmdList.TodoChecklister`; debug only: `SLASH_RELOADUI1`, `SLASH_FRAMESTK1` | `chat.lua`, `debug.lua` |
 | Named frames (XML `name=` / `CreateFrame` name) | `TodoChecklister` (the window frame, not the `TodoChecklisterFrame` module), `TodoChecklisterInterfaceOptions`, `TodoChecklisterMAINFRAME`, and `$parent...` children | XML, `Init`s |
-| XML script handlers | `OnShow`, `OnSaveItem`, `OnRemoveItem`, `OnCheckItem`, `OnSelectItem`, `ToggleFocusSettings` | bottom of `TodoChecklister.lua` |
+| XML script handlers | `OnShow`, `OnSaveItem`, `OnRemoveItem`, `OnCheckItem`, `OnSelectItem`, `ToggleFocusSettings`, `TodoChecklister_OnFolderButtonClick` | bottom of `TodoChecklister.lua` |
 | | `ShowKeepFocusClick`, `KeepFocusClick`, `OpacityValueChanged`, `OpacityOnHoverValueChanged`, `OnFanfarreCheck`, `DisplayLinkedCountClick`, `ToggleMapClick`, `MuteChatClick`, `DisplayBankClick`, `DisplayChargesClick` | bottom of `interfaceOptions.lua` |
 | Misc | `printDBG` (debug print), `StaticPopupDialogs["TodoChecklisterWEBSITE"]` | `debug.lua`, `interfaceOptions.lua` |
 | XML-referenced data | `TodoChecklister_BACKDROP` (the `backdropInfo` of `BackdropTemplate` frames) | `constants.lua` |

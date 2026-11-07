@@ -43,7 +43,8 @@
       "ChatFrameUtil",
       "StaticPopup_StandardNonEmptyTextHandler",
       "StaticPopup_StandardEditBoxOnEscapePressed",
-      "NameUtil"
+      "NameUtil",
+      "TodoChecklister_OnFolderButtonClick"
     ],
     "globalsRegex": [
       "^SLASH_",
