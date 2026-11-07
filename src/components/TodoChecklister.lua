@@ -38,7 +38,7 @@ local DROP_AREAS = {
 ---@class TodoItemFrame : Button
 ---@field todoItem TodoItem
 ---@field TodoCheckButton CheckButton
----@field FolderIcon Texture
+---@field FolderButton Button
 ---@field RemoveButton Button
 ---@field Text FontString
 ---@field Strikethrough Texture
@@ -190,15 +190,13 @@ function TodoChecklisterFrame:ToggleCollapsed(todoItem)
 end
 
 ---
----What a click on a row does: middle click turns it into a folder (or back), left click on a folder opens or closes it,
----any other click selects it for editing
+---What a click on a row does: right click turns it into a folder (or back), left click selects it for editing,
+---which is also how a folder is renamed. A folder opens and closes from its +/- button instead
 ---@param todoItem TodoItem @The clicked item
 ---@param button string @The mouse button
 function TodoChecklisterFrame:ClickItem(todoItem, button)
-	if (button == "MiddleButton") then
+	if (button == "RightButton") then
 		self:ToggleFolder(todoItem)
-	elseif (todoItem.isFolder and button == "LeftButton") then
-		self:ToggleCollapsed(todoItem)
 	else
 		self:SelectItem(todoItem)
 	end
@@ -370,11 +368,11 @@ function TodoChecklisterFrame:PaintItem(frame, todoItem, index)
 	frame.TodoCheckButton:SetPoint("LEFT", todoItem.inFolder and FOLDER_ITEM_INDENT or 0, 0)
 	-- A folder shows a +/- in place of the checkbox
 	frame.TodoCheckButton:SetShown(not todoItem.isFolder)
-	frame.FolderIcon:SetShown(todoItem.isFolder == true)
+	frame.FolderButton:SetShown(todoItem.isFolder == true)
 	if (todoItem.isFolder) then
-		frame.FolderIcon:SetTexture(
-			todoItem.isCollapsed and "Interface\\Buttons\\UI-PlusButton-Up" or "Interface\\Buttons\\UI-MinusButton-Up"
-		)
+		local sign = todoItem.isCollapsed and "Plus" or "Minus"
+		frame.FolderButton:SetNormalTexture("Interface\\Buttons\\UI-" .. sign .. "Button-Up")
+		frame.FolderButton:SetPushedTexture("Interface\\Buttons\\UI-" .. sign .. "Button-Down")
 	end
 
 	local text = todoItem.text
@@ -705,6 +703,10 @@ end
 
 function OnSelectItem(frame, button)
 	TodoChecklisterFrame:ClickItem(frame.todoItem, button)
+end
+
+function TodoChecklister_OnFolderButtonClick(frame)
+	TodoChecklisterFrame:ToggleCollapsed(frame:GetParent().todoItem)
 end
 
 function ToggleFocusSettings(frame)

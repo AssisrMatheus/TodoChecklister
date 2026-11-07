@@ -35,6 +35,7 @@ globals = {
 	"TodoChecklisterMapIcon",
 	"TodoChecklisterCharacterDB",
 	"TodoChecklister_BACKDROP",
+	"TodoChecklister_OnFolderButtonClick",
 
 	-- Blizzard globals missing from the list below
 	"ChatFrameUtil",
