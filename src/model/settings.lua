@@ -6,6 +6,8 @@ local TodoAddon = select(2, ...)
 
 ---@class TableUtils
 local TableUtils = TodoAddon.TableUtils
+---@class MigrationUtils
+local MigrationUtils = TodoAddon.MigrationUtils
 
 --------------------------------------
 -- Declarations
@@ -14,6 +16,22 @@ TodoAddon.Settings = {}
 
 ---@class Settings
 local Settings = TodoAddon.Settings
+
+-- !!! Read the USER DATA SAFETY rules in utils/migrationUtils.lua before changing the shape of
+-- TodoChecklisterSettingsDB. A new setting is additive: give it a `== nil` default in Settings:Init, never a new format !!!
+
+---
+---TodoChecklisterSettingsDB (account-wide).
+---Format 1: a flat table of settings, every key optional (filled with its default on load)
+---@type MigrationSchema
+local SETTINGS_SCHEMA = {
+	current = 1,
+	minSchemaVersion = 1,
+	detect = function(db)
+		return 1
+	end,
+	steps = {}
+}
 
 --------------------------------------
 -- Settings functions
@@ -156,8 +174,16 @@ function Settings:Defaults()
 end
 
 ---
----Initializes required properties for this class
+---Loads (and upgrades when needed) the saved settings.
+---When it returns "failed" or "incompatible" it changed nothing, and nothing may use Settings this session
+---@return MigrationStatus, string|nil @What happened to the saved data, and the error when it failed
 function Settings:Init()
+	local db, status, err = MigrationUtils:Migrate(TodoChecklisterSettingsDB, SETTINGS_SCHEMA)
+	if (status == "failed" or status == "incompatible") then
+		return status, err
+	end
+	TodoChecklisterSettingsDB = db
+
 	if (not TodoChecklisterSettingsDB) then
 		---
 		---The SavedVariable where the settings are stored into
@@ -173,7 +199,7 @@ function Settings:Init()
 		---@field public windowOpacityOnHover number|nil @The alpha value of 0 to 1 for the window opacity when hovering the mouse
 		---@field public displayBankOnLinked number|nil @Whether or not should count bank items on linked items
 		---@field public displayChargesOnLinked number|nil @Whether or not should count charges on linked items
-		TodoChecklisterSettingsDB = {}
+		TodoChecklisterSettingsDB = MigrationUtils:Create({}, SETTINGS_SCHEMA)
 		self:Defaults()
 	end
 
@@ -204,4 +230,6 @@ function Settings:Init()
 	if (TodoChecklisterSettingsDB.displayChargesOnLinked == nil) then
 		self:SetDisplayChargesOnLinked(true)
 	end
+
+	return status
 end

@@ -21,6 +21,33 @@ pnpm vendor [flavor...]   # clone/update Blizzard UI source into vendor/ (retail
 
 Manual testing: the addon folder must be named `TodoChecklister` inside the client's `Interface/AddOns/` (the only installed client is `/Applications/World of Warcraft/_forever_/`). Reload in-game with `/reload` (or `/rl` and `/fs` framestack when `Constants.debugMode` is on, which is hardcoded to the character name "Assis").
 
+## User data safety (read before touching anything saved)
+
+The SavedVariables (`TodoChecklisterDB`, `TodoChecklisterSettingsDB`, `TodoChecklisterCharacterDB`) hold people's notes, sometimes years of them. There is no server copy and no undo. **A change that breaks them loses user data permanently, and no feature is worth that.** Users also move between addon versions in both directions: a stale copy on another PC, a rollback after a bad release, or a flavor whose download lags behind. Data saved by new code will be read by old code, and the other way around.
+
+The migration engine is `MigrationUtils:Migrate` (`src/utils/migrationUtils.lua`, whose header repeats these rules). Each saved table has a `MigrationSchema` next to the code that owns it: `LISTS_SCHEMA` and `CHARACTER_SCHEMA` in `model/todoList.lua`, `SETTINGS_SCHEMA` in `model/settings.lua`. Every saved table carries three reserved keys, which must never be used for anything else:
+
+- `schemaVersion`: the format the table is in. Tables saved before versioning have none, and the schema's `detect` works the version out from the table's shape (the flat 1.x item array is format 0).
+- `minSchemaVersion`: the oldest code allowed to read and write the table.
+- `schemaBackup`: `{ fromVersion, data }`, the table as it was before the last upgrade.
+
+Rules:
+
+1. **Prefer additive changes.** Add new optional fields, which old code ignores and keeps. Folders were added this way, with no new format. Never rename, move, retype or delete a saved field in place.
+2. **A change that can't be additive needs a new format.** Raise `current`, add `steps[current]`, and raise `minSchemaVersion` to the new format, so older code refuses the data instead of corrupting it.
+3. **Steps are pure transforms.** A step receives a deep copy and returns the upgraded table. It may read the game API (the character name), but it must not write globals, frames or other saved tables. It must carry over anything it doesn't understand: never drop user data.
+4. **Shipped steps are frozen.** Never edit or remove a step that has been released, and never reuse a version number. Users skip releases, so steps 1 to N must still run in order from any older version.
+5. **Loading only fills gaps.** Defaults are applied with `== nil` checks and never overwrite a value the user saved. That covers data from newer versions too: fill the fields this code needs, and never replace them.
+6. **Test before releasing.** Run a new step against the SavedVariables of every released version (`WTF/Account/<account>/SavedVariables/TodoChecklister.lua`), including empty files and 1.x ones. The same applies to anything that changes what `Init` writes.
+
+What the code guarantees, and must keep guaranteeing:
+
+- Upgrades run on a copy. The saved table is replaced only after every step succeeds, and the original is kept in `schemaBackup`.
+- If a step errors (`"failed"`), or the data was saved by newer code that set a `minSchemaVersion` above this code's format (`"incompatible"`), `src/init.lua` stops start-up before any UI or module `Init`. The game then saves the data back exactly as it was loaded. The chat message explains why and ignores the chat mute setting.
+- Data from a newer but compatible version (`"newer"`) is used as it is, with a chat notice. Its `schemaVersion` is never lowered.
+- A downgrade to 1.x saves new items as `TodoChecklisterDB[1]`, `[2]`... next to `lists`. `TodoList:RecoverDowngradeItems` moves them into a "Recovered items" list on the next load. It saves the new list before it clears the array, so an error in between never loses items.
+- Share strings (`ListShare`) are user data too: people post them publicly and paste them into any version. They follow the same rules. Each string has a `version` and a `minVersion`. A newer format that only adds data (in the extra fields) keeps `minVersion` low, so older addons import what they know and tell the user that some details were skipped. A format older readers can't parse raises `minVersion`, and older addons refuse it with an "update" message instead of misreading it. Never change what an existing reader accepts; add a new reader instead.
+
 ## Architecture
 
 ### Layers and load order
@@ -30,7 +57,7 @@ The game loads `TodoChecklister.toc` → `src/init.xml` → `src/init.lua` → `
 | Order | Folder | Role | Depends on |
 |---|---|---|---|
 | 1 | `libs/` | LibStub, LibDataBroker, LibDBIcon (vendored externals, don't edit) | nothing |
-| 2 | `utils/` | `TableUtils`, `FunctionUtils`, `EncodingUtils`: pure helpers, no game state, no SavedVariables | nothing |
+| 2 | `utils/` | `TableUtils`, `FunctionUtils`, `EncodingUtils`, `MigrationUtils`: pure helpers, no game state, no SavedVariables | nothing |
 | 3 | `config/constants.lua` | `Constants`: theme colors, `debugMode` | game API only |
 | 4 | `model/` | `Settings`, `TodoList`, `ListShare`: the only code that reads or writes SavedVariables | utils |
 | 5 | `config/interfaceOptions.*` | `InterfaceOptions`: the Blizzard options panel | Settings, then later layers late-bound |
@@ -60,7 +87,7 @@ Rules that follow from this:
 
 - **File-scope imports only work for modules that loaded earlier.** A module that loads later is still `nil` when the file runs. To call into a later layer, look it up at call time instead: `TodoAddon.MinimapIcon:LoadCFG()`, `TodoAddon.Chat:Print(...)`. `interfaceOptions.lua` and `TodoChecklister.lua` do this. Don't "clean up" those calls into file-scope locals.
 - Modules are singletons, plain tables of `:`-methods. Per-instance state lives on the module table (`TodoChecklisterFrame.selectedItem`, `.memoizationId`, `.frame`).
-- `src/init.lua` is the only place that decides start-up order: Debug, Settings, TodoList, InterfaceOptions, TodoChecklisterFrame, ListShareDialog, Chat, MinimapIcon. Model `Init`s must run before any UI `Init` because they create the SavedVariables tables.
+- `src/init.lua` is the only place that decides start-up order: Debug, Settings, TodoList, InterfaceOptions, TodoChecklisterFrame, ListShareDialog, Chat, MinimapIcon. Model `Init`s must run before any UI `Init` because they load, upgrade and create the SavedVariables tables. They return a `MigrationStatus`, and start-up stops when the data isn't safe to use (see User data safety).
 - Every file repeats `---@class TodoAddon` / `---@class X` annotations on these locals, which is the old EmmyLua style where repeated declarations merged. `duplicate-type` is disabled in `.emmyrc.json` for this. Keep the same header when adding a file.
 
 ### Lifecycle contract
@@ -124,7 +151,7 @@ Blizzard globals (`NORMAL_FONT_COLOR`, `SOUNDKIT`, `GameFont*`, `ScrollUtil`, `U
 
 ### Recipes
 
-**Add a setting:** add the `---@field` to the `TodoSettings` annotation and the getter/setter pair in `Settings`. Add the default in `Settings:Defaults` and a `nil`-check default in `Settings:Init`; the `nil`-check is how users upgrading from older versions get the new key. Then add the control (with a `parentKey`) to `TodoChecklisterInterfaceOptionsTemplate` in `interfaceOptions.xml`, add a handler that calls the setter and then `InterfaceOptions:LoadCFG()`, reflect the value in `InterfaceOptions:LoadCFG`, and apply it in the consuming module's `LoadCFG`.
+**Add a setting:** add the `---@field` to the `TodoSettings` annotation and the getter/setter pair in `Settings`. Add the default in `Settings:Defaults` and a `nil`-check default in `Settings:Init`; the `nil`-check is how users upgrading from older versions get the new key. A new setting is an additive change, so it needs no new format (see User data safety). Then add the control (with a `parentKey`) to `TodoChecklisterInterfaceOptionsTemplate` in `interfaceOptions.xml`, add a handler that calls the setter and then `InterfaceOptions:LoadCFG()`, reflect the value in `InterfaceOptions:LoadCFG`, and apply it in the consuming module's `LoadCFG`.
 
 **Add a chat command:** add a key to `Chat.commands` that calls a `TodoChecklisterFrame` method, and add a line to `commands.help`. `lists`/`switch` show the pattern for commands that take a multi-word argument (`strjoin(" ", ...)`).
 
@@ -141,7 +168,7 @@ Blizzard globals (`NORMAL_FONT_COLOR`, `SOUNDKIT`, `GameFont*`, `ScrollUtil`, `U
 - Folders keep each list a flat array, so lists saved before folders load unchanged. A folder is an item with `isFolder` (and `isCollapsed`); the run of `inFolder` items right after it belongs to it. Folders can't nest or be checked. `TodoList:ResolveMove` decides where a drag lands, `GetVisibleItems` feeds the ScrollBox (so row indexes aren't saved indexes: compare items, not indexes), and `RepairFolders` in `Init` clears an `inFolder` with no folder above it.
 - `TodoChecklisterCharacterDB` is per character: `{ selectedList = name }`. `TodoList:EnsureSelectedList()` falls back to `"<Name>'s List"` (and creates it) when the character never picked a list or its list was deleted. `<Name>` comes from `NameUtil.GetUnmodifiedUnitFullName("player")`: name plus surname on Forever, just the name elsewhere.
 - Sharing a list (options panel, Export list / Import list) goes through `ListShare` (`model/listShare.lua`): `Export(name)` builds `!TodoChecklister:<version>:<minVersion>!` + `EncodingUtils:EncodeForPrint(payload)` (`minVersion` is the oldest reader that can read it, and empty extra fields let an additive newer format pass data that older readers skip), `Decode(text)` returns a `SharedList` or an error message without saving, and `TodoChecklisterFrame:ImportList` saves it under a free name (`"Raid (2)"`). The codec is pure Lua on purpose: `C_EncodingUtil` exists on every current client, but a string made with it can't be read where it's missing, so every client writes the same format. Never change what version 1 reads; add a new version to `readers` instead. Addons can't write the clipboard, so `ListShareDialog` shows the string highlighted for Ctrl+C.
-- Before lists, `TodoChecklisterDB` was a flat `TodoItem[]`. `TodoList:Init` migrates it into the first character's default list.
+- Before lists, `TodoChecklisterDB` was a flat `TodoItem[]` (format 0). `LISTS_SCHEMA.steps[1]` migrates it into the first character's default list.
 
 ## Game version and API references
 

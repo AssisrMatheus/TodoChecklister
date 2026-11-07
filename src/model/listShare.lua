@@ -24,8 +24,8 @@ local ListShare = TodoAddon.ListShare
 ---@field public items TodoItem[]
 
 -- !!! Share strings are user data too: people post them in guild chat, Discord and websites, and paste them into any
--- version of the addon, older or newer, on any flavor. Never change how an existing version reads, and never reuse a
--- version number !!!
+-- version of the addon, older or newer, on any flavor. Follow the USER DATA SAFETY rules in utils/migrationUtils.lua:
+-- never change how an existing version reads, and never reuse a version number !!!
 --
 -- A share string is PREFIX .. version .. ":" .. minVersion .. "!" .. EncodeForPrint(payload).
 --   version     the format that wrote it

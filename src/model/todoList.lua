@@ -6,6 +6,8 @@ local TodoAddon = select(2, ...)
 
 ---@class TableUtils
 local TableUtils = TodoAddon.TableUtils
+---@class MigrationUtils
+local MigrationUtils = TodoAddon.MigrationUtils
 
 --------------------------------------
 -- Declarations
@@ -27,6 +29,7 @@ local TodoList = TodoAddon.TodoList
 ---Account-wide SavedVariable: every list, keyed by its name. Lists are shared by all characters
 ---@class TodoListsDB
 ---@field public lists table<string, TodoItem[]>
+---@field [integer] TodoItem|nil @Only left by a downgrade to 1.x. See TodoList:RecoverDowngradeItems
 
 ---
 ---Per-character SavedVariable
@@ -527,24 +530,111 @@ function TodoList:GetMOTD()
 end
 
 --------------------------------------
+-- Saved data formats
+--------------------------------------
+-- !!! Read the USER DATA SAFETY rules in utils/migrationUtils.lua before changing anything below, or the shape of
+-- TodoChecklisterDB / TodoChecklisterCharacterDB anywhere in the addon. Breaking these loses people's lists !!!
+
+---
+---TodoChecklisterDB (account-wide).
+---Format 0: before lists (TodoChecklister 1.x), a flat TodoItem[] array.
+---Format 1: { lists = { [name] = TodoItem[] } }. Folders (isFolder, isCollapsed, inFolder) were added to it without a
+---new format: older code shows folders as plain items and keeps the fields, which is the additive change rule 1 asks for
+---@type MigrationSchema
+local LISTS_SCHEMA = {
+	current = 1,
+	minSchemaVersion = 1,
+	detect = function(db)
+		return db.lists == nil and 0 or 1
+	end,
+	steps = {
+		-- SHIPPED IN 2.0: never change. Format 0 to 1: the flat array becomes the list of the first character that loads
+		[1] = function(old)
+			local db = {lists = {}}
+			local items = {}
+			for index = 1, #old do
+				items[index] = old[index]
+			end
+			if (#items > 0) then
+				db.lists[TodoList:GetDefaultListName()] = items
+			end
+			-- Carry over anything else, so nothing is lost even if it isn't understood
+			for key, value in pairs(old) do
+				if (type(key) ~= "number" or key < 1 or key > #old or key % 1 ~= 0) then
+					db[key] = value
+				end
+			end
+			return db
+		end
+	}
+}
+
+---
+---TodoChecklisterCharacterDB (per character).
+---Format 1: { selectedList = name }
+---@type MigrationSchema
+local CHARACTER_SCHEMA = {
+	current = 1,
+	minSchemaVersion = 1,
+	detect = function(db)
+		return 1
+	end,
+	steps = {}
+}
+
+---
+---A downgrade to 1.x (before lists) reads TodoChecklisterDB as a flat array: it shows an empty list and saves new items
+---as TodoChecklisterDB[1], [2]... next to `lists`, where this code never looks. Move them into a list so they show up
+---@return string|nil @The name of the list they were moved to, nil when there were none
+function TodoList:RecoverDowngradeItems()
+	local count = #TodoChecklisterDB
+	if (count == 0) then
+		return nil
+	end
+	local items = {}
+	for index = 1, count do
+		items[index] = TodoChecklisterDB[index]
+	end
+	local name = self:GetUniqueListName("Recovered items")
+	self:RepairFolders(items)
+	-- Save the new list first, and only then remove the items from the array: an error in between never loses them
+	TodoChecklisterDB.lists[name] = items
+	for index = count, 1, -1 do
+		TodoChecklisterDB[index] = nil
+	end
+	return name
+end
+
+--------------------------------------
 -- Lifecycle Events
 --------------------------------------
 ---
----Initializes required properties for this class
+---Loads (and upgrades when needed) the saved lists.
+---When it returns "failed" or "incompatible" it changed nothing, and nothing may use TodoList this session
+---@return MigrationStatus, string|nil, string|nil @What happened to the saved data, the error when it failed, and a message for the user
 function TodoList:Init()
-	-- Older versions saved a single flat array of items. It becomes the list of the first character that loads
-	if (type(TodoChecklisterDB) ~= "table" or not TodoChecklisterDB.lists) then
-		local oldItems = TodoChecklisterDB or {}
-		---@type TodoListsDB
-		TodoChecklisterDB = {lists = {}}
-		if (#oldItems > 0) then
-			TodoChecklisterDB.lists[self:GetDefaultListName()] = oldItems
-		end
+	local lists, listsStatus, listsError = MigrationUtils:Migrate(TodoChecklisterDB, LISTS_SCHEMA)
+	if (listsStatus == "failed" or listsStatus == "incompatible") then
+		return listsStatus, listsError
+	end
+	local character, characterStatus, characterError = MigrationUtils:Migrate(TodoChecklisterCharacterDB, CHARACTER_SCHEMA)
+	if (characterStatus == "failed" or characterStatus == "incompatible") then
+		return characterStatus, characterError
 	end
 
-	if (type(TodoChecklisterCharacterDB) ~= "table") then
-		---@type TodoCharacterDB
-		TodoChecklisterCharacterDB = {}
+	---@type TodoListsDB
+	TodoChecklisterDB = lists or MigrationUtils:Create({lists = {}}, LISTS_SCHEMA)
+	---@type TodoCharacterDB
+	TodoChecklisterCharacterDB = character or MigrationUtils:Create({}, CHARACTER_SCHEMA)
+	-- Data from a newer version can lack fields this code needs. Fill them, never replace them (rule 5)
+	if (type(TodoChecklisterDB.lists) ~= "table") then
+		TodoChecklisterDB.lists = {}
+	end
+
+	local message
+	local recovered = self:RecoverDowngradeItems()
+	if (recovered) then
+		message = "Items added while an older TodoChecklister was installed were moved to the list |cff6cf900" .. recovered .. "|r"
 	end
 
 	self:EnsureSelectedList()
@@ -552,4 +642,11 @@ function TodoList:Init()
 	for _, items in pairs(TodoChecklisterDB.lists) do
 		self:RepairFolders(items)
 	end
+
+	if (listsStatus == "newer" or characterStatus == "newer") then
+		return "newer", nil, message
+	elseif (listsStatus == "migrated" or characterStatus == "migrated") then
+		return "migrated", nil, message
+	end
+	return "current", nil, message
 end
