@@ -3,11 +3,52 @@
 ..\FrameXML\UI.xsd">
   <Script file="objectiveTracker.lua"/>
 
-  <!-- One item in the objective tracker section: Blizzard's objective line (retail and Forever only), with the
-       window's checkbox, a bit smaller, in place of the dash. The dash stays hidden but keeps its width, so the text
-       lines up with quest objectives. Hyperlinks are off, like the window's rows, so clicking or dragging over an
-       item link reaches the line. Scripts are set from Lua: they need the module's closures -->
-  <Frame name="TodoChecklisterTrackerLineTemplate" inherits="ObjectiveTrackerAnimLineTemplate" enableMouse="true" hyperlinksEnabled="false" virtual="true">
+  <!-- The list's section under the objective tracker (retail and Forever). Our own frames, which Blizzard's tracker
+       code never calls, styled like a tracker section. Nothing here inherits a tracker template: the Classic clients
+       don't have them. ObjectiveTrackerSection:Init adds Blizzard's section header (ObjectiveTrackerModuleHeaderTemplate)
+       and the tracker fonts from Lua -->
+  <Frame name="TodoChecklisterTrackerSectionTemplate" parent="UIParent" frameStrata="LOW" hidden="true" virtual="true">
+    <Size x="260" y="26"/>
+    <Frames>
+      <!-- Holds the rows. ObjectiveTrackerSection:Layout anchors it below whichever header the style uses -->
+      <Frame parentKey="Contents">
+        <Anchors>
+          <Anchor point="TOPLEFT" y="-36"/>
+          <Anchor point="BOTTOMRIGHT"/>
+        </Anchors>
+      </Frame>
+
+      <!-- The list name styled like a Questie zone line, used in place of Blizzard's header next to Questie's tracker.
+           Layout sets its font, color, size and anchors from Questie's settings -->
+      <Button parentKey="QuestieHeader" hidden="true">
+        <Layers>
+          <Layer level="ARTWORK">
+            <FontString parentKey="Text" inherits="GameFontNormal" justifyH="LEFT" justifyV="TOP">
+              <Anchors>
+                <Anchor point="TOPLEFT"/>
+                <Anchor point="RIGHT"/>
+              </Anchors>
+            </FontString>
+          </Layer>
+        </Layers>
+      </Button>
+    </Frames>
+  </Frame>
+
+  <!-- One row: a folder name (styled like a quest title) or an item (styled like an objective, with the window's
+       checkbox, a bit smaller, in the 10px a dash would use). No hyperlinks, like the window's rows, so links don't
+       swallow clicks and drags. Scripts are set from Lua: they need the module's closures -->
+  <Button name="TodoChecklisterTrackerLineTemplate" virtual="true">
+    <Layers>
+      <Layer level="ARTWORK">
+        <FontString parentKey="Text" inherits="GameFontHighlight" justifyH="LEFT" justifyV="TOP">
+          <Anchors>
+            <Anchor point="TOPLEFT" x="10"/>
+            <Anchor point="RIGHT"/>
+          </Anchors>
+        </FontString>
+      </Layer>
+    </Layers>
     <Frames>
       <CheckButton parentKey="TodoCheckButton" inherits="UICheckButtonTemplate">
         <Size x="16" y="16"/>
@@ -16,5 +57,5 @@
         </Anchors>
       </CheckButton>
     </Frames>
-  </Frame>
+  </Button>
 </Ui>

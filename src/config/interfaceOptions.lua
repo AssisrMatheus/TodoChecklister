@@ -68,6 +68,9 @@ function InterfaceOptions:LoadCFG()
     self.frame.SettingsContainer.DisplayBankOnLinked:SetChecked(Settings:DisplayBankOnLinked())
     self.frame.SettingsContainer.DisplayChargesOnLinked:SetChecked(Settings:DisplayChargesOnLinked())
     self.frame.SettingsContainer.ObjectiveTrackerCheckButton:SetChecked(Settings:DisplayInObjectiveTracker())
+    -- Only where the section exists: retail and Forever, without a tracker replacement it doesn't support.
+    -- The section is created after login, so this is checked whenever the panel refreshes
+    self.frame.SettingsContainer.ObjectiveTrackerCheckButton:SetShown(TodoAddon.ObjectiveTrackerSection:IsAvailable())
     -- The panel has its real size once shown: measure the guide again so it scrolls exactly as far as needed
     self.frame.SettingsContainer.Guide:SetText(self.guideText)
     -- Refresh the dropdown text after the displayed list changed
@@ -163,8 +166,6 @@ function InterfaceOptions:Init()
     end
   )
 
-  -- Only retail and Forever have the objective tracker the list can join
-  self.frame.SettingsContainer.ObjectiveTrackerCheckButton:SetShown(ObjectiveTrackerManager ~= nil)
 
   self:InitLists()
 

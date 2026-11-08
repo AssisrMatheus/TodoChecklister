@@ -48,16 +48,13 @@
       "UISpecialFrames",
       "TodoChecklister_OnFolderButtonClick",
       "TodoChecklister_ObjectiveTrackerClick",
-      "ObjectiveTrackerManager",
       "ObjectiveTrackerFrame",
+      "STANDARD_TEXT_FONT",
       "CampaignQuestObjectiveTracker",
       "QuestObjectiveTracker",
-      "OBJECTIVE_TRACKER_COLOR",
-      "OBJECTIVE_DASH_STYLE_SHOW",
-      "OBJECTIVE_DASH_STYLE_HIDE",
-      "ObjectiveTrackerAnimLineState",
-      "EventUtil",
-      "RunNextFrame"
+      "ObjectiveTrackerLineFont",
+      "CreateFramePool",
+      "OBJECTIVE_TRACKER_COLOR"
     ],
     "globalsRegex": [
       "^SLASH_",
