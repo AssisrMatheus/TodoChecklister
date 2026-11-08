@@ -52,7 +52,7 @@ What the code guarantees, and must keep guaranteeing:
 
 ### Layers and load order
 
-The game loads `TodoChecklister.toc` → `src/init.xml` → `src/init.lua` → `bindings.xml`. `src/init.xml` includes per-folder XML manifests in a fixed order, and that order is the dependency direction:
+The game loads `TodoChecklister.toc` → `src/init.xml` → `src/init.lua`. It also loads `Bindings.xml` from the addon folder by itself; don't list it in the `.toc`, which parses it as a UI file and errors with "Unrecognized XML: Binding". `src/init.xml` includes per-folder XML manifests in a fixed order, and that order is the dependency direction:
 
 | Order | Folder | Role | Depends on |
 |---|---|---|---|
@@ -62,7 +62,7 @@ The game loads `TodoChecklister.toc` → `src/init.xml` → `src/init.lua` → `
 | 4 | `model/` | `Settings`, `TodoList`, `ListShare`: the only code that reads or writes SavedVariables | utils |
 | 5 | `config/interfaceOptions.*` | `InterfaceOptions`: the Blizzard options panel | Settings, then later layers late-bound |
 | 6 | `components/` | `ResponsiveFrame` (movable/resizable/scalable template), `TodoChecklisterFrame` (main window controller), `ListShareDialog` (export/import box) | model, utils |
-| 7 | `modules/` | `Debug`, `Utils`, `MinimapIcon`, `Chat`: integrations with the game (slash commands, minimap, chat output) | components, model |
+| 7 | `modules/` | `Debug`, `Utils`, `MinimapIcon`, `Chat`, `ObjectiveTrackerSection`: integrations with the game (slash commands, minimap, chat output, the objective tracker section) | components, model |
 | 8 | `src/init.lua` | composition root: one `ADDON_LOADED` handler calls every `:Init()` | everything |
 
 Each manifest lists `<Script file=...>` entries. A component's XML file loads its own `.lua` first, then declares templates. **A new Lua file does nothing until it is added to its folder's XML manifest.**
@@ -87,7 +87,7 @@ Rules that follow from this:
 
 - **File-scope imports only work for modules that loaded earlier.** A module that loads later is still `nil` when the file runs. To call into a later layer, look it up at call time instead: `TodoAddon.MinimapIcon:LoadCFG()`, `TodoAddon.Chat:Print(...)`. `interfaceOptions.lua` and `TodoChecklister.lua` do this. Don't "clean up" those calls into file-scope locals.
 - Modules are singletons, plain tables of `:`-methods. Per-instance state lives on the module table (`TodoChecklisterFrame.selectedItem`, `.memoizationId`, `.frame`).
-- `src/init.lua` is the only place that decides start-up order: Debug, Settings, TodoList, InterfaceOptions, TodoChecklisterFrame, ListShareDialog, Chat, MinimapIcon. Model `Init`s must run before any UI `Init` because they load, upgrade and create the SavedVariables tables. They return a `MigrationStatus`, and start-up stops when the data isn't safe to use (see User data safety).
+- `src/init.lua` is the only place that decides start-up order: Debug, Settings, TodoList, InterfaceOptions, TodoChecklisterFrame, ListShareDialog, Chat, MinimapIcon, ObjectiveTrackerSection. Model `Init`s must run before any UI `Init` because they load, upgrade and create the SavedVariables tables. They return a `MigrationStatus`, and start-up stops when the data isn't safe to use (see User data safety).
 - Every file repeats `---@class TodoAddon` / `---@class X` annotations on these locals, which is the old EmmyLua style where repeated declarations merged. `duplicate-type` is disabled in `.emmyrc.json` for this. Keep the same header when adding a file.
 
 ### Lifecycle contract
@@ -105,7 +105,7 @@ When a setting changes, the flow fans out like this: XML handler (global functio
 - **`TodoList`** (`model/todoList.lua`) is the data layer over `TodoChecklisterDB` and `TodoChecklisterCharacterDB`. It has no knowledge of frames. Item functions (`AddItem`, `GetItems`, `Move`...) act on the list the current character has selected.
 - **`Settings`** (`model/settings.lua`) is getter/setter pairs over `TodoChecklisterSettingsDB`. Nothing else touches that table directly.
 - **`TodoChecklisterFrame`** (`components/TodoChecklister.lua`) is the controller and view for the main window. It owns UI state: `selectedItem` (an index; `0` means none) and `memoizationId`. Its mutators (`AddItem`, `RemoveItemWithIndex`, `Move`, `CheckItemWithIndex`, `SelectItem`, and for lists `SwitchList`, `CreateList`, `DeleteList`) call `TodoList`, keep the selection pointing at the same item across index shifts, bump `memoizationId`, and call `OnUpdate()`.
-- **Other modules mutate the list through `TodoChecklisterFrame`, never through `TodoList` directly.** `Chat` and `MinimapIcon` follow this rule. Calling `TodoList` directly skips the selection fix-up and the repaint.
+- **Other modules mutate the list through `TodoChecklisterFrame`, never through `TodoList` directly.** `Chat`, `MinimapIcon` and `ObjectiveTrackerSection` follow this rule. Calling `TodoList` directly skips the selection fix-up and the repaint.
 - **`Chat`** (`modules/chat.lua`): the `/todo` command table `Chat.commands` maps a lowercase verb to a function that receives the remaining space-split args. A nested table makes a sub-command. `Chat:Print` is the only chat output path and honors `Settings:ChatMuted()`.
 
 ### Rendering and memoization
@@ -114,7 +114,15 @@ When a setting changes, the flow fans out like this: XML handler (global functio
 - Drag and drop is Blizzard's `ScrollUtil.InitDefaultLinearDragBehavior`. `SetCursorFactory` paints the clone that follows the cursor (same row, with backdrop and locked highlight), `SetDropEnter` places a `DropIndicatorTemplate` line, and `SetPostDrop` applies the move to the saved list through `TodoChecklisterFrame:Move(from, to)`, where `to` is the final position.
 - No script runs every frame while idle. The resize grip only sets `OnUpdate` while it is right-dragged to scale. Keep it that way.
 - Linked-item counts (`|Hitem:...|r` links in the text, plus `GetItemCount`) are cached with `FunctionUtils:Memoize(fn, comparator, name)`. The cache key includes `self.memoizationId`, so **any change that affects row text must increment `memoizationId` before `OnUpdate()`**. `BAG_UPDATE_DELAYED`, scrolling and `LoadCFG` already increment it.
-- Shift-clicking an item inserts its link into the input box through `hooksecurefunc("HandleModifiedItemClick", ...)` (and a hook on `StackSplitFrame:OpenStackSplitFrame` that closes the split frame while the input box has focus), installed when `TodoChecklister.lua` loads.
+- Shift-clicking a link (items, quests, spells, achievements, currencies, recipes, mounts...) inserts it into the input box through `hooksecurefunc(ChatFrameUtil, "InsertLink", ...)` (plus the deprecated `ChatEdit_InsertLink` alias), installed when `TodoChecklister.lua` loads. Every Blizzard link source ends there, items included (`HandleModifiedItemClick` calls it). A post-hook can't change `InsertLink` returning false, so retail quest clicks still run their shift fallback (untrack, toggle tracking, super-track); `KeepQuestTracking` snapshots the watch and super-track state and restores it next frame. Don't replace `InsertLink` to fix the return value: that taints every link click. Sources gated on `ChatFrameUtil.GetActiveWindow()` before they build a link (the Classic quest log, achievement and recipe tracker lines) never reach the hook. A hook on `StackSplitFrame:OpenStackSplitFrame` closes the split frame while the input box has focus.
+
+### Objective tracker section (retail and Forever)
+
+- `ObjectiveTrackerSection` (`modules/objectiveTracker.lua`, setting `displayInObjectiveTracker`, on by default, also for users upgrading from versions without it) adds the selected list to Blizzard's objective tracker as a real module: `ObjectiveTrackerModuleTemplate` plus `SectionMixin` overrides, added with `ObjectiveTrackerManager:SetModuleContainer` and a `uiOrder` just above the campaign and quest sections. Rows use Blizzard's `ObjectiveTrackerBlockTemplate` and `TodoChecklisterTrackerLineTemplate` (`modules/objectiveTracker.xml`: Blizzard's `ObjectiveTrackerAnimLineTemplate` with the window's checkbox at 16px in place of the dash, and hyperlinks off like the window's rows so links don't swallow clicks and drags), so they look like quests: a folder is a block with a header and its items as lines, a run of loose items shares one headerless block, and a checked item turns gray. The Classic clients have no `ObjectiveTrackerManager` (they use the older watch frames), so the section and its option are hidden there.
+- Clicking a line checks it, clicking a folder header collapses it, dragging reorders, and clicking the section title toggles the window. All of it calls `TodoChecklisterFrame` (`CheckItem`, `ToggleCollapsed`, `MoveRelative`, `ResolveDrop`, `GetDisplayText`, `Toggle`). The drag is our own (Blizzard's drag behavior needs a ScrollBox). The clone that follows the cursor is a `TodoItemTemplate` row painted by `PaintItem` with the backdrop and locked highlight, like the window's. Its `OnUpdate` runs only while it is shown during a drag, and ends the drag itself once the left button is up: the game sends no `OnDragStop` when the dragged row gets hidden. `Refresh` waits for the drop, so a layout never recycles the dragged row.
+- `TodoChecklisterFrame:OnUpdate()` calls `ObjectiveTrackerSection:Refresh()`, so every list change reaches the tracker. Block and line frames come from `ObjectiveTrackerManager` pools keyed by parent, so the scripts set on them only reach our frames.
+- Being a module means Blizzard's tracker update runs our code, which taints the rest of that update. To keep it out of combat, `Refresh` never marks the module dirty in combat and waits for `PLAYER_REGEN_ENABLED`. Watch for "action blocked" errors in combat when touching this.
+- The tracker only accepts modules after its own `Init` (after `PLAYER_ENTERING_WORLD` and `VARIABLES_LOADED`), so `Init` waits for both events plus one frame before `LoadCFG` attaches the module.
 
 ### UI: XML first
 
@@ -131,11 +139,11 @@ Inline XML scripts can't see the private `TodoAddon` table, and the game resolve
 | Kind | Names | Defined in |
 |---|---|---|
 | SavedVariables (must match `.toc`) | Account-wide: `TodoChecklisterDB`, `TodoChecklisterSettingsDB`, `TodoChecklisterMapIcon`. Per character (`SavedVariablesPerCharacter`): `TodoChecklisterCharacterDB` | model `Init`s, `MinimapIcon:Init` |
-| Keybinding (resolved by `bindings.xml`) | `BINDING_HEADER_TC_HEADER`, `BINDING_NAME_TC_TOGGLE_FRAME`, `GLOBAL_TodoChecklisterFrameToggle` | `src/init.lua` |
+| Keybinding (resolved by `Bindings.xml`) | `BINDING_HEADER_TC_HEADER`, `BINDING_NAME_TC_TOGGLE_FRAME`, `GLOBAL_TodoChecklisterFrameToggle` | `src/init.lua` |
 | Slash commands | `SLASH_TodoChecklister1` + `SlashCmdList.TodoChecklister`; debug only: `SLASH_RELOADUI1`, `SLASH_FRAMESTK1` | `chat.lua`, `debug.lua` |
-| Named frames (XML `name=` / `CreateFrame` name) | `TodoChecklister` (the window frame, not the `TodoChecklisterFrame` module), `TodoChecklisterInterfaceOptions`, `TodoChecklisterShareDialog` (also in `UISpecialFrames` so Escape closes it), `TodoChecklisterMAINFRAME`, and `$parent...` children | XML, `Init`s |
+| Named frames (XML `name=` / `CreateFrame` name) | `TodoChecklister` (the window frame, not the `TodoChecklisterFrame` module), `TodoChecklisterInterfaceOptions`, `TodoChecklisterShareDialog` (also in `UISpecialFrames` so Escape closes it), `TodoChecklisterMAINFRAME`, `TodoChecklisterObjectiveTracker` (the tracker module), and `$parent...` children | XML, `Init`s |
 | XML script handlers | `OnShow`, `OnSaveItem`, `OnRemoveItem`, `OnCheckItem`, `OnSelectItem`, `ToggleFocusSettings`, `TodoChecklister_OnFolderButtonClick` | bottom of `TodoChecklister.lua` |
-| | `ShowKeepFocusClick`, `KeepFocusClick`, `OpacityValueChanged`, `OpacityOnHoverValueChanged`, `OnFanfarreCheck`, `DisplayLinkedCountClick`, `ToggleMapClick`, `MuteChatClick`, `DisplayBankClick`, `DisplayChargesClick` | bottom of `interfaceOptions.lua` |
+| | `ShowKeepFocusClick`, `KeepFocusClick`, `OpacityValueChanged`, `OpacityOnHoverValueChanged`, `OnFanfarreCheck`, `DisplayLinkedCountClick`, `ToggleMapClick`, `MuteChatClick`, `DisplayBankClick`, `DisplayChargesClick`, `TodoChecklister_ObjectiveTrackerClick` | bottom of `interfaceOptions.lua` |
 | Misc | `printDBG` (debug print), `StaticPopupDialogs["TodoChecklisterWEBSITE"]` | `debug.lua`, `interfaceOptions.lua` |
 | XML-referenced data | `TodoChecklister_BACKDROP` (the `backdropInfo` of `BackdropTemplate` frames) | `constants.lua` |
 

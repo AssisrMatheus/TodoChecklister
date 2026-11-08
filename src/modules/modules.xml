@@ -5,4 +5,5 @@
   <Script file="utils.lua"/>
   <Script file="minimapIcon.lua"/>
   <Script file="chat.lua"/>
+  <Include file="objectiveTracker.xml"/>
 </Ui>

@@ -1,0 +1,20 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
+..\FrameXML\UI.xsd">
+  <Script file="objectiveTracker.lua"/>
+
+  <!-- One item in the objective tracker section: Blizzard's objective line (retail and Forever only), with the
+       window's checkbox, a bit smaller, in place of the dash. The dash stays hidden but keeps its width, so the text
+       lines up with quest objectives. Hyperlinks are off, like the window's rows, so clicking or dragging over an
+       item link reaches the line. Scripts are set from Lua: they need the module's closures -->
+  <Frame name="TodoChecklisterTrackerLineTemplate" inherits="ObjectiveTrackerAnimLineTemplate" enableMouse="true" hyperlinksEnabled="false" virtual="true">
+    <Frames>
+      <CheckButton parentKey="TodoCheckButton" inherits="UICheckButtonTemplate">
+        <Size x="16" y="16"/>
+        <Anchors>
+          <Anchor point="TOPRIGHT" relativeKey="$parent.Text" relativePoint="TOPLEFT" x="-3" y="2"/>
+        </Anchors>
+      </CheckButton>
+    </Frames>
+  </Frame>
+</Ui>

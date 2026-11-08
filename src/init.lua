@@ -23,6 +23,8 @@ local ListShareDialog = TodoAddon.ListShareDialog
 local Chat = TodoAddon.Chat
 ---@class MinimapIcon
 local MinimapIcon = TodoAddon.MinimapIcon
+---@class ObjectiveTrackerSection
+local ObjectiveTrackerSection = TodoAddon.ObjectiveTrackerSection
 
 --------------------------------------
 -- Init keybindings
@@ -113,6 +115,7 @@ function TodoAddon:Init(event, name)
     -- Modules
     Chat:Init()
     MinimapIcon:Init()
+    ObjectiveTrackerSection:Init()
 
     -------------------------------------------
     Chat:Print(TodoList:GetMOTD())

@@ -134,6 +134,36 @@
     <Frames>
       <GameTooltip parentKey="TodoTooltip" name="$parentTodoTooltip" frameStrata="TOOLTIP" inherits="GameTooltipTemplate" />
 
+      <!-- Opens the addon's settings page. Blizzard's small gear (UIPanelIconDropdownButtonTemplate's look): the atlas
+           exists on every client, and hovering adds a faint glow. Its click is set in TodoChecklisterFrame:Init -->
+      <Button parentKey="SettingsButton">
+        <Size x="15" y="16"/>
+        <Anchors>
+          <Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT">
+            <Offset x="-32" y="-8"/>
+          </Anchor>
+        </Anchors>
+        <NormalTexture atlas="questlog-icon-setting" useAtlasSize="true"/>
+        <PushedTexture atlas="questlog-icon-setting" useAtlasSize="true">
+          <Anchors>
+            <Anchor point="CENTER" x="1" y="-1"/>
+          </Anchors>
+        </PushedTexture>
+        <HighlightTexture atlas="questlog-icon-setting" useAtlasSize="true" alphaMode="ADD" alpha="0.4"/>
+        <Scripts>
+          <OnEnter>
+            self:GetParent().TodoTooltip:SetOwner(self, "ANCHOR_NONE")
+            self:GetParent().TodoTooltip:ClearAllPoints()
+            self:GetParent().TodoTooltip:SetPoint("BOTTOMRIGHT", self, "TOPRIGHT")
+            self:GetParent().TodoTooltip:AddLine("Settings",1,1,1)
+            self:GetParent().TodoTooltip:Show()
+          </OnEnter>
+          <OnLeave>
+            self:GetParent().TodoTooltip:Hide()
+          </OnLeave>
+        </Scripts>
+      </Button>
+
       <CheckButton parentKey="KeepFocus" name="$parentKeepFocus" inherits="UICheckButtonTemplate" hidden="true">
         <Size x="20" y="20"/>
 
@@ -158,9 +188,7 @@
         </Scripts>
 
         <Anchors>
-          <Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT">
-            <Offset x="-30" y="-6"/>
-          </Anchor>
+          <Anchor point="RIGHT" relativeKey="$parent.SettingsButton" relativePoint="LEFT" x="-2" y="0"/>
         </Anchors>
 
         <Layers>

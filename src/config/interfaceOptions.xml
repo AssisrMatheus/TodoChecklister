@@ -301,6 +301,40 @@
             </Layers>
           </CheckButton>
 
+          <!-- Retail and Forever only: hidden on Classic clients, which have no ObjectiveTrackerManager -->
+          <CheckButton parentKey="ObjectiveTrackerCheckButton" name="$parentObjectiveTrackerCheckButton" inherits="UICheckButtonTemplate">
+            <Size x="28" y="28"/>
+
+            <Scripts>
+              <OnLoad>
+                self.Text:SetText("Show list in the objective tracker");
+              </OnLoad>
+              <OnClick>
+                PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
+                TodoChecklister_ObjectiveTrackerClick(self)
+              </OnClick>
+            </Scripts>
+
+            <Anchors>
+              <Anchor point="LEFT" relativeTo="$parentDisplayChargesOnLinked" relativePoint="LEFT">
+                <Offset>
+                  <AbsDimension y="-40"/>
+                </Offset>
+              </Anchor>
+            </Anchors>
+
+            <Layers>
+              <Layer level="OVERLAY">
+                <FontString name="$parentText" parentKey="Text" inherits="GameFontWhite" justifyH="LEFT">
+                  <Anchors>
+                    <Anchor point="LEFT" relativeTo="$parent" relativePoint="Right">
+                    </Anchor>
+                  </Anchors>
+                </FontString>
+              </Layer>
+            </Layers>
+          </CheckButton>
+
           <Slider parentKey="Opacity" name="$parentOpacity" inherits="UISliderTemplateWithLabels" minValue="0" maxValue="1" valueStep="0.01" defaultValue="1">
             <Size x="144" y="17"/>
             <Anchors>
@@ -348,7 +382,7 @@
           <Slider parentKey="OpacityOnHover" name="$parentOpacityOnHover" inherits="UISliderTemplateWithLabels" minValue="0" maxValue="1" valueStep="0.01" defaultValue="1" hidden="true">
             <Size x="144" y="17"/>
             <Anchors>
-              <Anchor point="TOPLEFT" relativeTo="$parentDisplayChargesOnLinked" relativePoint="BOTTOMLEFT">
+              <Anchor point="TOPLEFT" relativeTo="$parentObjectiveTrackerCheckButton" relativePoint="BOTTOMLEFT">
                 <Offset x="10" y="-40"/>
               </Anchor>
             </Anchors>
@@ -471,28 +505,35 @@
           </Frame>
 
           <!-- How to use the addon. The text is set in InterfaceOptions:Init -->
-          <Frame parentKey="Guide" name="$parentGuide">
+          <!-- The feature guide. Blizzard's ScrollingFontTemplate scrolls it when the panel is too short for it.
+               Its right side leaves room for the scroll bar, which only shows when there is something to scroll -->
+          <Frame parentKey="Guide" name="$parentGuide" inherits="ScrollingFontTemplate">
+            <KeyValues>
+              <KeyValue key="fontName" value="GameFontHighlight" type="string"/>
+            </KeyValues>
             <Anchors>
               <Anchor point="TOPLEFT" relativeTo="$parentDivider" relativePoint="BOTTOMLEFT">
                 <Offset x="5" y="-4"/>
               </Anchor>
-              <Anchor point="RIGHT" relativeTo="$parentDivider" relativePoint="RIGHT"/>
+              <Anchor point="RIGHT" relativeTo="$parentDivider" relativePoint="RIGHT">
+                <Offset x="-16" y="0"/>
+              </Anchor>
               <!-- Stops above the footer url (15px tall). Anchored to the container because Obs is declared later -->
               <Anchor point="BOTTOM" relativeTo="$parent" relativePoint="BOTTOM">
                 <Offset x="0" y="25"/>
               </Anchor>
             </Anchors>
-            <Layers>
-              <Layer level="OVERLAY">
-                <FontString parentKey="Text" inherits="GameFontHighlight" justifyH="LEFT" justifyV="TOP" spacing="3">
-                  <Anchors>
-                    <Anchor point="TOPLEFT"/>
-                    <Anchor point="BOTTOMRIGHT"/>
-                  </Anchors>
-                </FontString>
-              </Layer>
-            </Layers>
           </Frame>
+
+          <EventFrame parentKey="GuideScrollBar" inherits="WowTrimScrollBar">
+            <KeyValues>
+              <KeyValue key="hideIfUnscrollable" value="true" type="boolean"/>
+            </KeyValues>
+            <Anchors>
+              <Anchor point="TOPLEFT" relativeKey="$parent.Guide" relativePoint="TOPRIGHT" x="4" y="0"/>
+              <Anchor point="BOTTOMLEFT" relativeKey="$parent.Guide" relativePoint="BOTTOMRIGHT" x="4" y="0"/>
+            </Anchors>
+          </EventFrame>
 
           <!-- Footer github url -->
           <Button parentKey="Obs" name="$parentObs" hidden="false">

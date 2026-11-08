@@ -49,6 +49,7 @@ local DROP_AREAS = {
 ---@field Title FontString
 ---@field TodoText EditBox
 ---@field KeepFocus CheckButton
+---@field SettingsButton Button
 ---@field Background TodoListBackgroundFrame
 ---@field ScrollBar Frame
 ---@field ResizeButton Button
@@ -368,6 +369,37 @@ function TodoChecklisterFrame:GetTextWithItemCounts(text)
 end
 
 ---
+---The text a row shows for an item: its text with bag counts after item links, and a folder's progress
+---@param todoItem TodoItem @The item to display
+---@return string
+function TodoChecklisterFrame:GetDisplayText(todoItem)
+	local text = todoItem.text
+	if (self.displayLinked and text:find("|Hitem:", 1, true)) then
+		-- Links only change their count when bags change, so it's cached until memoizationId changes
+		local identifier = todoItem.id or todoItem.text
+		text =
+			FunctionUtils:Memoize(
+			function()
+				return self:GetTextWithItemCounts(todoItem.text)
+			end,
+			identifier .. self.memoizationId,
+			identifier .. "Count"
+		)
+	end
+	if (todoItem.isFolder) then
+		-- Checked and total items, in gray: "Raid prep (2/5)"
+		local folderIndex = TodoList:GetIndexByItem(todoItem)
+		if (folderIndex > 0) then
+			local checked, total = TodoList:GetFolderProgress(folderIndex)
+			if (total > 0) then
+				text = text .. " |cff808080(" .. checked .. "/" .. total .. ")|r"
+			end
+		end
+	end
+	return text
+end
+
+---
 ---Set the given frame's properties to the given item ones
 ---@param frame TodoItemFrame @The row to paint
 ---@param todoItem TodoItem @The item displayed by the row
@@ -395,30 +427,7 @@ function TodoChecklisterFrame:PaintItem(frame, todoItem, index)
 		frame.FolderButton:SetPushedTexture("Interface\\Buttons\\UI-" .. sign .. "Button-Down")
 	end
 
-	local text = todoItem.text
-	if (self.displayLinked and text:find("|Hitem:", 1, true)) then
-		-- Links only change their count when bags change, so it's cached until memoizationId changes
-		local identifier = todoItem.id or todoItem.text
-		text =
-			FunctionUtils:Memoize(
-			function()
-				return self:GetTextWithItemCounts(todoItem.text)
-			end,
-			identifier .. self.memoizationId,
-			identifier .. "Count"
-		)
-	end
-	if (todoItem.isFolder) then
-		-- Checked and total items, in gray: "Raid prep (2/5)"
-		local folderIndex = TodoList:GetIndexByItem(todoItem)
-		if (folderIndex > 0) then
-			local checked, total = TodoList:GetFolderProgress(folderIndex)
-			if (total > 0) then
-				text = text .. " |cff808080(" .. checked .. "/" .. total .. ")|r"
-			end
-		end
-	end
-	frame:SetText(text)
+	frame:SetText(self:GetDisplayText(todoItem))
 
 	-- A drag starts on mouse down, so the row can be left in its pushed state
 	frame:SetButtonState("NORMAL")
@@ -547,6 +556,9 @@ function TodoChecklisterFrame:OnUpdate()
 		return
 	end
 
+	-- The objective tracker section shows the same list. Looked up at call time: modules load after components
+	TodoAddon.ObjectiveTrackerSection:Refresh()
+
 	if (#TodoList:GetItems() > 0) then
 		self.frame.Background.BlankText:SetText("")
 	else
@@ -650,6 +662,14 @@ function TodoChecklisterFrame:Init()
 		end
 	)
 
+	self.frame.SettingsButton:SetScript(
+		"OnClick",
+		function()
+			PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON)
+			TodoAddon.InterfaceOptions:Open()
+		end
+	)
+
 	self.frame.TodoText:SetHyperlinksEnabled(true)
 	self.frame:SetHyperlinksEnabled(true)
 	-- InputBoxTemplate's Escape only drops focus. While editing an item it also cancels the edit, so the next Enter
@@ -670,23 +690,66 @@ function TodoChecklisterFrame:Init()
 	end
 end
 
--- Shift-clicking an item calls HandleModifiedItemClick(link), which only knows about
--- Blizzard's own edit boxes. Insert the link into ours when it has focus.
-hooksecurefunc(
-	"HandleModifiedItemClick",
-	function(link)
-		if
-			not link or not IsModifiedClick("CHATLINK") or not TodoChecklisterFrame.frame or
-				not TodoChecklisterFrame.frame.TodoText:HasFocus() or
-				ChatFrameUtil.GetActiveWindow()
-		 then
-			-- Link will have been posted to the chat box instead. Ignore.
-			return
-		end
-
-		TodoChecklisterFrame.frame.TodoText:Insert(link)
+-- Retail and Forever: when InsertLink returns false, quest click handlers fall through to their shift-click
+-- behavior (objective tracker untracks, quest log toggles tracking, map pins track and super-track). The hook
+-- can't change that return value without replacing Blizzard's function, which would taint every link click.
+-- Instead, remember the quest's tracking state before the fallback runs and put it back on the next frame
+local function KeepQuestTracking(link)
+	local questID = tonumber(strmatch(link, "|Hquest:(%d+)") or "")
+	if (not questID or not C_QuestLog.GetQuestWatchType or not C_SuperTrack.SetSuperTrackedQuestID) then
+		return
 	end
-)
+
+	local watchType = C_QuestLog.GetQuestWatchType(questID)
+	local superTrackedID = C_SuperTrack.GetSuperTrackedQuestID()
+	C_Timer.After(
+		0,
+		function()
+			local isWorldQuest = C_QuestLog.IsWorldQuest(questID)
+			local currentWatchType = C_QuestLog.GetQuestWatchType(questID)
+			if (watchType and not currentWatchType) then
+				if (isWorldQuest) then
+					C_QuestLog.AddWorldQuestWatch(questID, watchType)
+				else
+					C_QuestLog.AddQuestWatch(questID)
+				end
+			elseif (not watchType and currentWatchType) then
+				if (isWorldQuest) then
+					C_QuestLog.RemoveWorldQuestWatch(questID)
+				else
+					C_QuestLog.RemoveQuestWatch(questID)
+				end
+			end
+			if (C_SuperTrack.GetSuperTrackedQuestID() ~= superTrackedID) then
+				C_SuperTrack.SetSuperTrackedQuestID(superTrackedID or 0)
+			end
+		end
+	)
+end
+
+-- Every shift-click link (items through HandleModifiedItemClick, quests, spells, achievements, currencies,
+-- recipes, mounts, pets, toys, quest rewards...) ends in ChatFrameUtil.InsertLink, which only knows about
+-- Blizzard's own edit boxes. Insert the link into ours when it has focus. hooksecurefunc keeps Blizzard's
+-- function secure
+local function InsertLinkIntoTodoText(link)
+	if
+		type(link) ~= "string" or link == "" or not IsModifiedClick("CHATLINK") or not TodoChecklisterFrame.frame or
+			not TodoChecklisterFrame.frame.TodoText:HasFocus() or
+			ChatFrameUtil.GetActiveWindow()
+	 then
+		-- Link will have been posted to the chat box instead. Ignore.
+		return
+	end
+
+	TodoChecklisterFrame.frame.TodoText:Insert(link)
+	KeepQuestTracking(link)
+end
+hooksecurefunc(ChatFrameUtil, "InsertLink", InsertLinkIntoTodoText)
+-- Blizzard_DeprecatedChatInfo keeps ChatEdit_InsertLink pointing at the original function, and other addons
+-- still call it. A call goes through only one of the two, so hooking both never inserts twice
+if (ChatEdit_InsertLink and ChatEdit_InsertLink ~= ChatFrameUtil.InsertLink) then
+	hooksecurefunc("ChatEdit_InsertLink", InsertLinkIntoTodoText)
+end
 
 -- Shift-click on a bag stack also opens the stack split frame, close it while linking
 local function CloseStackSplitWhileLinking()

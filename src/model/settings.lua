@@ -148,6 +148,16 @@ function Settings:SetDisplayChargesOnLinked(displayChargesOnLinked)
 	TodoChecklisterSettingsDB.displayChargesOnLinked = displayChargesOnLinked
 end
 
+---@return boolean @Whether or not the list shows as a section of Blizzard's objective tracker (retail and Forever)
+function Settings:DisplayInObjectiveTracker()
+	return TodoChecklisterSettingsDB.displayInObjectiveTracker
+end
+
+---@param displayInObjectiveTracker boolean @Sets whether or not the list shows as a section of the objective tracker
+function Settings:SetDisplayInObjectiveTracker(displayInObjectiveTracker)
+	TodoChecklisterSettingsDB.displayInObjectiveTracker = displayInObjectiveTracker
+end
+
 --------------------------------------
 -- Lifecycle Events
 --------------------------------------
@@ -168,7 +178,8 @@ function Settings:Defaults()
 			chatMuted = false,
 			windowOpacityOnHover = 1,
 			displayBankOnLinked = true,
-			displayChargesOnLinked = true
+			displayChargesOnLinked = true,
+			displayInObjectiveTracker = true
 		}
 	)
 end
@@ -199,6 +210,7 @@ function Settings:Init()
 		---@field public windowOpacityOnHover number|nil @The alpha value of 0 to 1 for the window opacity when hovering the mouse
 		---@field public displayBankOnLinked number|nil @Whether or not should count bank items on linked items
 		---@field public displayChargesOnLinked number|nil @Whether or not should count charges on linked items
+		---@field public displayInObjectiveTracker boolean|nil @Whether or not the list shows as a section of the objective tracker
 		TodoChecklisterSettingsDB = MigrationUtils:Create({}, SETTINGS_SCHEMA)
 		self:Defaults()
 	end
@@ -229,6 +241,10 @@ function Settings:Init()
 
 	if (TodoChecklisterSettingsDB.displayChargesOnLinked == nil) then
 		self:SetDisplayChargesOnLinked(true)
+	end
+
+	if (TodoChecklisterSettingsDB.displayInObjectiveTracker == nil) then
+		self:SetDisplayInObjectiveTracker(true)
 	end
 
 	return status

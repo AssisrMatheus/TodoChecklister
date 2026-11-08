@@ -37,6 +37,7 @@ function InterfaceOptions:Defaults()
   TodoAddon.TodoChecklisterFrame:Defaults()
   self:LoadCFG()
   TodoAddon.MinimapIcon:LoadCFG()
+  TodoAddon.ObjectiveTrackerSection:LoadCFG()
 end
 
 ---
@@ -66,6 +67,9 @@ function InterfaceOptions:LoadCFG()
     self.frame.SettingsContainer.ToggleMapButton:SetChecked(Settings:DisplayMinimapIcon())
     self.frame.SettingsContainer.DisplayBankOnLinked:SetChecked(Settings:DisplayBankOnLinked())
     self.frame.SettingsContainer.DisplayChargesOnLinked:SetChecked(Settings:DisplayChargesOnLinked())
+    self.frame.SettingsContainer.ObjectiveTrackerCheckButton:SetChecked(Settings:DisplayInObjectiveTracker())
+    -- The panel has its real size once shown: measure the guide again so it scrolls exactly as far as needed
+    self.frame.SettingsContainer.Guide:SetText(self.guideText)
     -- Refresh the dropdown text after the displayed list changed
     self.frame.SettingsContainer.ListDropdown:GenerateMenu()
   end
@@ -104,7 +108,7 @@ function InterfaceOptions:Init()
   -- Feature guide under the options, same content as the README's Features section
   local heading = "|cffffd100%s|r"
   local key = "|cff00cc66%s|r"
-  self.frame.SettingsContainer.Guide.Text:SetText(
+  self.guideText =
     table.concat(
       {
         heading:format("How to use"),
@@ -122,12 +126,19 @@ function InterfaceOptions:Init()
         "- " .. heading:format("Share: ") .. key:format("Export list") ..
           " gives you a code to send a friend. They paste it into " ..
             key:format("Import list") .. " and get a copy, folders and checks included.",
+        "- " .. heading:format("Objective tracker: ") .. key:format("Show list in the objective tracker") ..
+          " puts your list above your quests (Retail and Forever). Click an item to check it, a folder to open " ..
+            "or close it, and the list name to open the window. Drag rows to reorder them.",
         "",
         "Type " .. key:format("/todo") .. " in chat to see every command."
       },
       "\n"
     )
-  )
+  -- Blizzard's ScrollingFontTemplate: it scrolls when the panel is too short, and the bar only shows then
+  local guide = self.frame.SettingsContainer.Guide
+  guide:GetFontString():SetSpacing(3)
+  ScrollUtil.RegisterScrollBoxWithScrollBar(guide:GetScrollBox(), self.frame.SettingsContainer.GuideScrollBar)
+  guide:SetText(self.guideText)
 
   -- Set up the github popup
   StaticPopupDialogs[addonName .. "WEBSITE"] = {
@@ -152,11 +163,22 @@ function InterfaceOptions:Init()
     end
   )
 
+  -- Only retail and Forever have the objective tracker the list can join
+  self.frame.SettingsContainer.ObjectiveTrackerCheckButton:SetShown(ObjectiveTrackerManager ~= nil)
+
   self:InitLists()
 
   self:LoadCFG()
-  local category = BlizzardSettings.RegisterCanvasLayoutCategory(self.frame, addonName)
-  BlizzardSettings.RegisterAddOnCategory(category)
+  self.category = BlizzardSettings.RegisterCanvasLayoutCategory(self.frame, addonName)
+  BlizzardSettings.RegisterAddOnCategory(self.category)
+end
+
+---
+---Opens the game's settings window on this addon's page
+function InterfaceOptions:Open()
+  if (self.category) then
+    BlizzardSettings.OpenToCategory(self.category:GetID())
+  end
 end
 
 ---
@@ -331,4 +353,10 @@ end
 function DisplayChargesClick(frame)
   Settings:SetDisplayChargesOnLinked(frame:GetChecked())
   InterfaceOptions:LoadCFG()
+end
+
+function TodoChecklister_ObjectiveTrackerClick(frame)
+  Settings:SetDisplayInObjectiveTracker(frame:GetChecked())
+  InterfaceOptions:LoadCFG()
+  TodoAddon.ObjectiveTrackerSection:LoadCFG()
 end

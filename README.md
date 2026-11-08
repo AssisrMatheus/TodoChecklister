@@ -16,7 +16,7 @@ It also runs on Retail, Classic Era, TBC Anniversary and Mists of Pandaria Class
 
 ## Features
 
-Open the window with the minimap button, a keybind (Esc > Options > Keybindings > AddOns) or `/todo tg`.
+Open the window with the minimap button, a keybind (Esc > Options > Keybindings > AddOns) or `/todo tg`. The cog at the top of the window opens the options.
 
 1. **Track items:** shift-click an item in your bags while typing to link it. The list shows how many you carry.
 2. **Folders:** right-click an item to turn it into a folder, then drag items into it. Left-click a folder to rename it, and use its +/- button to open or close it.
@@ -24,6 +24,7 @@ Open the window with the minimap button, a keybind (Esc > Options > Keybindings 
 4. **Quick add:** tick it at the top of the window and the text box stays open after Enter.
 5. **Lists:** every character on your account sees your lists. Pick the one each character shows in Displayed list, under Esc > Options > AddOns > TodoChecklister.
 6. **Share:** Export list, in the same options panel, gives you a code to send a friend. They paste it into Import list and get a copy, folders and checks included.
+7. **Objective tracker (Retail and Forever):** your list shows above your quests. Click an item to check it, a folder to open or close it, and the list name to open the window. Drag rows to reorder them. Untick Show list in the objective tracker in the options to hide it.
 
 ## Chat commands
 
