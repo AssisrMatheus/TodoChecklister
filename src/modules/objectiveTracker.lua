@@ -56,20 +56,21 @@ local LINE_SPACING = 4
 -- The header is 26px tall, and rows start 10px below it (see TodoChecklisterTrackerSectionTemplate)
 local HEADER_HEIGHT = 26
 local CONTENTS_OFFSET = 10
+-- The drag clone is the window's row, 6px shorter (24px for one line)
+local CURSOR_ROW_SHRINK = 6
 -- The middle half of a folder row drops an item into the folder
 local FOLDER_INSIDE_FRACTION = 0.5
 -- Tracker replacements the section doesn't support: with one loaded, the section isn't created and the list stays in
 -- the window. The same two ElvUI steps aside for (BL:ObjectiveTracker_HasQuestTracker)
 local UNSUPPORTED_TRACKERS = {"!KalielsTracker", "DugisGuideViewerZ"}
 -- Questie's tracker layout (Modules/Tracker): lines start 10px in (TrackerLine lineMarginLeft) and keep 30px clear on
--- the right (TrackerLayout.MARGIN_RIGHT). Zones are gray, quest titles yellow, objectives near white, and a
--- completed quest says "Quest Complete!" in green (LineBuilder, QuestSection, QuestieLib:GetRGBForObjective)
+-- the right (TrackerLayout.MARGIN_RIGHT). Zones are gray, quest titles yellow, objectives near white (LineBuilder,
+-- QuestSection, QuestieLib:GetRGBForObjective). Checked items keep the objective color and get a strike line
 local QUESTIE_LINE_LEFT = 10
 local QUESTIE_MARGIN_RIGHT = 30
 local QUESTIE_ZONE_COLOR = {r = 0.753, g = 0.753, b = 0.753}
 local QUESTIE_TITLE_COLOR = {r = 1, g = 1, b = 0}
 local QUESTIE_OBJECTIVE_COLOR = {r = 0.933, g = 0.933, b = 0.933}
-local QUESTIE_COMPLETE_COLOR = {r = 0.157, g = 1, b = 0.157}
 -- How often and how long to wait for Questie's tracker frame, which Questie creates some time after login
 local QUESTIE_WAIT_INTERVAL = 1
 local QUESTIE_WAIT_TRIES = 60
@@ -176,6 +177,32 @@ local function SetUpDrag(region)
 end
 
 ---
+---Shows a row's whole text in a tooltip when it was cut short with "...", toward the middle of the screen
+---@param row table
+local function ShowTruncatedText(row)
+	if (not row.todoItem or not row.Text:IsTruncated() or ObjectiveTrackerSection.dragItem) then
+		return
+	end
+	local tooltip = ObjectiveTrackerSection.section.Tooltip
+	local isOnRight = (row:GetCenter() or 0) > UIParent:GetWidth() / 2
+	tooltip:SetOwner(row, isOnRight and "ANCHOR_LEFT" or "ANCHOR_RIGHT")
+	tooltip:SetText(TodoChecklisterFrame:GetDisplayText(row.todoItem), 1, 1, 1, 1, true)
+	tooltip:Show()
+end
+
+---
+---Colors a row's text and its strike lines
+---@param row table
+---@param color table
+local function SetRowColor(row, color)
+	row.Text:SetTextColor(color.r, color.g, color.b)
+	row.Strikethrough:SetColorTexture(color.r, color.g, color.b)
+	for _, texture in ipairs(row.extraStrikethroughs or {}) do
+		texture:SetColorTexture(color.r, color.g, color.b)
+	end
+end
+
+---
 ---Sets up a new pooled row: clicking an item checks it, clicking a folder opens or closes it, hovering highlights it
 ---like a tracker line
 ---@param row table
@@ -219,8 +246,9 @@ local function SetUpRow(row)
 		function(self)
 			local colorStyle = self.colorStyle and self.colorStyle.reverse
 			if (colorStyle) then
-				self.Text:SetTextColor(colorStyle.r, colorStyle.g, colorStyle.b)
+				SetRowColor(self, colorStyle)
 			end
+			ShowTruncatedText(self)
 		end
 	)
 	row:SetScript(
@@ -228,20 +256,23 @@ local function SetUpRow(row)
 		function(self)
 			local colorStyle = self.colorStyle
 			if (colorStyle) then
-				self.Text:SetTextColor(colorStyle.r, colorStyle.g, colorStyle.b)
+				SetRowColor(self, colorStyle)
 			end
+			ObjectiveTrackerSection.section.Tooltip:Hide()
 		end
 	)
 end
 
 ---
 ---Paints a row. Blizzard's style: a folder like a quest title, an item like an objective, gray once checked.
----Questie's style: a folder like a Questie quest title, an item like a Questie objective, green once checked
+---Questie's style: a folder like a Questie quest title, an item like a Questie objective. Both strike a checked item
+---through (Layout draws the strike, once the row has its width)
 ---@param row table
 ---@param todoItem TodoItem
 ---@param questie table|nil @GetQuestieStyle() for Questie's style, nil for Blizzard's
----@return number @The height of the row's text
-local function PaintRow(row, todoItem, questie)
+---@param wrap boolean @Whether long text wraps onto more lines (both trackers do that with objectives), or is cut short
+---with "..."
+local function PaintRow(row, todoItem, questie, wrap)
 	row.todoItem = todoItem
 	row.TodoCheckButton.todoItem = todoItem
 
@@ -253,13 +284,7 @@ local function PaintRow(row, todoItem, questie)
 		-- Items in a folder sit like objectives under a quest, items outside folders like quest titles
 		indent = (todoItem.isFolder or not todoItem.inFolder) and questie.questIndent or questie.objectiveIndent
 		row.TodoCheckButton:SetSize(questie.checkSize, questie.checkSize)
-		if (todoItem.isFolder) then
-			colorStyle = QUESTIE_TITLE_COLOR
-		elseif (todoItem.isChecked) then
-			colorStyle = QUESTIE_COMPLETE_COLOR
-		else
-			colorStyle = QUESTIE_OBJECTIVE_COLOR
-		end
+		colorStyle = todoItem.isFolder and QUESTIE_TITLE_COLOR or QUESTIE_OBJECTIVE_COLOR
 	else
 		text:SetFontObject(ObjectiveTrackerLineFont)
 		indent = todoItem.isFolder and 0 or 10
@@ -273,17 +298,44 @@ local function PaintRow(row, todoItem, questie)
 		end
 	end
 
+	row.textIndent = indent
 	text:ClearAllPoints()
 	text:SetPoint("TOPLEFT", indent, 0)
 	text:SetPoint("RIGHT")
+	TodoChecklisterFrame:SetTextWrap(text, wrap)
 	row.TodoCheckButton:SetShown(not todoItem.isFolder)
 	row.TodoCheckButton:SetChecked(todoItem.isChecked == true)
 	-- Blizzard's colors carry a highlight color for hovering (reverse). Questie's don't change on hover
 	row.colorStyle = colorStyle
 	text:SetTextColor(colorStyle.r, colorStyle.g, colorStyle.b)
 
+	-- Clears what the string measured before, or its height can be stale (ObjectiveTrackerBlockMixin:SetStringText)
+	text:SetHeight(0)
 	text:SetText(TodoChecklisterFrame:GetDisplayText(todoItem))
-	return math.max(text:GetStringHeight(), 1)
+end
+
+---
+---Questie sizes its tracker to its longest line, up to a share of the screen (trackerWidthRatio), and wraps the lines
+---longer than that (TrackerLayout.UpdateLineWidth, QuestieTracker:UpdateWidth). A width the player dragged it to
+---(TrackerWidth) stays. The section sizes itself from its own lines the same way, with Questie's width as the minimum,
+---so a list with longer lines than the quests gets room to spread instead of wrapping into Questie's narrow column
+---@param questieFrame table
+---@param rows table[] @The painted rows
+---@param zoneLine table @The list name
+---@return number
+local function GetQuestieSectionWidth(questieFrame, rows, zoneLine)
+	local profile = _G.Questie.db.profile
+	local width = questieFrame:GetWidth()
+	local ratio = profile.trackerWidthRatio
+	if ((tonumber(profile.TrackerWidth) or 0) > 0 or type(ratio) ~= "number") then
+		return width
+	end
+	local margins = QUESTIE_LINE_LEFT + QUESTIE_MARGIN_RIGHT
+	local contentWidth = zoneLine.Text:GetUnboundedStringWidth() + margins
+	for _, row in ipairs(rows) do
+		contentWidth = math.max(contentWidth, row.Text:GetUnboundedStringWidth() + row.textIndent + margins)
+	end
+	return math.max(width, math.min(contentWidth, GetScreenWidth() * ratio))
 end
 
 --------------------------------------
@@ -313,14 +365,31 @@ function ObjectiveTrackerSection:Layout()
 	local contents = section.Contents
 	contents:ClearAllPoints()
 
+	-- Questie's zone line has no minimize button, so the section never collapses there
+	local isCollapsed = self.isCollapsed and not questie
+	local wrap = Settings:WrapText()
+	---@type table<number, table>
+	local rows = {}
+	if (not isCollapsed) then
+		for index, todoItem in ipairs(items) do
+			local row = self.rowPool:Acquire()
+			SetUpRow(row)
+			PaintRow(row, todoItem, questie, wrap)
+			rows[index] = row
+		end
+	end
+
 	local height, rowLeft, rowRight
 	if (questie) then
-		section:SetWidth(questieFrame:GetWidth())
 		self.header:Hide()
 		local zoneLine = section.QuestieHeader
 		zoneLine.Text:SetFont(questie.zone[1], questie.zone[2], questie.zone[3])
 		zoneLine.Text:SetTextColor(QUESTIE_ZONE_COLOR.r, QUESTIE_ZONE_COLOR.g, QUESTIE_ZONE_COLOR.b)
+		TodoChecklisterFrame:SetTextWrap(zoneLine.Text, wrap)
+		zoneLine.Text:SetHeight(0)
 		zoneLine.Text:SetText(listName)
+		-- Set before measuring heights: text wraps at the section's width
+		section:SetWidth(GetQuestieSectionWidth(questieFrame, rows, zoneLine))
 		zoneLine:ClearAllPoints()
 		zoneLine:SetPoint("TOPLEFT", QUESTIE_LINE_LEFT, 0)
 		zoneLine:SetPoint("RIGHT", -QUESTIE_MARGIN_RIGHT, 0)
@@ -342,8 +411,6 @@ function ObjectiveTrackerSection:Layout()
 	end
 	contents:SetPoint("BOTTOMRIGHT")
 
-	-- Questie's zone line has no minimize button, so the section never collapses there
-	local isCollapsed = self.isCollapsed and not questie
 	if (isCollapsed) then
 		height = HEADER_HEIGHT
 	else
@@ -353,13 +420,16 @@ function ObjectiveTrackerSection:Layout()
 				y = y + (StartsBlock(todoItem, items[index - 1]) and BLOCK_SPACING or LINE_SPACING)
 			end
 
-			local row = self.rowPool:Acquire()
-			SetUpRow(row)
+			local row = rows[index]
 			row:SetPoint("TOPLEFT", contents, "TOPLEFT", rowLeft, -y)
 			row:SetPoint("RIGHT", contents, "RIGHT", rowRight, 0)
-			local rowHeight = PaintRow(row, todoItem, questie)
+			-- Measured once the row has its width, which decides where the text wraps
+			local rowHeight = math.max(row.Text:GetStringHeight(), 1)
 			row:SetHeight(rowHeight)
 			row:Show()
+			-- A checked item is struck through in its text color: Blizzard's gray, Questie's objective color
+			local isStruck = todoItem.isChecked == true and not todoItem.isFolder
+			TodoChecklisterFrame:PaintStrikethrough(row, isStruck, row.colorStyle)
 			y = y + rowHeight
 
 			if (questie) then
@@ -588,6 +658,8 @@ end
 ---Above Questie's tracker. When Questie anchors it by a top corner (it grows down), the section takes the spot Questie
 ---wants and pushes the tracker down by the section's height, so it never overlaps what is above (the minimap by
 ---default). When anchored by a bottom corner (it grows up), the section just sits on top of it.
+---The section lines up with the side Questie anchors by. Questie's width grows away from that side, so a section
+---wider than Questie's tracker grows away from the screen edge, like Questie's own lines.
 ---Questie saves its position only when the player drops it, from where it was dropped, so the push never ends up in
 ---Questie's settings
 function ObjectiveTrackerSection:PlaceAboveQuestie()
@@ -595,17 +667,18 @@ function ObjectiveTrackerSection:PlaceAboveQuestie()
 	local frame = _G.Questie_BaseFrame
 	local point = self:GetQuestiePoint()
 	local anchorPoint = point[1]
+	local side = (type(anchorPoint) == "string" and anchorPoint:find("RIGHT")) and "RIGHT" or "LEFT"
 	section:ClearAllPoints()
 
 	if (type(anchorPoint) ~= "string" or anchorPoint:find("BOTTOM")) then
 		self:RestoreQuestie()
-		section:SetPoint("BOTTOMLEFT", frame, "TOPLEFT")
+		section:SetPoint("BOTTOM" .. side, frame, "TOP" .. side)
 		section:Show()
 		return
 	end
 
-	-- Our top-left corner where Questie wants its own, then Questie's tracker right below us
-	section:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, section:GetHeight())
+	-- Our top corner where Questie wants its own, then Questie's tracker right below us
+	section:SetPoint("TOP" .. side, frame, "TOP" .. side, 0, section:GetHeight())
 	self:MoveQuestie(point, section:GetHeight())
 	self.isQuestieMoved = true
 	section:Show()
@@ -643,10 +716,13 @@ function ObjectiveTrackerSection:StartDrag(todoItem)
 	-- The clone that follows the cursor: the window's row, painted and highlighted the same way as the window's
 	-- drag clone. Its OnUpdate drives the drag, and only runs while a drag shows it
 	local cursorRow = self.cursorRow
-	TodoChecklisterFrame:PaintItem(cursorRow, todoItem, 0)
+	self.section.Tooltip:Hide()
+	-- Sized before painting: the window's PaintItem measures the text at the row's width. A bit shorter than the
+	-- window's rows, like the tracker's lines
+	cursorRow:SetWidth(self.section:GetWidth())
+	cursorRow:SetHeight(math.max(TodoChecklisterFrame:PaintItem(cursorRow, todoItem, 0) - CURSOR_ROW_SHRINK, 24))
 	cursorRow:SetBackdrop(TodoChecklister_BACKDROP)
 	cursorRow:LockHighlight()
-	cursorRow:SetWidth(self.section:GetWidth())
 	self.dropIndicator:Show()
 	cursorRow:Show()
 	self:UpdateDrag()

@@ -158,6 +158,17 @@ function Settings:SetDisplayInObjectiveTracker(displayInObjectiveTracker)
 	TodoChecklisterSettingsDB.displayInObjectiveTracker = displayInObjectiveTracker
 end
 
+---@return boolean @Whether long items wrap onto more lines (true) or are cut short with "..." (false), in the window
+---and in the objective tracker
+function Settings:WrapText()
+	return TodoChecklisterSettingsDB.wrapText
+end
+
+---@param wrapText boolean @Sets whether long items wrap onto more lines, or are cut short with "..."
+function Settings:SetWrapText(wrapText)
+	TodoChecklisterSettingsDB.wrapText = wrapText
+end
+
 --------------------------------------
 -- Lifecycle Events
 --------------------------------------
@@ -179,7 +190,8 @@ function Settings:Defaults()
 			windowOpacityOnHover = 1,
 			displayBankOnLinked = true,
 			displayChargesOnLinked = true,
-			displayInObjectiveTracker = true
+			displayInObjectiveTracker = true,
+			wrapText = true
 		}
 	)
 end
@@ -211,6 +223,7 @@ function Settings:Init()
 		---@field public displayBankOnLinked number|nil @Whether or not should count bank items on linked items
 		---@field public displayChargesOnLinked number|nil @Whether or not should count charges on linked items
 		---@field public displayInObjectiveTracker boolean|nil @Whether or not the list shows as a section of the objective tracker
+		---@field public wrapText boolean|nil @Whether long items wrap onto more lines, or are cut short with "..."
 		TodoChecklisterSettingsDB = MigrationUtils:Create({}, SETTINGS_SCHEMA)
 		self:Defaults()
 	end
@@ -245,6 +258,10 @@ function Settings:Init()
 
 	if (TodoChecklisterSettingsDB.displayInObjectiveTracker == nil) then
 		self:SetDisplayInObjectiveTracker(true)
+	end
+
+	if (TodoChecklisterSettingsDB.wrapText == nil) then
+		self:SetWrapText(true)
 	end
 
 	return status

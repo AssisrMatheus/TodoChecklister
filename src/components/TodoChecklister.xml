@@ -73,25 +73,23 @@
       </Button>
     </Frames>
 
-    <!-- Item text, between the checkbox and the remove button. Shifts down while pressed -->
-    <ButtonText parentKey="Text" justifyH="LEFT" wordwrap="false">
-      <Anchors>
-        <Anchor point="LEFT" relativeKey="$parent.TodoCheckButton" relativePoint="RIGHT"/>
-        <Anchor point="RIGHT" relativeKey="$parent.RemoveButton" relativePoint="LEFT"/>
-      </Anchors>
-    </ButtonText>
-    <NormalFont style="GameFontNormalSmall"/>
-    <PushedTextOffset x="2" y="-2"/>
-
     <Layers>
-      <Layer level="OVERLAY" textureSubLevel="7">
-        <!-- Strikes through checked items, across the text area between the checkbox and the remove button -->
-        <Texture parentKey="Strikethrough" hidden="true">
-          <Size y="1"/>
+      <Layer level="ARTWORK">
+        <!-- Item text, between the checkbox and the remove button. A plain FontString: the button's own ButtonText
+             stays on one line. PaintItem wraps it onto more lines (the row grows to fit) or cuts it short with "...",
+             from the wrapText setting -->
+        <FontString parentKey="Text" inherits="GameFontNormalSmall" justifyH="LEFT">
           <Anchors>
             <Anchor point="LEFT" relativeKey="$parent.TodoCheckButton" relativePoint="RIGHT"/>
             <Anchor point="RIGHT" relativeKey="$parent.RemoveButton" relativePoint="LEFT"/>
           </Anchors>
+        </FontString>
+      </Layer>
+      <Layer level="OVERLAY" textureSubLevel="7">
+        <!-- Strikes through the first line of a checked item's text. PaintStrikethrough places it on the glyphs and adds
+             one more for each wrapped line -->
+        <Texture parentKey="Strikethrough" hidden="true">
+          <Size y="1"/>
           <Color color="NORMAL_FONT_COLOR"/>
         </Texture>
       </Layer>
@@ -266,6 +264,12 @@
             <FontString parentKey="BlankText" inherits="GameFontNormal">
               <Anchors>
                 <Anchor point="CENTER" />
+              </Anchors>
+            </FontString>
+            <!-- Stays hidden. TodoChecklisterFrame:MeasureText sets an item's text on it to measure the row height -->
+            <FontString parentKey="MeasureText" inherits="GameFontNormalSmall" justifyH="LEFT" hidden="true">
+              <Anchors>
+                <Anchor point="TOPLEFT"/>
               </Anchors>
             </FontString>
           </Layer>

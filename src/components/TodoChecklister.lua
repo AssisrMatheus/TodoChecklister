@@ -25,9 +25,17 @@ local TodoChecklisterFrame = TodoAddon.TodoChecklisterFrame
 
 -- How far right the items inside a folder are drawn
 local FOLDER_ITEM_INDENT = 8
--- Rows are 30 high. A drop margin of 16 only leaves above/below; 9 leaves the middle of a folder row to drop into it
-local DROP_MARGIN = 16
-local FOLDER_DROP_MARGIN = 9
+-- A row is 30 high (TodoItemTemplate), and taller when its text wraps onto more lines: the text plus 8 above and below
+local ROW_HEIGHT = 30
+local ROW_TEXT_PADDING = 16
+-- The text sits between the checkbox (24) and the remove button (20, 4 from the right edge)
+local ROW_TEXT_INSET = 24 + 24
+-- The hover highlight is 16 high, and covers every line of wrapped text
+local HIGHLIGHT_HEIGHT = 16
+-- Drop margins, as a fraction of the row height. Over half only leaves above/below; 0.3 leaves the middle of a folder
+-- row to drop into it
+local DROP_MARGIN = 0.55
+local FOLDER_DROP_MARGIN = 0.3
 -- DragIntersectionArea to the names TodoList:ResolveMove uses
 local DROP_AREAS = {
 	[DragIntersectionArea.Above] = "above",
@@ -42,8 +50,11 @@ local DROP_AREAS = {
 ---@field RemoveButton Button
 ---@field Text FontString
 ---@field Strikethrough Texture
+---@field extraStrikethroughs Texture[]|nil @One more for each line of wrapped text after the first
+---@field isSetUp boolean|nil
 ---@class TodoListBackgroundFrame : Frame
 ---@field BlankText FontString
+---@field MeasureText FontString
 ---@field ScrollBox Frame
 ---@class TodoChecklisterWindowFrame : Frame
 ---@field Title FontString
@@ -53,6 +64,7 @@ local DROP_AREAS = {
 ---@field Background TodoListBackgroundFrame
 ---@field ScrollBar Frame
 ---@field ResizeButton Button
+---@field TodoTooltip GameTooltip
 
 --------------------------------------
 -- TodoChecklisterFrame functions
@@ -400,20 +412,195 @@ function TodoChecklisterFrame:GetDisplayText(todoItem)
 end
 
 ---
+---@param todoItem TodoItem
+---@return FontObject @The font a row uses for the item: white for folders, gray once checked, yellow otherwise
+function TodoChecklisterFrame:GetFontObject(todoItem)
+	if (todoItem.isFolder) then
+		return GameFontHighlightSmall
+	elseif (todoItem.isChecked) then
+		return GameFontDarkGraySmall
+	end
+	return GameFontNormalSmall
+end
+
+---
+---Sets how a row's text handles running out of room: wrapped onto more lines, or cut short with "..." (the game adds
+---the "..." itself to a one-line text that doesn't fit)
+---@param fontString FontString
+---@param wrap boolean|nil @nil (before LoadCFG read the setting) cuts short
+function TodoChecklisterFrame:SetTextWrap(fontString, wrap)
+	fontString:SetWordWrap(wrap == true)
+	-- A word too long for the line (a pasted url) breaks instead of running out of the row
+	fontString:SetNonSpaceWrap(wrap == true)
+	-- One line when cut short, so its measured height is one line too (Blizzard caps tracker lines the same way)
+	fontString:SetMaxLines(wrap == true and 0 or 1)
+end
+
+---
+---Measures an item's text the way a row shows it, on the hidden MeasureText of the list (the way Blizzard's achievement
+---list measures its rows): rows only exist for the visible items, but the ScrollBox needs the height of every one
+---@param todoItem TodoItem
+---@param rowWidth number @The width of the row
+---@return number @The text's height
+function TodoChecklisterFrame:MeasureText(todoItem, rowWidth)
+	local measure = self.frame.Background.MeasureText
+	measure:SetFontObject(self:GetFontObject(todoItem))
+	self:SetTextWrap(measure, self.wrapText)
+	measure:SetWidth(math.max(rowWidth - (todoItem.inFolder and FOLDER_ITEM_INDENT or 0) - ROW_TEXT_INSET, 1))
+	-- Clears what the string measured before, or the height can be stale (ObjectiveTrackerBlockMixin:SetStringText)
+	measure:SetHeight(0)
+	measure:SetText(self:GetDisplayText(todoItem))
+	return measure:GetStringHeight()
+end
+
+---
+---@param textHeight number @From MeasureText
+---@return number @The height of a row with that text
+function TodoChecklisterFrame:GetRowHeight(textHeight)
+	return math.max(ROW_HEIGHT, math.ceil(textHeight) + ROW_TEXT_PADDING)
+end
+
+-- The last character index CalculateScreenAreaFromCharacterSpan accepts, by text. It counts the characters on screen,
+-- without the color and link codes around them, so it's shorter than the stored text when the text has links
+local spanEnds = {}
+
+---
+---@param fontString FontString
+---@param last number @The last character to measure
+---@return table[]|nil @The areas of the lines from the first character to `last`, or nil when the game refuses `last`
+local function CalculateAreas(fontString, last)
+	local found, areas = pcall(fontString.CalculateScreenAreaFromCharacterSpan, fontString, 1, last)
+	if (found and type(areas) == "table" and #areas > 0) then
+		return areas
+	end
+end
+
+---
+---Where each line of a FontString's text sits: one { left, bottom, width, height } per line, from its bottom left corner.
+---The game measures the glyphs, the way Blizzard's chat highlights selected text (ScrollingMessageFrame)
+---@param fontString FontString
+---@return table[]
+local function GetLineAreas(fontString)
+	local boxWidth = fontString:GetWidth()
+	-- One line (wrap off): the game would also measure the text hidden behind the "...". Strike the line that shows,
+	-- up to the end of the text or of its box, before the remove button
+	if (not fontString:CanWordWrap()) then
+		return {
+			{
+				left = 0,
+				bottom = 0,
+				width = math.min(fontString:GetStringWidth(), boxWidth),
+				height = fontString:GetStringHeight()
+			}
+		}
+	end
+
+	local text = fontString:GetText() or ""
+	local last = spanEnds[text]
+	if (not last) then
+		last = #text
+		if (not CalculateAreas(fontString, last)) then
+			-- The stored text is longer than what shows: find the last character the game accepts
+			local low, high = 0, last
+			while (high - low > 1) do
+				local middle = math.floor((low + high) / 2)
+				if (CalculateAreas(fontString, middle)) then
+					low = middle
+				else
+					high = middle
+				end
+			end
+			last = low
+		end
+		if (last > 0) then
+			spanEnds[text] = last
+		end
+	end
+
+	local areas = last > 0 and CalculateAreas(fontString, last --[[@as number]])
+	if (areas) then
+		-- Only the lines that show, each kept inside the text's box
+		local shown = {}
+		for line = 1, math.min(#areas, math.max(fontString:GetNumLines(), 1)) do
+			local area = areas[line]
+			local width = math.min(tonumber(area.width) or 0, boxWidth - (tonumber(area.left) or 0))
+			if (width > 0) then
+				shown[#shown + 1] = {left = area.left, bottom = area.bottom, width = width, height = area.height}
+			end
+		end
+		if (#shown > 0) then
+			return shown
+		end
+	end
+
+	-- The game measured nothing: split the text's height into its lines, each as wide as the widest
+	local lineCount = math.max(fontString:GetNumLines(), 1)
+	local lineHeight = fontString:GetStringHeight() / lineCount
+	local width = math.min(fontString:GetWrappedWidth(), boxWidth)
+	areas = {}
+	for line = 1, lineCount do
+		areas[line] = {left = 0, bottom = (lineCount - line) * lineHeight, width = width, height = lineHeight}
+	end
+	return areas
+end
+
+---
+---Strikes through a checked item's text: a line through the middle of each line of text, as wide as its glyphs. The
+---first uses the template's Strikethrough, more lines get their own
+---The objective tracker section strikes its Questie-style rows the same way: any frame with a Text FontString and a
+---Strikethrough texture works. Call it once the frame has its width, which decides where the text wraps
+---@param frame TodoItemFrame|table
+---@param isShown boolean
+---@param color table|nil @The strike color, NORMAL_FONT_COLOR (the window's yellow) when nil
+function TodoChecklisterFrame:PaintStrikethrough(frame, isShown, color)
+	color = color or NORMAL_FONT_COLOR
+	frame.extraStrikethroughs = frame.extraStrikethroughs or {}
+	local areas = isShown and GetLineAreas(frame.Text) or {}
+	for line = 1, math.max(#areas, #frame.extraStrikethroughs + 1) do
+		local texture = line == 1 and frame.Strikethrough or frame.extraStrikethroughs[line - 1]
+		if (not texture) then
+			texture = frame:CreateTexture(nil, "OVERLAY", nil, 7)
+			texture:SetHeight(1)
+			frame.extraStrikethroughs[line - 1] = texture
+		end
+		local area = areas[line]
+		if (area) then
+			texture:SetColorTexture(color.r, color.g, color.b)
+			texture:ClearAllPoints()
+			texture:SetPoint("LEFT", frame.Text, "BOTTOMLEFT", area.left, area.bottom + area.height / 2)
+			texture:SetWidth(math.max(area.width, 1))
+			texture:Show()
+		else
+			texture:Hide()
+		end
+	end
+end
+
+---
+---Shows a row's whole text in a tooltip when it was cut short with "...", like Blizzard's lists do
+---@param frame TodoItemFrame
+function TodoChecklisterFrame:ShowTruncatedText(frame)
+	if (not frame.todoItem or not frame.Text:IsTruncated()) then
+		return
+	end
+	local tooltip = self.frame.TodoTooltip
+	tooltip:SetOwner(frame, "ANCHOR_NONE")
+	tooltip:ClearAllPoints()
+	tooltip:SetPoint("BOTTOMLEFT", frame, "TOPLEFT")
+	tooltip:SetText(self:GetDisplayText(frame.todoItem), 1, 1, 1, 1, true)
+	tooltip:Show()
+end
+
+---
 ---Set the given frame's properties to the given item ones
----@param frame TodoItemFrame @The row to paint
+---@param frame TodoItemFrame @The row to paint, already sized
 ---@param todoItem TodoItem @The item displayed by the row
 ---@param index number @The current item index on the list, 0 for the drag clone
+---@return number @The height the row needs for its text
 function TodoChecklisterFrame:PaintItem(frame, todoItem, index)
 	frame.todoItem = todoItem
 
-	if (todoItem.isFolder) then
-		frame:SetNormalFontObject(GameFontHighlightSmall)
-	elseif (todoItem.isChecked) then
-		frame:SetNormalFontObject(GameFontDarkGraySmall)
-	else
-		frame:SetNormalFontObject(GameFontNormalSmall)
-	end
+	frame.Text:SetFontObject(self:GetFontObject(todoItem))
 
 	-- Items inside a folder sit slightly to the right. Text, highlight and strikethrough follow the checkbox
 	frame.TodoCheckButton:ClearAllPoints()
@@ -427,12 +614,16 @@ function TodoChecklisterFrame:PaintItem(frame, todoItem, index)
 		frame.FolderButton:SetPushedTexture("Interface\\Buttons\\UI-" .. sign .. "Button-Down")
 	end
 
-	frame:SetText(self:GetDisplayText(todoItem))
+	self:SetTextWrap(frame.Text, self.wrapText)
+	frame.Text:SetText(self:GetDisplayText(todoItem))
+	-- The row already has its width (the ScrollBox lays rows out before painting them, the drag clones are sized first)
+	local textHeight = frame.Text:GetStringHeight()
 
 	-- A drag starts on mouse down, so the row can be left in its pushed state
 	frame:SetButtonState("NORMAL")
 	local highlightColor = self:GetColor(todoItem)
 	frame:GetHighlightTexture():SetVertexColor(highlightColor.r, highlightColor.g, highlightColor.b)
+	frame:GetHighlightTexture():SetHeight(math.max(HIGHLIGHT_HEIGHT, textHeight + 4))
 	-- Rows only show visible items, so their index isn't the saved one. Compare the items instead
 	local selectedItem = self.selectedItem and self.selectedItem > 0 and TodoList:GetItems()[self.selectedItem]
 	if (index > 0 and selectedItem == todoItem) then
@@ -443,7 +634,8 @@ function TodoChecklisterFrame:PaintItem(frame, todoItem, index)
 
 	frame.TodoCheckButton:SetChecked(todoItem.isChecked)
 
-	frame.Strikethrough:SetShown(todoItem.isChecked and not todoItem.isFolder)
+	self:PaintStrikethrough(frame, todoItem.isChecked == true and not todoItem.isFolder)
+	return self:GetRowHeight(textHeight)
 end
 
 ---
@@ -451,14 +643,53 @@ end
 function TodoChecklisterFrame:InitScrollBox()
 	local scrollBox = self.frame.Background.ScrollBox
 
+	-- Row heights by item, from the last time the ScrollBox measured them. The drop margins read them
+	self.rowHeights = setmetatable({}, {__mode = "k"})
+
 	local view = CreateScrollBoxListLinearView()
+	-- Wrapped text makes a row as tall as its lines. Cut short, every row is one line
+	view:SetElementExtentCalculator(
+		function(_, todoItem)
+			local height = ROW_HEIGHT ---@type number
+			if (self.wrapText) then
+				height = self:GetRowHeight((self:MeasureText(todoItem, scrollBox:GetWidth())))
+			end
+			self.rowHeights[todoItem] = height
+			return height
+		end
+	)
 	view:SetElementInitializer(
 		"TodoItemTemplate",
 		function(row, todoItem)
+			if (not row.isSetUp) then
+				row.isSetUp = true
+				row:HookScript(
+					"OnEnter",
+					function(frame)
+						self:ShowTruncatedText(frame)
+					end
+				)
+				row:HookScript(
+					"OnLeave",
+					function()
+						self.frame.TodoTooltip:Hide()
+					end
+				)
+			end
 			self:PaintItem(row, todoItem, row:GetElementDataIndex())
 		end
 	)
 	ScrollUtil.InitScrollBoxListWithScrollBar(scrollBox, self.frame.ScrollBar, view)
+
+	-- A narrower or wider window wraps the text onto a different number of lines: measure the rows again
+	scrollBox:HookScript(
+		"OnSizeChanged",
+		function(_, width)
+			if (self.wrapText and self.frame:IsShown() and width ~= self.listWidth) then
+				self:RefreshRows()
+			end
+		end
+	)
 
 	local dragBehavior = ScrollUtil.InitDefaultLinearDragBehavior(scrollBox)
 	dragBehavior:SetReorderable(true)
@@ -468,10 +699,11 @@ function TodoChecklisterFrame:InitScrollBox()
 	dragBehavior:SetAreaIntersectMargin(
 		function(targetItem, _, contextData)
 			local sourceItem = contextData.sourceData and contextData.sourceData.elementData
+			local height = self.rowHeights[targetItem] or ROW_HEIGHT
 			if (targetItem.isFolder and sourceItem and not sourceItem.isFolder) then
-				return FOLDER_DROP_MARGIN
+				return height * FOLDER_DROP_MARGIN
 			end
-			return DROP_MARGIN
+			return height * DROP_MARGIN
 		end
 	)
 
@@ -569,11 +801,16 @@ function TodoChecklisterFrame:OnUpdate()
 
 	-- Hidden windows are repainted by OnShow
 	if (self.frame:IsShown()) then
-		self.frame.Background.ScrollBox:SetDataProvider(
-			CreateDataProvider(TodoList:GetVisibleItems()),
-			ScrollBoxConstants.RetainScrollPosition
-		)
+		self:RefreshRows()
 	end
+end
+
+---
+---Hands the visible items to the ScrollBox, which measures every row again and repaints the visible ones
+function TodoChecklisterFrame:RefreshRows()
+	local scrollBox = self.frame.Background.ScrollBox
+	self.listWidth = scrollBox:GetWidth()
+	scrollBox:SetDataProvider(CreateDataProvider(TodoList:GetVisibleItems()), ScrollBoxConstants.RetainScrollPosition)
 end
 
 --------------------------------------
@@ -617,6 +854,7 @@ function TodoChecklisterFrame:LoadCFG()
 		self.displayLinked = Settings:DisplayLinked()
 		self.displayBankOnLinked = Settings:DisplayBankOnLinked()
 		self.displayChargesOnLinked = Settings:DisplayChargesOnLinked()
+		self.wrapText = Settings:WrapText()
 
 		self:OnUpdate()
 	end

@@ -48,6 +48,7 @@
       "UISpecialFrames",
       "TodoChecklister_OnFolderButtonClick",
       "TodoChecklister_ObjectiveTrackerClick",
+      "TodoChecklister_WrapTextClick",
       "ObjectiveTrackerFrame",
       "STANDARD_TEXT_FONT",
       "CampaignQuestObjectiveTracker",

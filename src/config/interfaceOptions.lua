@@ -67,6 +67,7 @@ function InterfaceOptions:LoadCFG()
     self.frame.SettingsContainer.ToggleMapButton:SetChecked(Settings:DisplayMinimapIcon())
     self.frame.SettingsContainer.DisplayBankOnLinked:SetChecked(Settings:DisplayBankOnLinked())
     self.frame.SettingsContainer.DisplayChargesOnLinked:SetChecked(Settings:DisplayChargesOnLinked())
+    self.frame.SettingsContainer.WrapTextCheckButton:SetChecked(Settings:WrapText())
     self.frame.SettingsContainer.ObjectiveTrackerCheckButton:SetChecked(Settings:DisplayInObjectiveTracker())
     -- Only where the section exists: retail and Forever, without a tracker replacement it doesn't support.
     -- The section is created after login, so this is checked whenever the panel refreshes
@@ -360,4 +361,10 @@ function TodoChecklister_ObjectiveTrackerClick(frame)
   Settings:SetDisplayInObjectiveTracker(frame:GetChecked())
   InterfaceOptions:LoadCFG()
   TodoAddon.ObjectiveTrackerSection:LoadCFG()
+end
+
+function TodoChecklister_WrapTextClick(frame)
+  Settings:SetWrapText(frame:GetChecked())
+  -- Reaches the window and, through its OnUpdate, the objective tracker section
+  InterfaceOptions:LoadCFG()
 end

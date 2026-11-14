@@ -10,6 +10,9 @@
   <Frame name="TodoChecklisterTrackerSectionTemplate" parent="UIParent" frameStrata="LOW" hidden="true" virtual="true">
     <Size x="260" y="26"/>
     <Frames>
+      <!-- A row's whole text, when it's cut short with "..." (ObjectiveTrackerSection's ShowTruncatedText) -->
+      <GameTooltip parentKey="Tooltip" name="$parentTooltip" frameStrata="TOOLTIP" inherits="GameTooltipTemplate"/>
+
       <!-- Holds the rows. ObjectiveTrackerSection:Layout anchors it below whichever header the style uses -->
       <Frame parentKey="Contents">
         <Anchors>
@@ -47,6 +50,13 @@
             <Anchor point="RIGHT"/>
           </Anchors>
         </FontString>
+      </Layer>
+      <Layer level="OVERLAY" textureSubLevel="7">
+        <!-- Strikes through the first line of a checked item. TodoChecklisterFrame:PaintStrikethrough
+             places it on the glyphs, colors it like the text and adds one more for each wrapped line -->
+        <Texture parentKey="Strikethrough" hidden="true">
+          <Size y="1"/>
+        </Texture>
       </Layer>
     </Layers>
     <Frames>

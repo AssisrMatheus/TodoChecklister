@@ -301,6 +301,40 @@
             </Layers>
           </CheckButton>
 
+          <!-- Wrap long items onto more lines, or cut them short with "..." (the window and the objective tracker) -->
+          <CheckButton parentKey="WrapTextCheckButton" name="$parentWrapTextCheckButton" inherits="UICheckButtonTemplate">
+            <Size x="28" y="28"/>
+
+            <Scripts>
+              <OnLoad>
+                self.Text:SetText("Wrap long items (off: shorten them with ...)");
+              </OnLoad>
+              <OnClick>
+                PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
+                TodoChecklister_WrapTextClick(self)
+              </OnClick>
+            </Scripts>
+
+            <Anchors>
+              <Anchor point="LEFT" relativeTo="$parentMuteDisplayBankOnLinked" relativePoint="LEFT">
+                <Offset>
+                  <AbsDimension y="-39" />
+                </Offset>
+              </Anchor>
+            </Anchors>
+
+            <Layers>
+              <Layer level="OVERLAY">
+                <FontString name="$parentText" parentKey="Text" inherits="GameFontWhite" justifyH="LEFT">
+                  <Anchors>
+                    <Anchor point="LEFT" relativeTo="$parent" relativePoint="Right">
+                    </Anchor>
+                  </Anchors>
+                </FontString>
+              </Layer>
+            </Layers>
+          </CheckButton>
+
           <!-- Retail and Forever only: hidden on Classic clients, which have no ObjectiveTrackerManager -->
           <CheckButton parentKey="ObjectiveTrackerCheckButton" name="$parentObjectiveTrackerCheckButton" inherits="UICheckButtonTemplate">
             <Size x="28" y="28"/>
@@ -338,7 +372,7 @@
           <Slider parentKey="Opacity" name="$parentOpacity" inherits="UISliderTemplateWithLabels" minValue="0" maxValue="1" valueStep="0.01" defaultValue="1">
             <Size x="144" y="17"/>
             <Anchors>
-              <Anchor point="TOPLEFT" relativeTo="$parentMuteDisplayBankOnLinked" relativePoint="BOTTOMLEFT">
+              <Anchor point="TOPLEFT" relativeTo="$parentWrapTextCheckButton" relativePoint="BOTTOMLEFT">
                 <Offset x="10" y="-40"/>
               </Anchor>
             </Anchors>

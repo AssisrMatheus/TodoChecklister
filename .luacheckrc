@@ -37,6 +37,7 @@ globals = {
 	"TodoChecklister_BACKDROP",
 	"TodoChecklister_OnFolderButtonClick",
 	"TodoChecklister_ObjectiveTrackerClick",
+	"TodoChecklister_WrapTextClick",
 
 	-- Blizzard globals missing from the list below
 	"ChatFrameUtil",
